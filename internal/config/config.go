@@ -15,7 +15,6 @@ const (
 )
 
 func init() {
-
 	err := envconfig.Process("", &Env)
 	if err != nil {
 		panic(err)

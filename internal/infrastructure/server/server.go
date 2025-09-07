@@ -20,6 +20,7 @@ func Run() {
 
 	// ミドルウェア設定
 	e.Use(middleware.Logger())
+	e.Use(middleware.CORS())
 	e.Use(middleware.Recover())
 
 	// ルーティング
@@ -28,7 +29,7 @@ func Run() {
 	})
 
 	srv := &http.Server{
-		Addr:    ":8085",
+		Addr:    ":8090",
 		Handler: e,
 	}
 
@@ -39,7 +40,7 @@ func Run() {
 	}()
 
 	fmt.Println("----------")
-	fmt.Println("homing server started")
+	fmt.Println("homing server started!")
 	fmt.Println("----------")
 
 	quit := make(chan os.Signal, 1)
