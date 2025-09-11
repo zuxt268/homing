@@ -5,6 +5,8 @@ import (
 )
 
 type Environment struct {
+	ADDRESS      string `envconfig:"ADDRESS"`
+	SecretPhrase string `envconfig:"SECRET_PHRASE"`
 }
 
 var Env Environment

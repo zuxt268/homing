@@ -13,6 +13,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/zuxt268/homing/internal/config"
 )
 
 func Run() {
@@ -27,21 +28,23 @@ func Run() {
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "ok")
 	})
-
+	
 	srv := &http.Server{
-		Addr:    ":8090",
+		Addr:    config.Env.ADDRESS,
 		Handler: e,
 	}
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("listen: %s\n", err)
+			fmt.Printf("listen: %s\n", err)
 		}
 	}()
 
-	fmt.Println("----------")
+	fmt.Println()
+	fmt.Println("**********************")
 	fmt.Println("homing server started!")
-	fmt.Println("----------")
+	fmt.Println("**********************")
+	fmt.Println()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
