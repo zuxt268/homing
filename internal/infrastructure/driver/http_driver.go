@@ -10,7 +10,7 @@ import (
 
 type HttpDriver interface {
 	Get(ctx context.Context, endpoint string, params any, header any) ([]byte, error)
-	Post(ctx context.Context, endpoint string, reqBody any, header any) ([]byte, error)
+	Post(ctx context.Context, endpoint string, reqBody any, header map[string]string) ([]byte, error)
 }
 
 type httpDriver struct {
@@ -24,6 +24,10 @@ func NewClient(baseURL string, c *http.Client) HttpDriver {
 }
 
 func (c *httpDriver) Get(ctx context.Context, endpoint string, params any, header any) ([]byte, error) {
+
+}
+
+func (c *httpDriver) Post(ctx context.Context, endpoint string, reqBody any, header map[string]string) ([]byte, error) {
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, err

@@ -16,16 +16,22 @@ type WordpressAdapter interface {
 	//FileUpload(ctx context.Context, file multipart.File, header *multipart.FileHeader) error
 }
 
-func NewWordpressAdapter(httpDriver driver.HttpDriver, adminEmail string) WordpressAdapter {
+func NewWordpressAdapter(
+	httpDriver driver.HttpDriver,
+	adminEmail string,
+	secretPhrase string,
+) WordpressAdapter {
 	return &wordpressAdapter{
-		httpDriver: httpDriver,
-		adminEmail: adminEmail,
+		httpDriver:   httpDriver,
+		adminEmail:   adminEmail,
+		secretPhrase: secretPhrase,
 	}
 }
 
 type wordpressAdapter struct {
-	httpDriver driver.HttpDriver
-	adminEmail string
+	httpDriver   driver.HttpDriver
+	adminEmail   string
+	secretPhrase string
 }
 
 func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostInput) (*entity.Post, error) {
@@ -35,8 +41,12 @@ func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostIn
 		Content:       in.Post.GetContent(),
 		FeaturedMedia: in.MediaID,
 	}
-	header := external.WordpressHeader{} // TODO
-	u, err := url.Parse(in.Domain)
+	apiKey := in.Customer.GenerateAPIKey(a.secretPhrase)
+	header, err := external.GetWordpressHeader(reqBody, apiKey)
+	if err != nil {
+		return nil, err
+	}
+	u, err := url.Parse(in.Customer.WordpressUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +55,7 @@ func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostIn
 	q.Set("rest_route", "/rodut/v1/create_post")
 	u.RawQuery = q.Encode()
 
-	resp, err := a.httpDriver.Post(ctx, u.String(), &reqBody, &header)
+	resp, err := a.httpDriver.Post(ctx, u.String(), &reqBody, header)
 	if err != nil {
 		return nil, fmt.Errorf("記事の投稿に失敗: %w", err)
 	}
