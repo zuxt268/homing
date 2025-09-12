@@ -9,7 +9,7 @@ import (
 )
 
 type HttpDriver interface {
-	Get(ctx context.Context, endpoint string, params any, header any) ([]byte, error)
+	Get(ctx context.Context, endpoint string, params any, header map[string]string) ([]byte, error)
 	Post(ctx context.Context, endpoint string, reqBody any, header map[string]string) ([]byte, error)
 }
 
@@ -23,8 +23,8 @@ func NewClient(baseURL string, c *http.Client) HttpDriver {
 	}
 }
 
-func (c *httpDriver) Get(ctx context.Context, endpoint string, params any, header any) ([]byte, error) {
-
+func (c *httpDriver) Get(ctx context.Context, endpoint string, params any, header map[string]string) ([]byte, error) {
+	return nil, nil
 }
 
 func (c *httpDriver) Post(ctx context.Context, endpoint string, reqBody any, header map[string]string) ([]byte, error) {
@@ -36,7 +36,6 @@ func (c *httpDriver) Post(ctx context.Context, endpoint string, reqBody any, hea
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, err
-
 	}
 
 	for k, v := range header {
