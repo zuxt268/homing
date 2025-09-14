@@ -28,9 +28,9 @@ func Run() {
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "ok")
 	})
-	
+
 	srv := &http.Server{
-		Addr:    config.Env.ADDRESS,
+		Addr:    config.Env.Address,
 		Handler: e,
 	}
 

@@ -1,6 +1,8 @@
 package external
 
-import "github.com/zuxt268/homing/internal/domain/entity"
+import (
+	"github.com/zuxt268/homing/internal/domain/entity"
+)
 
 type InstagramRequest struct {
 	AccessToken string `param:"access_token"`
@@ -49,12 +51,40 @@ type InstagramGetPostsResponse struct {
 	Id string `json:"id"`
 }
 
-func ToInstagramAccountEntity(dto *InstagramGetAccountResponse) *entity.InstagramAccount {
-	return &entity.InstagramAccount{}
+func ToInstagramAccountEntity(dto *InstagramGetAccountResponse) []entity.InstagramAccount {
+	accounts := make([]entity.InstagramAccount, 0, len(dto.Accounts.Data))
+	for _, account := range dto.Accounts.Data {
+		if account.InstagramBusinessAccount.Name != "" {
+			accounts = append(accounts, entity.InstagramAccount{
+				InstagramAccountName:     account.InstagramBusinessAccount.Name,
+				InstagramAccountID:       account.InstagramBusinessAccount.Id,
+				InstagramAccountUsername: account.InstagramBusinessAccount.Username,
+			})
+		}
+	}
+	return accounts
 }
 
 func ToInstagramPostsEntity(dto *InstagramGetPostsResponse) []entity.InstagramPost {
 	var posts []entity.InstagramPost
-
+	for _, post := range dto.Media.Data {
+		children := make([]entity.InstagramPostChildren, 0, len(post.Children.Data))
+		for _, child := range post.Children.Data {
+			children = append(children, entity.InstagramPostChildren{
+				MediaType: child.MediaType,
+				MediaURL:  child.MediaUrl,
+				ID:        child.Id,
+			})
+		}
+		posts = append(posts, entity.InstagramPost{
+			ID:        post.Id,
+			Permalink: post.Permalink,
+			Caption:   post.Caption,
+			Timestamp: post.Timestamp,
+			MediaType: post.MediaType,
+			MediaURL:  post.MediaUrl,
+			Children:  children,
+		})
+	}
 	return posts
 }

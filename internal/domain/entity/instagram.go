@@ -1,9 +1,9 @@
 package entity
 
 type InstagramAccount struct {
-	Name             string
-	ID               string
-	InstagramAccount string
+	InstagramAccountName     string
+	InstagramAccountID       string
+	InstagramAccountUsername string
 }
 
 type InstagramPost struct {

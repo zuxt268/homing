@@ -11,7 +11,7 @@ import (
 )
 
 type InstagramAdapter interface {
-	GetAccount(ctx context.Context, accessToken string) (*entity.InstagramAccount, error)
+	GetAccount(ctx context.Context, accessToken string) ([]entity.InstagramAccount, error)
 	GetPosts(ctx context.Context, accessToken string, accountID string) ([]entity.InstagramPost, error)
 }
 
@@ -21,21 +21,26 @@ func NewInstagramAdapter(httpDriver driver.HttpDriver) InstagramAdapter {
 	}
 }
 
+const (
+	baseURL = "https://graph.facebook.com/v23.0"
+)
+
 type instagramAdapter struct {
 	httpDriver driver.HttpDriver
 }
 
-func (a *instagramAdapter) GetAccount(ctx context.Context, accessToken string) (*entity.InstagramAccount, error) {
-	req := &external.InstagramRequest{
+func (a *instagramAdapter) GetAccount(ctx context.Context, accessToken string) ([]entity.InstagramAccount, error) {
+	req := external.InstagramRequest{
 		AccessToken: accessToken,
 		Fields:      "accounts{name,instagram_business_account{name,username}}",
 	}
-	resp, err := a.httpDriver.Get(ctx, "/me", req, nil)
+	endpoint := baseURL + "/me"
+	respBody, err := a.httpDriver.Get(ctx, endpoint, req, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get instagram account: %w", err)
 	}
 	var accountDto external.InstagramGetAccountResponse
-	if err := json.Unmarshal(resp, &accountDto); err != nil {
+	if err := json.Unmarshal(respBody, &accountDto); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal instagram account response: %w", err)
 	}
 	return external.ToInstagramAccountEntity(&accountDto), nil
@@ -46,7 +51,7 @@ func (a *instagramAdapter) GetPosts(ctx context.Context, accessToken string, acc
 		AccessToken: accessToken,
 		Fields:      "media{id,permalink,caption,timestamp,media_type,media_url,children{media_type,media_url}}",
 	}
-	endpoint := fmt.Sprintf("/%s", accountID)
+	endpoint := baseURL + "/" + accountID
 	resp, err := a.httpDriver.Get(ctx, endpoint, req, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get posts: %w", err)

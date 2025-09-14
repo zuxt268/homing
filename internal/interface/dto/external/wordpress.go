@@ -19,21 +19,13 @@ type WordpressPostPayload struct {
 	FeaturedMedia int    `json:"featured_media"`
 }
 
-type WordpressHeader struct {
-}
-
 func GetWordpressHeader(payload any, apiKeyHex string) (map[string]string, error) {
-	// JSON シリアライズ (Python の separators=(",", ":") 相当)
-	// Go の encoding/json は余計なスペースを入れないのでそのままでOK
 	bodyBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
 	}
-
-	// タイムスタンプ (秒)
 	ts := fmt.Sprintf("%d", time.Now().Unix())
 
-	// message = timestamp + "." + body
 	var buf bytes.Buffer
 	buf.WriteString(ts)
 	buf.WriteByte('.')
