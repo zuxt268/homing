@@ -33,6 +33,6 @@ func TestInstagramAdapter_GetAccount(t *testing.T) {
 		if err != nil {
 			t.Fatalf("GetPosts failed: %v", err)
 		}
-		fmt.Println("posts length:", len(posts))
+		fmt.Println(posts)
 	}
 }

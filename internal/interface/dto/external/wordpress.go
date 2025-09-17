@@ -53,7 +53,7 @@ type WordpressPostResponse struct {
 }
 
 type WordpressPostInput struct {
-	Customer entity.Customer
-	MediaID  int
-	Post     entity.InstagramPost
+	Customer        entity.Customer
+	FeaturedMediaID int
+	Post            entity.InstagramPost
 }

@@ -39,7 +39,7 @@ func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostIn
 		Email:         a.adminEmail,
 		Title:         in.Post.GetTitle(),
 		Content:       in.Post.GetContent(),
-		FeaturedMedia: in.MediaID,
+		FeaturedMedia: in.FeaturedMediaID,
 	}
 	apiKey := in.Customer.GenerateAPIKey(a.secretPhrase)
 	header, err := external.GetWordpressHeader(reqBody, apiKey)
@@ -52,8 +52,10 @@ func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostIn
 	}
 
 	q := u.Query()
-	q.Set("rest_route", "/rodut/v1/create_post")
+	q.Set("rest_route", "/rodut/v1/create-post")
 	u.RawQuery = q.Encode()
+
+	fmt.Println(u.String())
 
 	resp, err := a.httpDriver.Post(ctx, u.String(), &reqBody, header)
 	if err != nil {
