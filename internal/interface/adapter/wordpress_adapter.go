@@ -82,7 +82,8 @@ func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostIn
 	}
 
 	return &entity.Post{
-		ID: postDto.PostId,
+		ID:           postDto.PostId,
+		WordpressURL: postDto.PostUrl,
 	}, nil
 }
 
@@ -91,7 +92,9 @@ func (a *wordpressAdapter) FileUpload(ctx context.Context, in external.Wordpress
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	fileName := filepath.Base(in.Path)
 	apiKey := in.Customer.GenerateAPIKey(a.secretPhrase)
@@ -128,8 +131,9 @@ func (a *wordpressAdapter) FileUpload(ctx context.Context, in external.Wordpress
 	if err != nil {
 		return nil, fmt.Errorf("failed to write email field: %w", err)
 	}
-
-	writer.Close()
+	defer func() {
+		_ = writer.Close()
+	}()
 
 	// WordPressのアップロードURLを構築
 	u, err := url.Parse(in.Customer.WordpressUrl)
@@ -159,7 +163,9 @@ func (a *wordpressAdapter) FileUpload(ctx context.Context, in external.Wordpress
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusCreated {
 		return nil, fmt.Errorf("upload failed with status code: %d", resp.StatusCode)

@@ -6,7 +6,10 @@ import (
 )
 
 type Customer struct {
-	WordpressUrl string
+	ID                 int
+	WordpressUrl       string
+	AccessToken        string
+	InstagramAccountID string
 }
 
 func (c *Customer) GenerateAPIKey(secretPhrase string) string {

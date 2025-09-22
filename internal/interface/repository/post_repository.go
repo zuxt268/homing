@@ -1,0 +1,74 @@
+package repository
+
+import (
+	"context"
+
+	"github.com/zuxt268/homing/internal/interface/dto/model"
+	"gorm.io/gorm"
+)
+
+type PostRepository interface {
+	ExistPost(ctx context.Context, filter PostFilter) (bool, error)
+	SavePost(ctx context.Context, post *model.Post) error
+}
+
+type postRepository struct {
+	db *gorm.DB
+}
+
+type PostFilter struct {
+	ID            *int
+	MediaID       *string
+	CustomerID    *int
+	Timestamp     *string
+	MediaURL      *string
+	Permalink     *string
+	WordpressLink *string
+}
+
+func (p *PostFilter) Mod(db *gorm.DB) *gorm.DB {
+	if p.ID != nil {
+		db = db.Where("id = ?", *p.ID)
+	}
+	if p.MediaID != nil {
+		db = db.Where("media_id = ?", *p.MediaID)
+	}
+	if p.CustomerID != nil {
+		db = db.Where("customer_id = ?", *p.CustomerID)
+	}
+	if p.Timestamp != nil {
+		db = db.Where("timestamp = ?", *p.Timestamp)
+	}
+	if p.MediaURL != nil {
+		db = db.Where("media_url = ?", *p.MediaURL)
+	}
+	if p.Permalink != nil {
+		db = db.Where("permalink = ?", *p.Permalink)
+	}
+	if p.WordpressLink != nil {
+		db = db.Where("wordpress_link = ?", *p.WordpressLink)
+	}
+
+	return db
+}
+
+func NewPostRepository(db *gorm.DB) PostRepository {
+	return &postRepository{
+		db: db,
+	}
+}
+
+func (r *postRepository) ExistPost(ctx context.Context, filter PostFilter) (bool, error) {
+	db := r.db.WithContext(ctx)
+	db = filter.Mod(db)
+	var posts []*model.Post
+	err := db.Find(&posts).Error
+	if err != nil {
+		return false, err
+	}
+	return len(posts) > 0, nil
+}
+
+func (r *postRepository) SavePost(ctx context.Context, post *model.Post) error {
+	return r.db.WithContext(ctx).Create(post).Error
+}

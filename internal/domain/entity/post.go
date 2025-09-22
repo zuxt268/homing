@@ -1,5 +1,6 @@
 package entity
 
 type Post struct {
-	ID int
+	ID           int
+	WordpressURL string
 }
