@@ -57,3 +57,18 @@ type WordpressPostInput struct {
 	FeaturedMediaID int
 	Post            entity.InstagramPost
 }
+
+type WordpressFileUploadInput struct {
+	Path     string
+	Customer entity.Customer
+}
+
+type WordpressFileUploadPayload struct {
+	Email string `json:"email"`
+}
+
+type WordpressFileUploadResponse struct {
+	Id        int    `json:"id"`
+	SourceUrl string `json:"source_url"`
+	MimeType  string `json:"mime_type"`
+}

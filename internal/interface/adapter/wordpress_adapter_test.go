@@ -28,7 +28,7 @@ func TestWordpressAdapter_Post(t *testing.T) {
 			},
 		},
 	}
-	customer := entity.Customer{WordpressUrl: "https://hp-standard.moe"}
+	customer := entity.Customer{WordpressUrl: "hp-standard.moe"}
 
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
@@ -42,4 +42,20 @@ func TestWordpressAdapter_Post(t *testing.T) {
 		t.Errorf("error posting %v", err)
 	}
 	fmt.Println(posted)
+}
+
+func TestUploadFile(t *testing.T) {
+	customer := entity.Customer{WordpressUrl: "hp-standard.moe"}
+	httpClient := &http.Client{}
+	client := driver.NewClient(httpClient)
+	adapter := NewWordpressAdapter(client, config.Env.AdminEmail, config.Env.SecretPhrase)
+
+	resp, err := adapter.FileUpload(context.Background(), external.WordpressFileUploadInput{
+		Path:     "/var/folders/3t/gfwjqksn6tqfj5kvg70dzlwr0000gn/T/homing_download_1656907455/548865242_17916787776176467_8381450328613983170_n.jpg",
+		Customer: customer,
+	})
+	if err != nil {
+		t.Errorf("error uploading %v", err)
+	}
+	fmt.Println(resp)
 }

@@ -5,9 +5,10 @@ import (
 )
 
 type Environment struct {
-	Address      string `envconfig:"ADDRESS"`
-	SecretPhrase string `envconfig:"SECRET_PHRASE"`
-	AdminEmail   string `envconfig:"ADMIN_EMAIL"`
+	Address         string `envconfig:"ADDRESS"`
+	SecretPhrase    string `envconfig:"SECRET_PHRASE"`
+	AdminEmail      string `envconfig:"ADMIN_EMAIL"`
+	SlackWebhookUrl string `envconfig:"SLACK_WEBHOOK_URL"`
 }
 
 var Env Environment

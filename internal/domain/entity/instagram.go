@@ -27,5 +27,5 @@ func (i *InstagramPost) GetTitle() string {
 }
 
 func (i *InstagramPost) GetContent() string {
-	return ""
+	return "<h1>Instagram</h1>"
 }
