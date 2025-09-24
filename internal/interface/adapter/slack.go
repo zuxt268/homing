@@ -2,6 +2,8 @@ package adapter
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/zuxt268/homing/internal/config"
 	"github.com/zuxt268/homing/internal/domain/entity"
@@ -24,8 +26,20 @@ func NewSlack(httpDriver driver.HttpDriver) Slack {
 	}
 }
 
+const template = `[%s]
+顧客: id=%d, name=%s`
+
 func (s *slack) Alert(ctx context.Context, msg string, customer entity.Customer) error {
-	return nil
+	sb := strings.Builder{}
+	sb.WriteString("｀｀｀")
+	sb.WriteString("<@U04P797HYPM>\n")
+	sb.WriteString(fmt.Sprintf(template, strings.TrimSpace(msg), customer.ID, customer.Name))
+	sb.WriteString("｀｀｀")
+	return s.SendMessage(ctx, external.SlackRequest{
+		Text:      sb.String(),
+		Username:  "homing",
+		IconEmoji: ":cat:",
+	})
 }
 
 func (s *slack) SendMessage(ctx context.Context, payload external.SlackRequest) error {

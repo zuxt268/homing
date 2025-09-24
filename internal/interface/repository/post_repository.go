@@ -59,10 +59,9 @@ func NewPostRepository(db *gorm.DB) PostRepository {
 }
 
 func (r *postRepository) ExistPost(ctx context.Context, filter PostFilter) (bool, error) {
-	db := r.db.WithContext(ctx)
-	db = filter.Mod(db)
 	var posts []*model.Post
-	err := db.Find(&posts).Error
+
+	err := filter.Mod(r.db).WithContext(ctx).Find(&posts).Error
 	if err != nil {
 		return false, err
 	}

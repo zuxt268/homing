@@ -53,10 +53,7 @@ func (u *customerUsecase) SyncAll(ctx context.Context) error {
 	for _, customer := range customers {
 		err := u.syncOne(ctx, customer)
 		if err != nil {
-			_ = u.slack.SendMessage(ctx, external.SlackRequest{
-				Username:  "homing",
-				IconEmoji: ":cat:",
-			})
+			_ = u.slack.Alert(ctx, err.Error(), *customer)
 		}
 	}
 	return nil
@@ -69,11 +66,7 @@ func (u *customerUsecase) SyncOne(ctx context.Context, customerID int) error {
 	}
 	err = u.syncOne(ctx, customer)
 	if err != nil {
-		_ = u.slack.SendMessage(ctx, external.SlackRequest{
-			Text:      "",
-			Username:  "homing",
-			IconEmoji: ":cat:",
-		})
+		_ = u.slack.Alert(ctx, err.Error(), *customer)
 		return err
 	}
 	return nil
@@ -97,7 +90,11 @@ func (u *customerUsecase) syncOne(ctx context.Context, customer *entity.Customer
 			return err
 		}
 	}
-	return nil
+
+	/*
+		tempディレクトリを削除
+	*/
+	return u.fileDownloader.DeleteTempDirectory()
 }
 
 func (u *customerUsecase) transfer(ctx context.Context, customer *entity.Customer, post entity.InstagramPost) error {

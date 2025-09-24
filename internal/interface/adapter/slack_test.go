@@ -2,10 +2,12 @@ package adapter
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/zuxt268/homing/internal/domain/entity"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
 )
@@ -19,5 +21,9 @@ func TestSlackSendMessage(t *testing.T) {
 		Username:  "neko",
 		IconEmoji: ":cat:",
 	})
+	assert.NoError(t, err)
+
+	customer := entity.Customer{}
+	err = s.Alert(context.Background(), errors.New("wao").Error(), customer)
 	assert.NoError(t, err)
 }

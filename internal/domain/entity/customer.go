@@ -7,6 +7,7 @@ import (
 
 type Customer struct {
 	ID                 int
+	Name               string
 	WordpressUrl       string
 	AccessToken        string
 	InstagramAccountID string

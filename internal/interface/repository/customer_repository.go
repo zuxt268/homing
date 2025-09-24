@@ -37,7 +37,11 @@ func (a *customerRepository) GetCustomer(ctx context.Context, id int) (*entity.C
 		return nil, err
 	}
 	return &entity.Customer{
-		WordpressUrl: customer.WordpressURL,
+		ID:                 customer.ID,
+		Name:               customer.Name,
+		WordpressUrl:       customer.WordpressURL,
+		AccessToken:        customer.FacebookToken,
+		InstagramAccountID: customer.InstagramBusinessAccountID,
 	}, nil
 }
 
@@ -96,17 +100,18 @@ func (f *CustomerFilter) Mod(db *gorm.DB) *gorm.DB {
 
 func (a *customerRepository) FindAllCustomers(ctx context.Context, filter CustomerFilter) ([]*entity.Customer, error) {
 	var customers []*model.Customer
-	db := a.db.WithContext(ctx)
-	db = filter.Mod(db)
-	db.Find(&customers)
+	db := filter.Mod(a.db).WithContext(ctx).Find(&customers)
 	if db.Error != nil {
 		return nil, db.Error
 	}
 	result := make([]*entity.Customer, 0, len(customers))
 	for _, customer := range customers {
 		result = append(result, &entity.Customer{
-			ID:           customer.ID,
-			WordpressUrl: customer.WordpressURL,
+			ID:                 customer.ID,
+			Name:               customer.Name,
+			WordpressUrl:       customer.WordpressURL,
+			AccessToken:        customer.FacebookToken,
+			InstagramAccountID: customer.InstagramBusinessAccountID,
 		})
 	}
 	return result, nil
