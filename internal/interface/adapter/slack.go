@@ -6,13 +6,13 @@ import (
 	"strings"
 
 	"github.com/zuxt268/homing/internal/config"
-	"github.com/zuxt268/homing/internal/domain/entity"
+	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
 )
 
 type Slack interface {
-	Alert(ctx context.Context, msg string, customer entity.Customer) error
+	Alert(ctx context.Context, msg string, customer domain.Customer) error
 	SendMessage(ctx context.Context, payload external.SlackRequest) error
 }
 
@@ -29,7 +29,7 @@ func NewSlack(httpDriver driver.HttpDriver) Slack {
 const template = `[%s]
 顧客: id=%d, name=%s`
 
-func (s *slack) Alert(ctx context.Context, msg string, customer entity.Customer) error {
+func (s *slack) Alert(ctx context.Context, msg string, customer domain.Customer) error {
 	sb := strings.Builder{}
 	sb.WriteString("｀｀｀")
 	sb.WriteString("<@U04P797HYPM>\n")

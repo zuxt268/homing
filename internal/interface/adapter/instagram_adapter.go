@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/zuxt268/homing/internal/domain/entity"
+	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
 )
 
 type InstagramAdapter interface {
-	GetAccount(ctx context.Context, accessToken string) ([]entity.InstagramAccount, error)
-	GetPosts(ctx context.Context, accessToken string, accountID string) ([]entity.InstagramPost, error)
+	GetAccount(ctx context.Context, accessToken string) ([]domain.InstagramAccount, error)
+	GetPosts(ctx context.Context, accessToken string, accountID string) ([]domain.InstagramPost, error)
 }
 
 func NewInstagramAdapter(httpDriver driver.HttpDriver) InstagramAdapter {
@@ -29,7 +29,7 @@ type instagramAdapter struct {
 	httpDriver driver.HttpDriver
 }
 
-func (a *instagramAdapter) GetAccount(ctx context.Context, accessToken string) ([]entity.InstagramAccount, error) {
+func (a *instagramAdapter) GetAccount(ctx context.Context, accessToken string) ([]domain.InstagramAccount, error) {
 	req := external.InstagramRequest{
 		AccessToken: accessToken,
 		Fields:      "accounts{name,instagram_business_account{name,username}}",
@@ -46,7 +46,7 @@ func (a *instagramAdapter) GetAccount(ctx context.Context, accessToken string) (
 	return external.ToInstagramAccountEntity(&accountDto), nil
 }
 
-func (a *instagramAdapter) GetPosts(ctx context.Context, accessToken string, accountID string) ([]entity.InstagramPost, error) {
+func (a *instagramAdapter) GetPosts(ctx context.Context, accessToken string, accountID string) ([]domain.InstagramPost, error) {
 	req := &external.InstagramRequest{
 		AccessToken: accessToken,
 		Fields:      "media{id,permalink,caption,timestamp,media_type,media_url,children{media_type,media_url}}",

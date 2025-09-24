@@ -5,14 +5,14 @@ import (
 	"errors"
 	"time"
 
-	"github.com/zuxt268/homing/internal/domain/entity"
+	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/interface/dto/model"
 	"gorm.io/gorm"
 )
 
 type CustomerRepository interface {
-	GetCustomer(ctx context.Context, id int) (*entity.Customer, error)
-	FindAllCustomers(ctx context.Context, filter CustomerFilter) ([]*entity.Customer, error)
+	GetCustomer(ctx context.Context, id int) (*domain.Customer, error)
+	FindAllCustomers(ctx context.Context, filter CustomerFilter) ([]*domain.Customer, error)
 }
 
 type customerRepository struct {
@@ -25,7 +25,7 @@ func NewCustomerRepository(db *gorm.DB) CustomerRepository {
 	}
 }
 
-func (a *customerRepository) GetCustomer(ctx context.Context, id int) (*entity.Customer, error) {
+func (a *customerRepository) GetCustomer(ctx context.Context, id int) (*domain.Customer, error) {
 	var customer model.Customer
 	err := a.db.WithContext(ctx).
 		Where("id = ?", id).
@@ -36,7 +36,7 @@ func (a *customerRepository) GetCustomer(ctx context.Context, id int) (*entity.C
 		}
 		return nil, err
 	}
-	return &entity.Customer{
+	return &domain.Customer{
 		ID:                 customer.ID,
 		Name:               customer.Name,
 		WordpressUrl:       customer.WordpressURL,
@@ -98,15 +98,15 @@ func (f *CustomerFilter) Mod(db *gorm.DB) *gorm.DB {
 	return db
 }
 
-func (a *customerRepository) FindAllCustomers(ctx context.Context, filter CustomerFilter) ([]*entity.Customer, error) {
+func (a *customerRepository) FindAllCustomers(ctx context.Context, filter CustomerFilter) ([]*domain.Customer, error) {
 	var customers []*model.Customer
 	db := filter.Mod(a.db).WithContext(ctx).Find(&customers)
 	if db.Error != nil {
 		return nil, db.Error
 	}
-	result := make([]*entity.Customer, 0, len(customers))
+	result := make([]*domain.Customer, 0, len(customers))
 	for _, customer := range customers {
-		result = append(result, &entity.Customer{
+		result = append(result, &domain.Customer{
 			ID:                 customer.ID,
 			Name:               customer.Name,
 			WordpressUrl:       customer.WordpressURL,

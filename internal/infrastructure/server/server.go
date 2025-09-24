@@ -14,9 +14,17 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/zuxt268/homing/internal/config"
+	"github.com/zuxt268/homing/internal/di"
+	"github.com/zuxt268/homing/internal/interface/handler"
 )
 
 func Run() {
+	// DI コンテナ初期化
+	customerUsecase, err := di.InitializeCustomerUsecase()
+	if err != nil {
+		log.Fatal("Failed to initialize dependencies:", err)
+	}
+
 	e := echo.New()
 
 	// ミドルウェア設定
@@ -24,10 +32,18 @@ func Run() {
 	e.Use(middleware.CORS())
 	e.Use(middleware.Recover())
 
+	// ハンドラー初期化
+	apiHandler := handler.NewAPIHandler(customerUsecase)
+
 	// ルーティング
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "ok")
 	})
+
+	// API ルート設定
+	api := e.Group("/api")
+	api.POST("/sync", apiHandler.SyncAll)
+	api.POST("/sync/:customer_id", apiHandler.SyncOne)
 
 	srv := &http.Server{
 		Addr:    config.Env.Address,

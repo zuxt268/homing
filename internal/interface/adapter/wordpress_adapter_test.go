@@ -7,20 +7,20 @@ import (
 	"testing"
 
 	"github.com/zuxt268/homing/internal/config"
-	"github.com/zuxt268/homing/internal/domain/entity"
+	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
 )
 
 func TestWordpressAdapter_Post(t *testing.T) {
-	post := entity.InstagramPost{
+	post := domain.InstagramPost{
 		ID:        "18287747659283707",
 		Permalink: "https://www.instagram.com/p/DOdb8pEjyLU/",
 		Caption:   "DDDDD",
 		Timestamp: "2025-09-11T11:16:24+0000",
 		MediaType: "CAROUSEL_ALBUM",
 		MediaURL:  "https://scontent-nrt1-1.cdninstagram.com/v/t51.82787-15/545510899_17858706267498031_8817069271596986900_n.webp?stp=dst-jpg_e35_tt6&_nc_cat=106&ccb=1-7&_nc_sid=18de74&_nc_ohc=LyGPz35EmhwQ7kNvwEi04Dl&_nc_oc=Adkj6qPf6CGsJl7HSFGjiz3Nmodo2mtYH7lYEjrythPr0r-3L3RkYK-FD1isFLIqLug&_nc_zt=23&_nc_ht=scontent-nrt1-1.cdninstagram.com&edm=AL-3X8kEAAAA&_nc_gid=7xCyPmu21M4s5JlAQ9a9nw&oh=00_AfbXhH9SlsBe6LewpLQL2X4-fVJ-7cDTahiZxRBXpI8Bug&oe=68D056EE",
-		Children: []entity.InstagramPostChildren{
+		Children: []domain.InstagramPostChildren{
 			{
 				MediaType: "IMAGE",
 				MediaURL:  "https://scontent-nrt1-1.cdninstagram.com/v/t51.82787-15/545510899_17858706267498031_8817069271596986900_n.webp?stp=dst-jpg_e35_tt6&_nc_cat=106&ccb=1-7&_nc_sid=18de74&_nc_ohc=LyGPz35EmhwQ7kNvwEi04Dl&_nc_oc=Adkj6qPf6CGsJl7HSFGjiz3Nmodo2mtYH7lYEjrythPr0r-3L3RkYK-FD1isFLIqLug&_nc_zt=23&_nc_ht=scontent-nrt1-1.cdninstagram.com&edm=AL-3X8kEAAAA&_nc_gid=7xCyPmu21M4s5JlAQ9a9nw&oh=00_AfbXhH9SlsBe6LewpLQL2X4-fVJ-7cDTahiZxRBXpI8Bug&oe=68D056EE",
@@ -28,7 +28,7 @@ func TestWordpressAdapter_Post(t *testing.T) {
 			},
 		},
 	}
-	customer := entity.Customer{WordpressUrl: "hp-standard.moe"}
+	customer := domain.Customer{WordpressUrl: "hp-standard.moe"}
 
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
@@ -45,7 +45,7 @@ func TestWordpressAdapter_Post(t *testing.T) {
 }
 
 func TestUploadFile(t *testing.T) {
-	customer := entity.Customer{WordpressUrl: "hp-standard.moe"}
+	customer := domain.Customer{WordpressUrl: "hp-standard.moe"}
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
 	adapter := NewWordpressAdapter(client, config.Env.AdminEmail, config.Env.SecretPhrase)

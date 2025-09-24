@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/zuxt268/homing/internal/domain/entity"
+	"github.com/zuxt268/homing/internal/domain"
 )
 
 type WordpressPostPayload struct {
@@ -53,14 +53,14 @@ type WordpressPostResponse struct {
 }
 
 type WordpressPostInput struct {
-	Customer        entity.Customer
+	Customer        domain.Customer
 	FeaturedMediaID int
-	Post            entity.InstagramPost
+	Post            domain.InstagramPost
 }
 
 type WordpressFileUploadInput struct {
 	Path     string
-	Customer entity.Customer
+	Customer domain.Customer
 }
 
 type WordpressFileUploadPayload struct {

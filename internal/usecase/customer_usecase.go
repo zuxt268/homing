@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/zuxt268/homing/internal/domain/entity"
+	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/interface/adapter"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
 	"github.com/zuxt268/homing/internal/interface/dto/model"
@@ -12,6 +12,8 @@ import (
 )
 
 type CustomerUsecase interface {
+	SyncAll(ctx context.Context) error
+	SyncOne(ctx context.Context, customerID int) error
 }
 
 type customerUsecase struct {
@@ -72,7 +74,7 @@ func (u *customerUsecase) SyncOne(ctx context.Context, customerID int) error {
 	return nil
 }
 
-func (u *customerUsecase) syncOne(ctx context.Context, customer *entity.Customer) error {
+func (u *customerUsecase) syncOne(ctx context.Context, customer *domain.Customer) error {
 	/*
 		インスタグラムから投稿を一覧で取得する
 	*/
@@ -97,7 +99,7 @@ func (u *customerUsecase) syncOne(ctx context.Context, customer *entity.Customer
 	return u.fileDownloader.DeleteTempDirectory()
 }
 
-func (u *customerUsecase) transfer(ctx context.Context, customer *entity.Customer, post entity.InstagramPost) error {
+func (u *customerUsecase) transfer(ctx context.Context, customer *domain.Customer, post domain.InstagramPost) error {
 
 	/*
 		すでに投稿しているものかどうかをチェック

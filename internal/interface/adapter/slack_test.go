@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zuxt268/homing/internal/domain/entity"
+	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
 )
@@ -23,7 +23,7 @@ func TestSlackSendMessage(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	customer := entity.Customer{}
+	customer := domain.Customer{}
 	err = s.Alert(context.Background(), errors.New("wao").Error(), customer)
 	assert.NoError(t, err)
 }

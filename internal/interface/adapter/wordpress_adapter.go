@@ -20,21 +20,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zuxt268/homing/internal/domain/entity"
+	"github.com/zuxt268/homing/internal/config"
+	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
 )
 
 type WordpressAdapter interface {
-	Post(ctx context.Context, in external.WordpressPostInput) (*entity.Post, error)
+	Post(ctx context.Context, in external.WordpressPostInput) (*domain.Post, error)
 	FileUpload(ctx context.Context, in external.WordpressFileUploadInput) (*external.WordpressFileUploadResponse, error)
 }
 
 func NewWordpressAdapter(
 	httpDriver driver.HttpDriver,
-	adminEmail string,
-	secretPhrase string,
 ) WordpressAdapter {
+	adminEmail := config.Env.AdminEmail
+	secretPhrase := config.Env.SecretPhrase
 	return &wordpressAdapter{
 		httpDriver:   httpDriver,
 		adminEmail:   adminEmail,
@@ -48,7 +49,7 @@ type wordpressAdapter struct {
 	secretPhrase string
 }
 
-func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostInput) (*entity.Post, error) {
+func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostInput) (*domain.Post, error) {
 	reqBody := external.WordpressPostPayload{
 		Email:         a.adminEmail,
 		Title:         in.Post.GetTitle(),
@@ -81,7 +82,7 @@ func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostIn
 		return nil, fmt.Errorf("JSONの変換に失敗: %w", err)
 	}
 
-	return &entity.Post{
+	return &domain.Post{
 		ID:           postDto.PostId,
 		WordpressURL: postDto.PostUrl,
 	}, nil
