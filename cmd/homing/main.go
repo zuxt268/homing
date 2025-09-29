@@ -1,8 +1,7 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package main
 
+import "github.com/zuxt268/homing/internal/infrastructure/server"
+
 func main() {
-	Execute()
+	server.Run()
 }

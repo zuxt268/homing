@@ -1,0 +1,88 @@
+info:
+  contact: {}
+paths:
+  /api/customers/{customer_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get customer information by customer ID
+      parameters:
+      - description: Customer ID
+        in: path
+        name: customer_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Customer information
+          schema: {}
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: Customer not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get customer by ID
+      tags:
+      - customers
+  /api/sync:
+    post:
+      consumes:
+      - application/json
+      description: Sync data for all customers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: sync all
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Sync all customers
+      tags:
+      - sync
+  /api/sync/{customer_id}:
+    post:
+      consumes:
+      - application/json
+      description: Sync data for a specific customer by ID
+      parameters:
+      - description: Customer ID
+        in: path
+        name: customer_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: sync one customer
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: Customer not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Sync one customer
+      tags:
+      - sync
+swagger: "2.0"

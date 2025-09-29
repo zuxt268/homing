@@ -18,14 +18,11 @@ type FileDownloader interface {
 }
 
 type fileDownloader struct {
-	httpClient *http.Client
-	tempDir    string
+	tempDir string
 }
 
-func NewFileDownloader(client *http.Client) FileDownloader {
-	return &fileDownloader{
-		httpClient: client,
-	}
+func NewFileDownloader() FileDownloader {
+	return &fileDownloader{}
 }
 
 func (f *fileDownloader) Download(ctx context.Context, urlStr string) (string, error) {
@@ -40,7 +37,8 @@ func (f *fileDownloader) Download(ctx context.Context, urlStr string) (string, e
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	resp, err := f.httpClient.Do(req)
+	client := http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to download file: %w", err)
 	}

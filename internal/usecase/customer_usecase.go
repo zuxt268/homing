@@ -8,12 +8,14 @@ import (
 	"github.com/zuxt268/homing/internal/interface/adapter"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
 	"github.com/zuxt268/homing/internal/interface/dto/model"
+	"github.com/zuxt268/homing/internal/interface/dto/res"
 	"github.com/zuxt268/homing/internal/interface/repository"
 )
 
 type CustomerUsecase interface {
 	SyncAll(ctx context.Context) error
 	SyncOne(ctx context.Context, customerID int) error
+	GetCustomer(ctx context.Context, customerID int) (*res.Customer, error)
 }
 
 type customerUsecase struct {
@@ -161,4 +163,12 @@ func (u *customerUsecase) transfer(ctx context.Context, customer *domain.Custome
 		return err
 	}
 	return nil
+}
+
+func (u *customerUsecase) GetCustomer(ctx context.Context, customerID int) (*res.Customer, error) {
+	customer, err := u.customerRepo.GetCustomer(ctx, customerID)
+	if err != nil {
+		return nil, err
+	}
+	return res.GetCustomer(customer), nil
 }

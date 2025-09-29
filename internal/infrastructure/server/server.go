@@ -13,17 +13,25 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	_ "github.com/zuxt268/homing/docs" // Swaggerドキュメント用
 	"github.com/zuxt268/homing/internal/config"
 	"github.com/zuxt268/homing/internal/di"
+	"github.com/zuxt268/homing/internal/infrastructure/database"
+	"github.com/zuxt268/homing/internal/infrastructure/driver"
 	"github.com/zuxt268/homing/internal/interface/handler"
 )
 
 func Run() {
-	// DI コンテナ初期化
-	customerUsecase, err := di.InitializeCustomerUsecase()
+	
+	db, err := database.NewDB()
 	if err != nil {
-		log.Fatal("Failed to initialize dependencies:", err)
+		log.Fatal(err)
 	}
+	httpClient := &http.Client{Timeout: time.Second * 10}
+	httpDriver := driver.NewClient(httpClient)
+
+	customerUsecase := di.NewCustomerUsecase(httpDriver, db)
 
 	e := echo.New()
 
@@ -35,15 +43,14 @@ func Run() {
 	// ハンドラー初期化
 	apiHandler := handler.NewAPIHandler(customerUsecase)
 
-	// ルーティング
-	e.GET("/health", func(c echo.Context) error {
-		return c.String(http.StatusOK, "ok")
-	})
+	// Swagger ルート
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// API ルート設定
 	api := e.Group("/api")
 	api.POST("/sync", apiHandler.SyncAll)
 	api.POST("/sync/:customer_id", apiHandler.SyncOne)
+	api.GET("/customers/:customer_id", apiHandler.GetCustomer)
 
 	srv := &http.Server{
 		Addr:    config.Env.Address,
