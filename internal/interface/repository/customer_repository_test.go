@@ -20,7 +20,7 @@ func TestCustomerRepository_GetCustomer(t *testing.T) {
 		assert.Equal(t, 1, customer.ID)
 		assert.Equal(t, "田中太郎", customer.Name)
 		assert.Equal(t, "https://tanaka-blog.com", customer.WordpressUrl)
-		assert.Equal(t, "facebook_token_123", customer.AccessToken)
+		assert.Equal(t, "facebook_token_123", customer.FacebookToken)
 		assert.Equal(t, "ig_business_123", customer.InstagramAccountID)
 	})
 
@@ -196,7 +196,7 @@ func TestCustomerRepository_Integration(t *testing.T) {
 			assert.Equal(t, customer.ID, individualCustomer.ID)
 			assert.Equal(t, customer.Name, individualCustomer.Name)
 			assert.Equal(t, customer.WordpressUrl, individualCustomer.WordpressUrl)
-			assert.Equal(t, customer.AccessToken, individualCustomer.AccessToken)
+			assert.Equal(t, customer.FacebookToken, individualCustomer.FacebookToken)
 			assert.Equal(t, customer.InstagramAccountID, individualCustomer.InstagramAccountID)
 		}
 	})
@@ -222,7 +222,7 @@ func TestCustomerRepository_Integration(t *testing.T) {
 			expected := expectedData[customer.ID]
 			assert.Equal(t, expected.name, customer.Name)
 			assert.Equal(t, expected.wordpressURL, customer.WordpressUrl)
-			assert.Equal(t, expected.facebookToken, customer.AccessToken)
+			assert.Equal(t, expected.facebookToken, customer.FacebookToken)
 			assert.Equal(t, expected.instagramAccountID, customer.InstagramAccountID)
 		}
 	})

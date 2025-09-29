@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/zuxt268/homing/internal/domain"
@@ -15,7 +16,9 @@ import (
 type CustomerUsecase interface {
 	SyncAll(ctx context.Context) error
 	SyncOne(ctx context.Context, customerID int) error
+	SyncAccount(ctx context.Context, customerID int) (*res.InstagramAccounts, error)
 	GetCustomer(ctx context.Context, customerID int) (*res.Customer, error)
+	GetInstagramAccount(ctx context.Context, customerID int) (*res.InstagramAccounts, error)
 }
 
 type customerUsecase struct {
@@ -77,21 +80,27 @@ func (u *customerUsecase) SyncOne(ctx context.Context, customerID int) error {
 }
 
 func (u *customerUsecase) syncOne(ctx context.Context, customer *domain.Customer) error {
-	/*
-		インスタグラムから投稿を一覧で取得する
-	*/
-	posts, err := u.instagramAdapter.GetPosts(ctx, customer.AccessToken, customer.InstagramAccountID)
-	if err != nil {
-		return err
-	}
 
 	/*
-		まだ連携していない投稿をWordpressに連携する
+		アカウント毎に処理を行う
 	*/
-	for _, post := range posts {
-		err := u.transfer(ctx, customer, post)
+	for _, accountID := range customer.InstagramBusinessAccountID {
+		/*
+			インスタグラムから投稿を一覧で取得する
+		*/
+		posts, err := u.instagramAdapter.GetPosts(ctx, customer.FacebookToken, accountID)
 		if err != nil {
 			return err
+		}
+
+		/*
+			まだ連携していない投稿をWordpressに連携する
+		*/
+		for _, post := range posts {
+			err := u.transfer(ctx, customer, post)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -163,6 +172,41 @@ func (u *customerUsecase) transfer(ctx context.Context, customer *domain.Custome
 		return err
 	}
 	return nil
+}
+
+func (u *customerUsecase) SyncAccount(ctx context.Context, customerID int) (*res.InstagramAccounts, error) {
+	customer, err := u.customerRepo.GetCustomer(ctx, customerID)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(customer)
+	account, err := u.instagramAdapter.GetAccount(ctx, customer.FacebookToken)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(account)
+	ids := make([]string, 0, len(account))
+	for _, a := range account {
+		ids = append(ids, a.InstagramAccountID)
+	}
+	customer.InstagramBusinessAccountID = ids
+	err = u.customerRepo.SaveCustomer(ctx, customer)
+	if err != nil {
+		return nil, err
+	}
+	return res.GetInstagramAccounts(account), nil
+}
+
+func (u *customerUsecase) GetInstagramAccount(ctx context.Context, customerID int) (*res.InstagramAccounts, error) {
+	customer, err := u.customerRepo.GetCustomer(ctx, customerID)
+	if err != nil {
+		return nil, err
+	}
+	account, err := u.instagramAdapter.GetAccount(ctx, customer.FacebookToken)
+	if err != nil {
+		return nil, err
+	}
+	return res.GetInstagramAccounts(account), nil
 }
 
 func (u *customerUsecase) GetCustomer(ctx context.Context, customerID int) (*res.Customer, error) {

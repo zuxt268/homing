@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/api/customers/{customer_id}": {
             "get": {
-                "description": "Get customer information by customer ID",
+                "description": "指定された顧客IDの情報を取得します",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,11 +27,11 @@ const docTemplate = `{
                 "tags": [
                     "customers"
                 ],
-                "summary": "Get customer by ID",
+                "summary": "顧客情報取得",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Customer ID",
+                        "description": "顧客ID",
                         "name": "customer_id",
                         "in": "path",
                         "required": true
@@ -39,23 +39,119 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Customer information",
+                        "description": "顧客情報",
                         "schema": {}
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "リクエストが不正です",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "404": {
-                        "description": "Customer not found",
+                        "description": "顧客が見つかりません",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/instagram/sync/{customer_id}": {
+            "post": {
+                "description": "指定された顧客のInstagramアカウントを同期します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "instagram"
+                ],
+                "summary": "Instagramアカウント同期",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "顧客ID",
+                        "name": "customer_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "同期結果",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "リクエストが不正です",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "顧客が見つかりません",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/instagram/{customer_id}": {
+            "get": {
+                "description": "指定された顧客のInstagramアカウント情報を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "instagram"
+                ],
+                "summary": "Instagramアカウント情報取得",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "顧客ID",
+                        "name": "customer_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Instagramアカウント情報",
+                        "schema": {}
+                    },
+                    "400": {
+                        "description": "リクエストが不正です",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "顧客が見つかりません",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
                         "schema": {
                             "type": "string"
                         }
@@ -65,7 +161,7 @@ const docTemplate = `{
         },
         "/api/sync": {
             "post": {
-                "description": "Sync data for all customers",
+                "description": "全ての顧客のデータを同期します",
                 "consumes": [
                     "application/json"
                 ],
@@ -75,16 +171,16 @@ const docTemplate = `{
                 "tags": [
                     "sync"
                 ],
-                "summary": "Sync all customers",
+                "summary": "全顧客データ同期",
                 "responses": {
                     "200": {
-                        "description": "sync all",
+                        "description": "全顧客同期完了",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "内部サーバーエラー",
                         "schema": {
                             "type": "string"
                         }
@@ -94,7 +190,7 @@ const docTemplate = `{
         },
         "/api/sync/{customer_id}": {
             "post": {
-                "description": "Sync data for a specific customer by ID",
+                "description": "指定された顧客IDのデータを同期します",
                 "consumes": [
                     "application/json"
                 ],
@@ -104,11 +200,11 @@ const docTemplate = `{
                 "tags": [
                     "sync"
                 ],
-                "summary": "Sync one customer",
+                "summary": "指定顧客データ同期",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Customer ID",
+                        "description": "顧客ID",
                         "name": "customer_id",
                         "in": "path",
                         "required": true
@@ -116,25 +212,25 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "sync one customer",
+                        "description": "顧客同期完了",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "リクエストが不正です",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "404": {
-                        "description": "Customer not found",
+                        "description": "顧客が見つかりません",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "内部サーバーエラー",
                         "schema": {
                             "type": "string"
                         }

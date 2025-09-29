@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/zuxt268/homing/internal/domain"
@@ -11,6 +12,7 @@ import (
 )
 
 type CustomerRepository interface {
+	SaveCustomer(ctx context.Context, customer *domain.Customer) error
 	GetCustomer(ctx context.Context, id int) (*domain.Customer, error)
 	FindAllCustomers(ctx context.Context, filter CustomerFilter) ([]*domain.Customer, error)
 }
@@ -25,6 +27,24 @@ func NewCustomerRepository(db *gorm.DB) CustomerRepository {
 	}
 }
 
+func (a *customerRepository) SaveCustomer(ctx context.Context, customer *domain.Customer) error {
+	return a.db.WithContext(ctx).Save(&model.Customer{
+		ID:                           customer.ID,
+		Name:                         customer.Name,
+		Email:                        customer.Email,
+		Password:                     customer.Password,
+		WordpressURL:                 customer.WordpressUrl,
+		FacebookToken:                customer.FacebookToken,
+		StartDate:                    customer.StartDate,
+		InstagramBusinessAccountID:   strings.Join(customer.InstagramBusinessAccountID, ","),
+		InstagramBusinessAccountName: customer.InstagramBusinessAccountName,
+		InstagramTokenStatus:         customer.InstagramTokenStatus,
+		DeleteHash:                   customer.DeleteHash,
+		PaymentType:                  customer.PaymentType,
+		Type:                         customer.Type,
+	}).Error
+}
+
 func (a *customerRepository) GetCustomer(ctx context.Context, id int) (*domain.Customer, error) {
 	var customer model.Customer
 	err := a.db.WithContext(ctx).
@@ -37,11 +57,19 @@ func (a *customerRepository) GetCustomer(ctx context.Context, id int) (*domain.C
 		return nil, err
 	}
 	return &domain.Customer{
-		ID:                 customer.ID,
-		Name:               customer.Name,
-		WordpressUrl:       customer.WordpressURL,
-		AccessToken:        customer.FacebookToken,
-		InstagramAccountID: customer.InstagramBusinessAccountID,
+		ID:                           customer.ID,
+		Name:                         customer.Name,
+		WordpressUrl:                 customer.WordpressURL,
+		FacebookToken:                customer.FacebookToken,
+		Email:                        customer.Email,
+		Password:                     customer.Password,
+		StartDate:                    customer.StartDate,
+		InstagramBusinessAccountID:   strings.Split(customer.InstagramBusinessAccountID, ","),
+		InstagramBusinessAccountName: customer.InstagramBusinessAccountName,
+		InstagramTokenStatus:         customer.InstagramTokenStatus,
+		DeleteHash:                   customer.DeleteHash,
+		PaymentType:                  customer.PaymentType,
+		Type:                         customer.Type,
 	}, nil
 }
 
@@ -107,11 +135,11 @@ func (a *customerRepository) FindAllCustomers(ctx context.Context, filter Custom
 	result := make([]*domain.Customer, 0, len(customers))
 	for _, customer := range customers {
 		result = append(result, &domain.Customer{
-			ID:                 customer.ID,
-			Name:               customer.Name,
-			WordpressUrl:       customer.WordpressURL,
-			AccessToken:        customer.FacebookToken,
-			InstagramAccountID: customer.InstagramBusinessAccountID,
+			ID:                         customer.ID,
+			Name:                       customer.Name,
+			WordpressUrl:               customer.WordpressURL,
+			FacebookToken:              customer.FacebookToken,
+			InstagramBusinessAccountID: strings.Split(customer.InstagramBusinessAccountID, ","),
 		})
 	}
 	return result, nil

@@ -23,7 +23,7 @@ import (
 )
 
 func Run() {
-	
+
 	db, err := database.NewDB()
 	if err != nil {
 		log.Fatal(err)
@@ -51,6 +51,8 @@ func Run() {
 	api.POST("/sync", apiHandler.SyncAll)
 	api.POST("/sync/:customer_id", apiHandler.SyncOne)
 	api.GET("/customers/:customer_id", apiHandler.GetCustomer)
+	api.GET("/instagram/:customer_id", apiHandler.GetInstagramAccount)
+	api.POST("/instagram/sync/:customer_id", apiHandler.SyncInstagramAccount)
 
 	srv := &http.Server{
 		Addr:    config.Env.Address,
