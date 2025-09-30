@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/zuxt268/homing/internal/domain"
@@ -179,17 +178,18 @@ func (u *customerUsecase) SyncAccount(ctx context.Context, customerID int) (*res
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(customer)
 	account, err := u.instagramAdapter.GetAccount(ctx, customer.FacebookToken)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(account)
 	ids := make([]string, 0, len(account))
+	names := make([]string, 0, len(account))
 	for _, a := range account {
 		ids = append(ids, a.InstagramAccountID)
+		names = append(names, a.InstagramAccountName)
 	}
 	customer.InstagramBusinessAccountID = ids
+	customer.InstagramBusinessAccountName = names
 	err = u.customerRepo.SaveCustomer(ctx, customer)
 	if err != nil {
 		return nil, err

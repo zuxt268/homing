@@ -11,7 +11,7 @@ type Customer struct {
 	FacebookToken                string     `gorm:"column:facebook_token"`
 	StartDate                    *time.Time `gorm:"column:start_date"`
 	InstagramBusinessAccountID   string     `gorm:"column:instagram_business_account_id"`
-	InstagramBusinessAccountName *string    `gorm:"column:instagram_business_account_name"`
+	InstagramBusinessAccountName string     `gorm:"column:instagram_business_account_name"`
 	InstagramTokenStatus         int        `gorm:"column:instagram_token_status"`
 	DeleteHash                   bool       `gorm:"column:delete_hash"`
 	PaymentType                  string     `gorm:"column:payment_type"`

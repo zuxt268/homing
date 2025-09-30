@@ -15,7 +15,7 @@ type Customer struct {
 	Password                     string
 	StartDate                    *time.Time
 	InstagramBusinessAccountID   []string
-	InstagramBusinessAccountName *string
+	InstagramBusinessAccountName []string
 	InstagramTokenStatus         int
 	DeleteHash                   bool
 	PaymentType                  string
