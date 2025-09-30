@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/zuxt268/homing/internal/domain"
@@ -182,6 +183,7 @@ func (u *customerUsecase) SyncAccount(ctx context.Context, customerID int) (*res
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(account)
 	ids := make([]string, 0, len(account))
 	names := make([]string, 0, len(account))
 	for _, a := range account {
