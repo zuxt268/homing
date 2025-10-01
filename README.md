@@ -1,2 +1,397 @@
-# homing
+# Homing
 
+**Instagram投稿を自動的にWordPressへ連携するバックエンドサービス**
+
+[![Go Version](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://golang.org/)
+[![Echo](https://img.shields.io/badge/Echo-v4-00ADD8)](https://echo.labstack.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+
+## 🎯 プロジェクトの背景と目的
+
+SNSマーケティングを活用する企業にとって、InstagramからWebサイトへのコンテンツ連携は手作業では時間がかかり、ヒューマンエラーも発生しやすい課題でした。本プロジェクトは、この課題を解決するために開発した**マルチテナント対応のSaaS型自動連携システム**です。
+
+### ビジネス価値
+
+- **作業時間の削減**: 手作業での投稿作業を完全自動化（1投稿あたり5分→0分）
+- **リアルタイム性**: 定期実行により、新規投稿を即座にWebサイトへ反映
+- **スケーラビリティ**: 複数顧客・複数アカウントを一元管理
+- **運用の安定性**: エラー通知とリトライ機能により、連携漏れを防止
+
+## 📋 概要
+
+Homingは、複数の顧客のInstagramビジネスアカウントから投稿を取得し、自動的にWordPressサイトへ連携するGoアプリケーションです。**クリーンアーキテクチャ**を採用し、保守性と拡張性を重視した設計になっています。
+
+### 主な機能
+
+- ✅ Instagram Graph APIからの投稿自動取得
+- ✅ WordPressへの画像/動画アップロードと記事投稿
+- ✅ 複数顧客・複数アカウント対応（マルチテナント）
+- ✅ 連携開始日以降の投稿のみ同期（柔軟なフィルタリング）
+- ✅ Slack通知によるエラーアラート
+- ✅ 重複投稿の防止（冪等性の保証）
+- ✅ Graceful Shutdown対応
+
+## 💡 技術的なアピールポイント
+
+### 1. クリーンアーキテクチャの実践
+
+**Domain Driven Design (DDD)** に基づいた4層アーキテクチャを採用し、ビジネスロジックと技術的関心事を分離。
+
+- **テスタビリティ**: 依存性注入により、モックを使った単体テストが容易
+- **保守性**: 各層の責務が明確で、変更の影響範囲が限定的
+- **拡張性**: 新しい外部サービス連携も、Adapterパターンで容易に追加可能
+
+### 2. 複数の外部API統合
+
+3つの異なる外部APIを統合し、エンドツーエンドの自動化を実現。
+
+- **Instagram Graph API**: OAuth認証、ページング処理
+- **WordPress REST API**: マルチパートファイルアップロード、Basic認証
+- **Slack Incoming Webhook**: リアルタイムアラート
+
+### 3. データ整合性の保証
+
+- **重複防止**: メディアIDベースの冪等性チェック
+- **トランザクション管理**: GORMを使用したDBトランザクション
+- **エラーハンドリング**: 段階的なリトライとSlack通知
+
+### 4. プロダクションレディな実装
+
+- **環境変数管理**: direnv / envconfig
+- **マイグレーション**: sql-migrateによるスキーマバージョン管理
+- **API仕様書**: Swagger/OpenAPIによる自動生成
+- **ホットリロード**: Airによる開発効率向上
+- **統合テスト**: Testcontainersで実際のMySQLを使用したテスト
+
+### 5. コード品質
+
+- **総コード行数**: 2,130行（Go）
+- **テストカバレッジ**: リポジトリ層を中心にテスト実装
+- **Go標準スタイル**: gofmtに準拠
+
+## アーキテクチャ
+
+クリーンアーキテクチャ(DDD)を採用しています。
+
+```
+internal/
+├── domain/          # ドメインモデル（Customer, Post, InstagramPost）
+├── usecase/         # ビジネスロジック（CustomerUsecase）
+├── interface/       # 外部とのインターフェース
+│   ├── adapter/     # 外部API連携（Instagram, WordPress, Slack）
+│   ├── handler/     # HTTPハンドラー
+│   ├── repository/  # データベースアクセス
+│   └── dto/         # データ転送オブジェクト
+├── infrastructure/  # インフラ層
+│   ├── database/    # DB接続
+│   ├── driver/      # HTTPクライアント
+│   └── server/      # Echoサーバー設定
+├── config/          # 環境変数管理
+└── di/              # 依存性注入
+```
+
+## 技術スタック
+
+- **Go**: 1.25.0
+- **Webフレームワーク**: Echo v4
+- **ORM**: GORM
+- **データベース**: MySQL 8.0
+- **マイグレーション**: sql-migrate
+- **ホットリロード**: Air
+- **API仕様**: Swagger/OpenAPI
+- **テスト**: Testify, Testcontainers
+
+## セットアップ
+
+### 前提条件
+
+- Go 1.25.0以上
+- MySQL 8.0以上
+- direnv（推奨）
+
+### 1. リポジトリのクローン
+
+```bash
+git clone <repository-url>
+cd homing
+```
+
+### 2. 環境変数の設定
+
+`.envrc`ファイルを作成し、以下の環境変数を設定してください。
+
+```bash
+export ADDRESS=:8090
+export SECRET_PHRASE=your_secret_phrase
+export ADMIN_EMAIL=admin@example.com
+export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+export DB_USER=root
+export DB_PASSWORD=your_password
+export DB_HOST=localhost
+export DB_PORT=3306
+export DB_NAME=homing_db
+```
+
+direnvを使用している場合:
+```bash
+direnv allow
+```
+
+### 3. データベースの作成
+
+```bash
+mysql -u root -p
+CREATE DATABASE homing_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 4. マイグレーションの実行
+
+```bash
+# sql-migrateのインストール
+go install github.com/rubenv/sql-migrate/...@latest
+
+# マイグレーション実行
+sql-migrate up
+```
+
+### 5. 依存関係のインストール
+
+```bash
+go mod download
+```
+
+### 6. アプリケーションの起動
+
+#### 開発環境（ホットリロード）
+
+```bash
+# Airのインストール
+go install github.com/air-verse/air@latest
+
+# 起動
+make dev
+```
+
+#### 本番環境
+
+```bash
+go build -o homing ./cmd/homing/main.go
+./homing
+```
+
+## API仕様
+
+サーバー起動後、Swagger UIでAPI仕様を確認できます。
+
+```
+http://localhost:8090/swagger/index.html
+```
+
+### 主要エンドポイント
+
+| メソッド | パス | 説明 |
+|---------|------|------|
+| POST | `/api/sync` | 全顧客の投稿を同期 |
+| POST | `/api/sync/:customer_id` | 特定顧客の投稿を同期 |
+| GET | `/api/customers/:customer_id` | 顧客情報を取得 |
+| GET | `/api/instagram/:customer_id` | Instagramアカウント情報を取得 |
+| POST | `/api/instagram/sync/:customer_id` | Instagramアカウント情報を同期 |
+
+## データベーススキーマ
+
+### customers テーブル
+
+顧客情報を管理します。
+
+| カラム名 | 型 | 説明 |
+|---------|---|------|
+| id | INT | 主キー |
+| name | VARCHAR(100) | 顧客名 |
+| email | VARCHAR(100) | メールアドレス |
+| wordpress_url | VARCHAR(255) | WordPress URL |
+| facebook_token | TEXT | Facebook API トークン |
+| start_date | DATETIME | 連携開始日 |
+| instagram_business_account_id | JSON | Instagram ビジネスアカウントID配列 |
+| instagram_business_account_name | JSON | Instagram アカウント名配列 |
+
+### posts テーブル
+
+連携済み投稿を管理します。
+
+| カラム名 | 型 | 説明 |
+|---------|---|------|
+| id | INT | 主キー |
+| media_id | VARCHAR(45) | Instagram メディアID |
+| customer_id | INT | 顧客ID（外部キー） |
+| timestamp | VARCHAR(45) | 投稿日時 |
+| media_url | MEDIUMTEXT | メディアURL |
+| permalink | VARCHAR(255) | Instagram パーマリンク |
+| wordpress_link | VARCHAR(255) | WordPress 投稿URL |
+| created_at | DATETIME | レコード作成日時 |
+
+## 開発
+
+### テストの実行
+
+```bash
+make test
+```
+
+### Swagger仕様の再生成
+
+コードのコメントを修正した後、Swagger仕様を再生成します。
+
+```bash
+make swag
+```
+
+### コードスタイル
+
+- gofmtでフォーマット
+- golangci-lintでリント（推奨）
+
+## 運用
+
+### ログ
+
+- 標準出力にJSON形式でログを出力
+- Echoのミドルウェアでリクエスト/レスポンスをログ記録
+
+### エラー通知
+
+同期処理でエラーが発生した場合、Slackに通知されます。
+
+通知内容:
+- 顧客ID
+- 顧客名
+- エラーメッセージ
+
+### 同期処理の仕様
+
+1. **重複チェック**: 既に連携済みの投稿はスキップ
+2. **日付フィルタ**: `start_date`以前の投稿はスキップ
+3. **メディア処理**:
+   - 画像/動画を一時ディレクトリにダウンロード
+   - WordPressへアップロード
+   - アップロード後、一時ディレクトリを削除
+4. **トランザクション**: 投稿記録をDBに保存
+
+## トラブルシューティング
+
+### マイグレーションエラー
+
+```bash
+# 現在の状態確認
+sql-migrate status
+
+# ロールバック
+sql-migrate down
+
+# 再実行
+sql-migrate up
+```
+
+### データベース接続エラー
+
+- 環境変数が正しく設定されているか確認
+- MySQLが起動しているか確認
+- データベースが作成されているか確認
+
+```bash
+mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST -P $DB_PORT -e "SHOW DATABASES;"
+```
+
+### Instagram API エラー
+
+- Facebook トークンの有効期限を確認
+- Instagram Graph APIの権限を確認
+- レート制限に達していないか確認
+
+## 🎓 学んだこと・工夫した点
+
+### 設計面
+
+1. **依存性の逆転原則 (DIP)**
+   - Usecaseは具象ではなくインターフェースに依存
+   - テスト時のモック化が容易で、外部APIに依存しないテスト実装を実現
+
+2. **リポジトリパターン**
+   - データアクセスロジックをカプセル化
+   - 柔軟なクエリ条件をFilterパターンで実現
+
+3. **Adapterパターン**
+   - 各外部APIの差異を吸収し、統一されたインターフェースを提供
+   - 将来的な外部サービス変更時の影響範囲を最小化
+
+### 実装面
+
+1. **エラーハンドリング**
+   - カスタムエラー型を定義し、エラーの種類を判別可能に
+   - Slackへの通知で、運用チームへリアルタイム通知
+
+2. **データ整合性**
+   - メディアIDによる冪等性チェックで重複投稿を防止
+   - 連携開始日フィルターで、過去データの不要な連携を回避
+
+3. **パフォーマンス**
+   - HTTPクライアントのタイムアウト設定
+   - 一時ファイルの適切なクリーンアップ
+
+### チーム開発を想定した工夫
+
+1. **セルフドキュメンティング**
+   - Swagger/OpenAPIによる自動生成API仕様
+   - 日本語コメントによる可読性向上
+
+2. **開発体験**
+   - Airによるホットリロードで開発効率向上
+   - Makefileでよく使うコマンドを簡略化
+
+3. **テスト戦略**
+   - Testcontainersで本番環境に近い統合テスト
+   - リポジトリ層の網羅的なテストケース
+
+## 🚀 今後の改善案
+
+- [ ] テストカバレッジの向上（目標: 80%以上）
+- [ ] CI/CDパイプラインの構築（GitHub Actions）
+- [ ] ログ構造化とログレベル管理
+- [ ] メトリクス監視（Prometheus対応）
+- [ ] Docker/Docker Compose対応
+- [ ] レート制限対策（指数バックオフ）
+- [ ] Webhook対応（Instagram投稿時の即座連携）
+
+## 📊 プロジェクト統計
+
+- **開発期間**: [期間を記載]
+- **総コード行数**: 2,130行（Go）
+- **ファイル数**: 34ファイル
+- **テストファイル数**: 7ファイル
+- **外部API連携数**: 3サービス
+- **エンドポイント数**: 5つ
+
+## 💼 想定されるユースケース
+
+### SaaS事業者向け
+- Instagram連携機能を持つCMS/マーケティングツールの開発
+- マルチテナント対応のソーシャルメディア管理ツール
+
+### Web制作会社向け
+- クライアントのWebサイト制作時の付加価値サービス
+- 運用代行サービスの自動化基盤
+
+### 企業のマーケティング部門向け
+- オウンドメディアとSNSの一元管理
+- コンテンツマーケティングの効率化
+
+## 📞 お問い合わせ
+
+本プロジェクトに関するご質問や、採用に関するお問い合わせは以下までご連絡ください。
+
+- Email: [your-email@example.com]
+- GitHub: [your-github-profile]
+- Portfolio: [your-portfolio-url]
+
+---
+
+**このプロジェクトは、実用的なビジネス課題の解決と、モダンなGoアプリケーション開発のベストプラクティスの実践を目的として開発されました。**
