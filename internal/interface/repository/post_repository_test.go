@@ -128,7 +128,7 @@ func TestPostRepository_SavePost(t *testing.T) {
 		newPost := &model.Post{
 			MediaID:       "test_media_001",
 			CustomerID:    1,
-			Timestamp:     "1650000000",
+			Timestamp:     "2025-09-29T10:19:24+0000",
 			MediaURL:      "https://instagram.com/p/test001.jpg",
 			Permalink:     "https://instagram.com/p/test001/",
 			WordpressLink: "https://tanaka-blog.com/post/test-1/",
@@ -148,10 +148,11 @@ func TestPostRepository_SavePost(t *testing.T) {
 	})
 
 	t.Run("必要な情報のみで投稿を保存", func(t *testing.T) {
+
 		minimumPost := &model.Post{
 			MediaID:    "test_media_002",
 			CustomerID: 2,
-			Timestamp:  "1650000001",
+			Timestamp:  "2025-09-29T10:19:24+0000",
 			CreatedAt:  time.Now(),
 		}
 
@@ -168,17 +169,18 @@ func TestPostRepository_SavePost(t *testing.T) {
 	})
 
 	t.Run("異なるCustomerIDで投稿を保存", func(t *testing.T) {
+
 		posts := []*model.Post{
 			{
 				MediaID:    "test_media_003",
 				CustomerID: 3,
-				Timestamp:  "1650000002",
+				Timestamp:  "2025-09-29T10:19:24+0000",
 				CreatedAt:  time.Now(),
 			},
 			{
 				MediaID:    "test_media_004",
 				CustomerID: 4,
-				Timestamp:  "1650000003",
+				Timestamp:  "2025-09-29T10:19:24+0000",
 				CreatedAt:  time.Now(),
 			},
 		}
@@ -208,7 +210,7 @@ func TestPostRepository_Integration(t *testing.T) {
 		testPost := &model.Post{
 			MediaID:       "integration_test_001",
 			CustomerID:    1,
-			Timestamp:     "1650100000",
+			Timestamp:     "2025-09-29T10:19:24+0000",
 			MediaURL:      "https://instagram.com/p/integration001.jpg",
 			Permalink:     "https://instagram.com/p/integration001/",
 			WordpressLink: "https://tanaka-blog.com/post/integration-1/",

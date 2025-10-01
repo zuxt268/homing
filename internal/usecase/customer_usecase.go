@@ -125,6 +125,14 @@ func (u *customerUsecase) transfer(ctx context.Context, customer *domain.Custome
 	}
 
 	/*
+		連携開始日前のデータは連携しない
+	*/
+	instagramPost, _ := time.Parse("2006-01-02T15:04:05-0700", post.Timestamp)
+	if instagramPost.Before(*customer.StartDate) {
+		return nil
+	}
+
+	/*
 		インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
 	*/
 	localPath, err := u.fileDownloader.Download(ctx, post.MediaURL)
