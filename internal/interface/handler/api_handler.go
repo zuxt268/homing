@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/zuxt268/homing/internal/domain"
+	_ "github.com/zuxt268/homing/internal/interface/dto/res"
 	"github.com/zuxt268/homing/internal/usecase"
 )
 
@@ -46,9 +47,6 @@ func (h *APIHandler) SyncAll(c echo.Context) error {
 // @Produce      json
 // @Param        customer_id  path      int     true  "顧客ID"
 // @Success      200          {string}  string  "顧客同期完了"
-// @Failure      400          {string}  string  "リクエストが不正です"
-// @Failure      404          {string}  string  "顧客が見つかりません"
-// @Failure      500          {string}  string  "内部サーバーエラー"
 // @Router       /api/sync/{customer_id} [post]
 func (h *APIHandler) SyncOne(c echo.Context) error {
 	customerID := c.Param("customer_id")
@@ -76,10 +74,7 @@ func (h *APIHandler) SyncOne(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        customer_id  path      int     true  "顧客ID"
-// @Success      200          {object}  interface{}  "顧客情報"
-// @Failure      400          {string}  string  "リクエストが不正です"
-// @Failure      404          {string}  string  "顧客が見つかりません"
-// @Failure      500          {string}  string  "内部サーバーエラー"
+// @Success      200          {object}  res.Customer  "顧客情報"
 // @Router       /api/customers/{customer_id} [get]
 func (h *APIHandler) GetCustomer(c echo.Context) error {
 	customerIDStr := c.Param("customer_id")
@@ -105,10 +100,7 @@ func (h *APIHandler) GetCustomer(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        customer_id  path      int     true  "顧客ID"
-// @Success      200          {object}  interface{}  "Instagramアカウント情報"
-// @Failure      400          {string}  string  "リクエストが不正です"
-// @Failure      404          {string}  string  "顧客が見つかりません"
-// @Failure      500          {string}  string  "内部サーバーエラー"
+// @Success      200          {object}  res.InstagramAccounts  "Instagramアカウント情報"
 // @Router       /api/instagram/{customer_id} [get]
 func (h *APIHandler) GetInstagramAccount(c echo.Context) error {
 	customerIDStr := c.Param("customer_id")
@@ -133,10 +125,7 @@ func (h *APIHandler) GetInstagramAccount(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        customer_id  path      int     true  "顧客ID"
-// @Success      200          {object}  interface{}  "同期結果"
-// @Failure      400          {string}  string  "リクエストが不正です"
-// @Failure      404          {string}  string  "顧客が見つかりません"
-// @Failure      500          {string}  string  "内部サーバーエラー"
+// @Success      200          {object}  res.InstagramAccounts  "Instagramアカウント情報"
 // @Router       /api/instagram/sync/{customer_id} [post]
 func (h *APIHandler) SyncInstagramAccount(c echo.Context) error {
 	customerIDStr := c.Param("customer_id")

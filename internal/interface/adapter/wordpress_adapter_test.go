@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/zuxt268/homing/internal/config"
 	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
@@ -32,7 +31,7 @@ func TestWordpressAdapter_Post(t *testing.T) {
 
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
-	adapter := NewWordpressAdapter(client, config.Env.AdminEmail, config.Env.SecretPhrase)
+	adapter := NewWordpressAdapter(client)
 	posted, err := adapter.Post(context.Background(), external.WordpressPostInput{
 		Post:            post,
 		FeaturedMediaID: 0,
@@ -48,7 +47,7 @@ func TestUploadFile(t *testing.T) {
 	customer := domain.Customer{WordpressUrl: "hp-standard.moe"}
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
-	adapter := NewWordpressAdapter(client, config.Env.AdminEmail, config.Env.SecretPhrase)
+	adapter := NewWordpressAdapter(client)
 
 	resp, err := adapter.FileUpload(context.Background(), external.WordpressFileUploadInput{
 		Path:     "/var/folders/3t/gfwjqksn6tqfj5kvg70dzlwr0000gn/T/homing_download_1656907455/548865242_17916787776176467_8381450328613983170_n.jpg",
