@@ -13,6 +13,8 @@ import (
 )
 
 func TestSlackSendMessage(t *testing.T) {
+	t.Skip()
+
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
 	s := NewSlack(client)

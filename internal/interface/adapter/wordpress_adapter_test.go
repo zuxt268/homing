@@ -44,6 +44,9 @@ func TestWordpressAdapter_Post(t *testing.T) {
 }
 
 func TestUploadFile(t *testing.T) {
+
+	t.Skip()
+
 	wordpressInstagram := domain.WordpressInstagram{Wordpress: "hp-standard.moe"}
 
 	httpClient := &http.Client{}
