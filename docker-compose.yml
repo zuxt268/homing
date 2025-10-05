@@ -1,6 +1,7 @@
 services:
   app:
     build:
+      context: .
       dockerfile: dockerfiles/Dockerfile
     networks:
       - shared-network
