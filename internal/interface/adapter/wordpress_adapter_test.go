@@ -27,15 +27,15 @@ func TestWordpressAdapter_Post(t *testing.T) {
 			},
 		},
 	}
-	customer := domain.Customer{WordpressUrl: "hp-standard.moe"}
+	wordpressInstagram := domain.WordpressInstagram{Wordpress: "hp-standard.moe"}
 
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
 	adapter := NewWordpressAdapter(client)
 	posted, err := adapter.Post(context.Background(), external.WordpressPostInput{
-		Post:            post,
-		FeaturedMediaID: 0,
-		Customer:        customer,
+		Post:               post,
+		FeaturedMediaID:    0,
+		WordpressInstagram: wordpressInstagram,
 	})
 	if err != nil {
 		t.Errorf("error posting %v", err)
@@ -44,14 +44,15 @@ func TestWordpressAdapter_Post(t *testing.T) {
 }
 
 func TestUploadFile(t *testing.T) {
-	customer := domain.Customer{WordpressUrl: "hp-standard.moe"}
+	wordpressInstagram := domain.WordpressInstagram{Wordpress: "hp-standard.moe"}
+
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
 	adapter := NewWordpressAdapter(client)
 
 	resp, err := adapter.FileUpload(context.Background(), external.WordpressFileUploadInput{
-		Path:     "/var/folders/3t/gfwjqksn6tqfj5kvg70dzlwr0000gn/T/homing_download_1656907455/548865242_17916787776176467_8381450328613983170_n.jpg",
-		Customer: customer,
+		Path:               "/var/folders/3t/gfwjqksn6tqfj5kvg70dzlwr0000gn/T/homing_download_1656907455/548865242_17916787776176467_8381450328613983170_n.jpg",
+		WordpressInstagram: wordpressInstagram,
 	})
 	if err != nil {
 		t.Errorf("error uploading %v", err)
