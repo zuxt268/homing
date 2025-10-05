@@ -53,14 +53,14 @@ type WordpressPostResponse struct {
 }
 
 type WordpressPostInput struct {
-	Customer        domain.Customer
-	FeaturedMediaID int
-	Post            domain.InstagramPost
+	WordpressInstagram domain.WordpressInstagram
+	FeaturedMediaID    int
+	Post               domain.InstagramPost
 }
 
 type WordpressFileUploadInput struct {
-	Path     string
-	Customer domain.Customer
+	Path               string
+	WordpressInstagram domain.WordpressInstagram
 }
 
 type WordpressFileUploadPayload struct {

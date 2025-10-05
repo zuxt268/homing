@@ -2,31 +2,30 @@ package usecase
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/interface/adapter"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
 	"github.com/zuxt268/homing/internal/interface/dto/model"
-	"github.com/zuxt268/homing/internal/interface/dto/res"
 	"github.com/zuxt268/homing/internal/interface/repository"
+	"github.com/zuxt268/homing/internal/interface/util"
 )
 
 type CustomerUsecase interface {
 	SyncAll(ctx context.Context) error
-	SyncOne(ctx context.Context, customerID int) error
-	SyncAccount(ctx context.Context, customerID int) (*res.InstagramAccounts, error)
-	GetCustomer(ctx context.Context, customerID int) (*res.Customer, error)
-	GetInstagramAccount(ctx context.Context, customerID int) (*res.InstagramAccounts, error)
+	SaveToken(ctx context.Context, token string) error
 }
 
 type customerUsecase struct {
-	fileDownloader   adapter.FileDownloader
-	instagramAdapter adapter.InstagramAdapter
-	slack            adapter.Slack
-	wordpressAdapter adapter.WordpressAdapter
-	customerRepo     repository.CustomerRepository
-	postRepo         repository.PostRepository
+	fileDownloader         adapter.FileDownloader
+	instagramAdapter       adapter.InstagramAdapter
+	slack                  adapter.Slack
+	wordpressAdapter       adapter.WordpressAdapter
+	postRepo               repository.PostRepository
+	wordpressInstagramRepo repository.WordpressInstagramRepository
+	tokenRepo              repository.TokenRepository
 }
 
 func NewCustomerUsecase(
@@ -34,16 +33,18 @@ func NewCustomerUsecase(
 	instagramAdapter adapter.InstagramAdapter,
 	slack adapter.Slack,
 	wordpressAdapter adapter.WordpressAdapter,
-	customerRepo repository.CustomerRepository,
 	postRepo repository.PostRepository,
+	wordpressInstagramRepo repository.WordpressInstagramRepository,
+	tokenRepo repository.TokenRepository,
 ) CustomerUsecase {
 	return &customerUsecase{
-		fileDownloader:   fileDownloader,
-		instagramAdapter: instagramAdapter,
-		slack:            slack,
-		wordpressAdapter: wordpressAdapter,
-		customerRepo:     customerRepo,
-		postRepo:         postRepo,
+		fileDownloader:         fileDownloader,
+		instagramAdapter:       instagramAdapter,
+		slack:                  slack,
+		wordpressAdapter:       wordpressAdapter,
+		postRepo:               postRepo,
+		wordpressInstagramRepo: wordpressInstagramRepo,
+		tokenRepo:              tokenRepo,
 	}
 }
 
@@ -52,54 +53,58 @@ const template = `<@U04P797HYPM>
 顧客 id=%d, name=%s`
 
 func (u *customerUsecase) SyncAll(ctx context.Context) error {
-	customers, err := u.customerRepo.FindAllCustomers(ctx, repository.CustomerFilter{})
+	wiList, err := u.wordpressInstagramRepo.FindAll(ctx, repository.WordpressInstagramFilter{})
 	if err != nil {
 		return err
 	}
-	for _, customer := range customers {
-		err := u.syncOne(ctx, customer)
-		if err != nil {
-			_ = u.slack.Alert(ctx, err.Error(), *customer)
-		}
+
+	// 20件の並列処理
+	semaphore := make(chan struct{}, 20)
+	var wg sync.WaitGroup
+
+	for _, wi := range wiList {
+		wg.Add(1)
+		semaphore <- struct{}{} // セマフォを取得
+
+		go func(wi *domain.WordpressInstagram) {
+			defer wg.Done()
+			defer func() { <-semaphore }() // セマフォを解放
+
+			err := u.syncOne(ctx, wi)
+			if err != nil {
+				_ = u.slack.Alert(ctx, err.Error(), *wi)
+			}
+		}(wi)
 	}
+
+	wg.Wait()
 	return nil
 }
 
-func (u *customerUsecase) SyncOne(ctx context.Context, customerID int) error {
-	customer, err := u.customerRepo.GetCustomer(ctx, customerID)
-	if err != nil {
-		return err
-	}
-	err = u.syncOne(ctx, customer)
-	if err != nil {
-		_ = u.slack.Alert(ctx, err.Error(), *customer)
-		return err
-	}
-	return nil
-}
-
-func (u *customerUsecase) syncOne(ctx context.Context, customer *domain.Customer) error {
+func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInstagram) error {
 
 	/*
-		アカウント毎に処理を行う
+		トークンを取得する
 	*/
-	for _, accountID := range customer.InstagramBusinessAccountID {
-		/*
-			インスタグラムから投稿を一覧で取得する
-		*/
-		posts, err := u.instagramAdapter.GetPosts(ctx, customer.FacebookToken, accountID)
+	token, err := u.tokenRepo.First(ctx)
+	if err != nil {
+		return err
+	}
+	/*
+		インスタグラムから投稿を一覧で取得する
+	*/
+	posts, err := u.instagramAdapter.GetPosts(ctx, token, wi.InstagramID)
+	if err != nil {
+		return err
+	}
+
+	/*
+		まだ連携していない投稿をWordpressに連携する
+	*/
+	for _, post := range posts {
+		err := u.transfer(ctx, wi, post)
 		if err != nil {
 			return err
-		}
-
-		/*
-			まだ連携していない投稿をWordpressに連携する
-		*/
-		for _, post := range posts {
-			err := u.transfer(ctx, customer, post)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
@@ -109,13 +114,14 @@ func (u *customerUsecase) syncOne(ctx context.Context, customer *domain.Customer
 	return u.fileDownloader.DeleteTempDirectory()
 }
 
-func (u *customerUsecase) transfer(ctx context.Context, customer *domain.Customer, post domain.InstagramPost) error {
+func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInstagram, post domain.InstagramPost) error {
 
 	/*
 		すでに投稿しているものかどうかをチェック
 	*/
 	exist, err := u.postRepo.ExistPost(ctx, repository.PostFilter{
-		MediaID: &post.ID,
+		CustomerID: util.Pointer(100000 + wi.ID),
+		MediaID:    &post.ID,
 	})
 	if err != nil {
 		return err
@@ -128,7 +134,7 @@ func (u *customerUsecase) transfer(ctx context.Context, customer *domain.Custome
 		連携開始日前のデータは連携しない
 	*/
 	instagramPost, _ := time.Parse("2006-01-02T15:04:05-0700", post.Timestamp)
-	if instagramPost.Before(*customer.StartDate) {
+	if instagramPost.Before(wi.StartDate) {
 		return nil
 	}
 
@@ -144,8 +150,8 @@ func (u *customerUsecase) transfer(ctx context.Context, customer *domain.Custome
 		ダウンロードしたファイルをWordpressにアップロード
 	*/
 	uploadResp, err := u.wordpressAdapter.FileUpload(ctx, external.WordpressFileUploadInput{
-		Path:     localPath,
-		Customer: *customer,
+		Path:               localPath,
+		WordpressInstagram: *wi,
 	})
 	if err != nil {
 		return err
@@ -155,9 +161,9 @@ func (u *customerUsecase) transfer(ctx context.Context, customer *domain.Custome
 		アップロードしたファイルをFeaturedに指定して、記事を投稿
 	*/
 	postResp, err := u.wordpressAdapter.Post(ctx, external.WordpressPostInput{
-		Customer:        *customer,
-		FeaturedMediaID: uploadResp.Id,
-		Post:            post,
+		WordpressInstagram: *wi,
+		FeaturedMediaID:    uploadResp.Id,
+		Post:               post,
 	})
 	if err != nil {
 		return err
@@ -168,59 +174,25 @@ func (u *customerUsecase) transfer(ctx context.Context, customer *domain.Custome
 	*/
 	err = u.postRepo.SavePost(ctx, &model.Post{
 		MediaID:       post.ID,
-		CustomerID:    customer.ID,
+		CustomerID:    100000 + wi.ID,
 		Timestamp:     post.Timestamp,
 		MediaURL:      post.MediaURL,
-		CreatedAt:     time.Now(),
 		Permalink:     post.Permalink,
 		WordpressLink: postResp.WordpressURL,
+		CreatedAt:     time.Now(),
 	})
 	if err != nil {
 		return err
 	}
+
+	/*
+		Slackに通知
+	*/
+	_ = u.slack.Success(ctx, wi, postResp.WordpressURL, post.Permalink)
+
 	return nil
 }
 
-func (u *customerUsecase) SyncAccount(ctx context.Context, customerID int) (*res.InstagramAccounts, error) {
-	customer, err := u.customerRepo.GetCustomer(ctx, customerID)
-	if err != nil {
-		return nil, err
-	}
-	account, err := u.instagramAdapter.GetAccount(ctx, customer.FacebookToken)
-	if err != nil {
-		return nil, err
-	}
-	ids := make([]string, 0, len(account))
-	names := make([]string, 0, len(account))
-	for _, a := range account {
-		ids = append(ids, a.InstagramAccountID)
-		names = append(names, a.InstagramAccountName)
-	}
-	customer.InstagramBusinessAccountID = ids
-	customer.InstagramBusinessAccountName = names
-	err = u.customerRepo.SaveCustomer(ctx, customer)
-	if err != nil {
-		return nil, err
-	}
-	return res.GetInstagramAccounts(account), nil
-}
-
-func (u *customerUsecase) GetInstagramAccount(ctx context.Context, customerID int) (*res.InstagramAccounts, error) {
-	customer, err := u.customerRepo.GetCustomer(ctx, customerID)
-	if err != nil {
-		return nil, err
-	}
-	account, err := u.instagramAdapter.GetAccount(ctx, customer.FacebookToken)
-	if err != nil {
-		return nil, err
-	}
-	return res.GetInstagramAccounts(account), nil
-}
-
-func (u *customerUsecase) GetCustomer(ctx context.Context, customerID int) (*res.Customer, error) {
-	customer, err := u.customerRepo.GetCustomer(ctx, customerID)
-	if err != nil {
-		return nil, err
-	}
-	return res.GetCustomer(customer), nil
+func (u *customerUsecase) SaveToken(ctx context.Context, token string) error {
+	return u.tokenRepo.DeleteInsert(ctx, token)
 }

@@ -12,8 +12,9 @@ import (
 )
 
 type Slack interface {
-	Alert(ctx context.Context, msg string, customer domain.Customer) error
+	Alert(ctx context.Context, msg string, wi domain.WordpressInstagram) error
 	SendMessage(ctx context.Context, payload external.SlackRequest) error
+	Success(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error
 }
 
 type slack struct {
@@ -29,11 +30,11 @@ func NewSlack(httpDriver driver.HttpDriver) Slack {
 const template = `[%s]
 顧客: id=%d, name=%s`
 
-func (s *slack) Alert(ctx context.Context, msg string, customer domain.Customer) error {
+func (s *slack) Alert(ctx context.Context, msg string, wi domain.WordpressInstagram) error {
 	sb := strings.Builder{}
 	sb.WriteString("｀｀｀")
 	sb.WriteString("<@U04P797HYPM>\n")
-	sb.WriteString(fmt.Sprintf(template, strings.TrimSpace(msg), customer.ID, customer.Name))
+	sb.WriteString(fmt.Sprintf(template, strings.TrimSpace(msg), wi.ID, wi.Name))
 	sb.WriteString("｀｀｀")
 	return s.SendMessage(ctx, external.SlackRequest{
 		Text:      sb.String(),
@@ -47,4 +48,23 @@ func (s *slack) SendMessage(ctx context.Context, payload external.SlackRequest) 
 		"Content-Type": "application/json",
 	})
 	return err
+}
+
+const templateSuccess = `[system user]
+id: %d
+name: %s
+wordpress: %s
+instagram: %s
+`
+
+func (s *slack) Success(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error {
+	sb := strings.Builder{}
+	sb.WriteString("｀｀｀")
+	sb.WriteString(fmt.Sprintf(templateSuccess, wi.ID, wi.Name, wordpressUrl, instagramUrl))
+	sb.WriteString("｀｀｀")
+	return s.SendMessage(ctx, external.SlackRequest{
+		Text:      sb.String(),
+		Username:  "homing",
+		IconEmoji: ":cat:",
+	})
 }

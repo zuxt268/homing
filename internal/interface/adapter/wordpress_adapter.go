@@ -56,13 +56,13 @@ func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostIn
 		Content:       in.Post.GetContent(),
 		FeaturedMedia: in.FeaturedMediaID,
 	}
-	apiKey := in.Customer.GenerateAPIKey(a.secretPhrase)
+	apiKey := in.WordpressInstagram.GenerateAPIKey(a.secretPhrase)
 
 	header, err := external.GetWordpressHeader(reqBody, apiKey)
 	if err != nil {
 		return nil, err
 	}
-	u, err := url.Parse(in.Customer.WordpressUrl)
+	u, err := url.Parse(in.WordpressInstagram.Wordpress)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (a *wordpressAdapter) FileUpload(ctx context.Context, in external.Wordpress
 	}()
 
 	fileName := filepath.Base(in.Path)
-	apiKey := in.Customer.GenerateAPIKey(a.secretPhrase)
+	apiKey := in.WordpressInstagram.GenerateAPIKey(a.secretPhrase)
 
 	// MIMEタイプを取得（Pythonの実装に合わせる）
 	mimeType := mime.TypeByExtension(filepath.Ext(fileName))
@@ -137,7 +137,7 @@ func (a *wordpressAdapter) FileUpload(ctx context.Context, in external.Wordpress
 	}()
 
 	// WordPressのアップロードURLを構築
-	u, err := url.Parse(in.Customer.WordpressUrl)
+	u, err := url.Parse(in.WordpressInstagram.Wordpress)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse WordPress URL: %w", err)
 	}

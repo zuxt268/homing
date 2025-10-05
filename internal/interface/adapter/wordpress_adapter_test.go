@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
@@ -13,12 +12,11 @@ import (
 )
 
 func TestWordpressAdapter_Post(t *testing.T) {
-	timestamp := time.Now()
 	post := domain.InstagramPost{
 		ID:        "18287747659283707",
 		Permalink: "https://www.instagram.com/p/DOdb8pEjyLU/",
 		Caption:   "DDDDD",
-		Timestamp: timestamp,
+		Timestamp: "2025-09-29T10:19:24+0000",
 		MediaType: "CAROUSEL_ALBUM",
 		MediaURL:  "https://scontent-nrt1-1.cdninstagram.com/v/t51.82787-15/545510899_17858706267498031_8817069271596986900_n.webp?stp=dst-jpg_e35_tt6&_nc_cat=106&ccb=1-7&_nc_sid=18de74&_nc_ohc=LyGPz35EmhwQ7kNvwEi04Dl&_nc_oc=Adkj6qPf6CGsJl7HSFGjiz3Nmodo2mtYH7lYEjrythPr0r-3L3RkYK-FD1isFLIqLug&_nc_zt=23&_nc_ht=scontent-nrt1-1.cdninstagram.com&edm=AL-3X8kEAAAA&_nc_gid=7xCyPmu21M4s5JlAQ9a9nw&oh=00_AfbXhH9SlsBe6LewpLQL2X4-fVJ-7cDTahiZxRBXpI8Bug&oe=68D056EE",
 		Children: []domain.InstagramPostChildren{

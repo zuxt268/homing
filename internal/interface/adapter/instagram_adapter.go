@@ -11,8 +11,7 @@ import (
 )
 
 type InstagramAdapter interface {
-	GetAccount(ctx context.Context, accessToken string) ([]domain.InstagramAccount, error)
-	GetPosts(ctx context.Context, accessToken string, accountID string) ([]domain.InstagramPost, error)
+	GetPosts(ctx context.Context, token, instagramID string) ([]domain.InstagramPost, error)
 }
 
 func NewInstagramAdapter(httpDriver driver.HttpDriver) InstagramAdapter {
@@ -46,12 +45,12 @@ func (a *instagramAdapter) GetAccount(ctx context.Context, accessToken string) (
 	return external.ToInstagramAccountEntity(&accountDto), nil
 }
 
-func (a *instagramAdapter) GetPosts(ctx context.Context, accessToken string, accountID string) ([]domain.InstagramPost, error) {
+func (a *instagramAdapter) GetPosts(ctx context.Context, token string, instagramID string) ([]domain.InstagramPost, error) {
 	req := &external.InstagramRequest{
-		AccessToken: accessToken,
+		AccessToken: token,
 		Fields:      "media{id,permalink,caption,timestamp,media_type,media_url,children{media_type,media_url}}",
 	}
-	endpoint := baseURL + "/" + accountID
+	endpoint := baseURL + "/" + instagramID
 	resp, err := a.httpDriver.Get(ctx, endpoint, req, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get posts: %w", err)

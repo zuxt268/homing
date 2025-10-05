@@ -9,3 +9,10 @@ test:
 
 swag:
 	swag init -g cmd/homing/main.go
+
+
+run:
+	docker compose down
+	docker compose build app
+	docker compose up --build -d
+	docker compose ps

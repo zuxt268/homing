@@ -28,7 +28,7 @@ type InstagramPostChildren struct {
 }
 
 func (i *InstagramPost) GetTitle() string {
-	return i.Caption
+	return strings.Split(i.Caption, "\n")[0]
 }
 
 func (i *InstagramPost) GetContent() string {
@@ -47,7 +47,6 @@ func (i *InstagramPost) GetContent() string {
 func (i *InstagramPost) getContentsHTML() string {
 	caption := i.Caption
 	contents := "<p>"
-	// 改行で分割してbrタグを追加
 	lines := strings.Split(caption, "\n")
 	for _, line := range lines {
 		contents += line + "<br>"

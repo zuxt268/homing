@@ -1,0 +1,14 @@
+services:
+  app:
+    build:
+      dockerfile: dockerfiles/Dockerfile
+    networks:
+      - shared-network
+    ports:
+      - "8090:8090"
+    env_file:
+      - .env
+
+networks:
+  shared-network:
+    external: true

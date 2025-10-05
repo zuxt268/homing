@@ -15,150 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/customers/{customer_id}": {
-            "get": {
-                "description": "指定された顧客IDの情報を取得します",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "customers"
-                ],
-                "summary": "顧客情報取得",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "顧客ID",
-                        "name": "customer_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "顧客情報",
-                        "schema": {}
-                    },
-                    "400": {
-                        "description": "リクエストが不正です",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "顧客が見つかりません",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "内部サーバーエラー",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/instagram/sync/{customer_id}": {
-            "post": {
-                "description": "指定された顧客のInstagramアカウントを同期します",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "instagram"
-                ],
-                "summary": "Instagramアカウント同期",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "顧客ID",
-                        "name": "customer_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "同期結果",
-                        "schema": {}
-                    },
-                    "400": {
-                        "description": "リクエストが不正です",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "顧客が見つかりません",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "内部サーバーエラー",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/instagram/{customer_id}": {
-            "get": {
-                "description": "指定された顧客のInstagramアカウント情報を取得します",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "instagram"
-                ],
-                "summary": "Instagramアカウント情報取得",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "顧客ID",
-                        "name": "customer_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Instagramアカウント情報",
-                        "schema": {}
-                    },
-                    "400": {
-                        "description": "リクエストが不正です",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "顧客が見つかりません",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "内部サーバーエラー",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/api/sync": {
             "post": {
                 "description": "全ての顧客のデータを同期します",
@@ -188,9 +44,8 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/sync/{customer_id}": {
+        "/api/token": {
             "post": {
-                "description": "指定された顧客IDのデータを同期します",
                 "consumes": [
                     "application/json"
                 ],
@@ -198,33 +53,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "sync"
+                    "token"
                 ],
-                "summary": "指定顧客データ同期",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "顧客ID",
-                        "name": "customer_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "トークンを保存します。",
                 "responses": {
                     "200": {
-                        "description": "顧客同期完了",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "リクエストが不正です",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "顧客が見つかりません",
+                        "description": "全顧客同期完了",
                         "schema": {
                             "type": "string"
                         }

@@ -28,6 +28,14 @@ func NewWordpressAdapter(httpDriver driver.HttpDriver) adapter.WordpressAdapter 
 	return adapter.NewWordpressAdapter(httpDriver)
 }
 
+func NewWordpressInstagramRepository(db *gorm.DB) repository.WordpressInstagramRepository {
+	return repository.NewWordpressInstagramRepository(db)
+}
+
+func NewTokenRepository(db *gorm.DB) repository.TokenRepository {
+	return repository.NewTokenRepository(db)
+}
+
 func NewFileDownloader() adapter.FileDownloader {
 	return adapter.NewFileDownloader()
 }
@@ -38,7 +46,8 @@ func NewCustomerUsecase(httpDriver driver.HttpDriver, db *gorm.DB) usecase.Custo
 		NewInstagramAdapter(httpDriver),
 		NewSlack(httpDriver),
 		NewWordpressAdapter(httpDriver),
-		NewCustomerRepository(db),
 		NewPostRepository(db),
+		NewWordpressInstagramRepository(db),
+		NewTokenRepository(db),
 	)
 }

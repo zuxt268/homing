@@ -27,9 +27,11 @@ Homingは、複数の顧客のInstagramビジネスアカウントから投稿�
 - ✅ WordPressへの画像/動画アップロードと記事投稿
 - ✅ 複数顧客・複数アカウント対応（マルチテナント）
 - ✅ 連携開始日以降の投稿のみ同期（柔軟なフィルタリング）
-- ✅ Slack通知によるエラーアラート
+- ✅ **20件並列処理による高速同期**（セマフォパターン）
+- ✅ Slack通知によるエラーアラート・成功通知
 - ✅ 重複投稿の防止（冪等性の保証）
 - ✅ Graceful Shutdown対応
+- ✅ Docker/Docker Compose対応
 
 ## 💡 技術的なアピールポイント
 
@@ -191,28 +193,40 @@ http://localhost:8090/swagger/index.html
 
 | メソッド | パス | 説明 |
 |---------|------|------|
-| POST | `/api/sync` | 全顧客の投稿を同期 |
-| POST | `/api/sync/:customer_id` | 特定顧客の投稿を同期 |
-| GET | `/api/customers/:customer_id` | 顧客情報を取得 |
-| GET | `/api/instagram/:customer_id` | Instagramアカウント情報を取得 |
-| POST | `/api/instagram/sync/:customer_id` | Instagramアカウント情報を同期 |
+| GET | `/api/healthcheck` | ヘルスチェック |
+| POST | `/api/sync` | 全顧客の投稿を同期（20件並列処理） |
+| POST | `/api/token` | Instagram APIトークンを保存 |
 
 ## データベーススキーマ
 
-### customers テーブル
+### wordpress_instagrams テーブル
 
-顧客情報を管理します。
+WordPress-Instagram連携情報を管理します。
 
 | カラム名 | 型 | 説明 |
 |---------|---|------|
 | id | INT | 主キー |
-| name | VARCHAR(100) | 顧客名 |
-| email | VARCHAR(100) | メールアドレス |
-| wordpress_url | VARCHAR(255) | WordPress URL |
-| facebook_token | TEXT | Facebook API トークン |
+| name | VARCHAR(255) | アカウント名 |
+| wordpress | VARCHAR(255) | WordPress URL |
+| instagram_id | VARCHAR(255) | Instagram ビジネスアカウントID |
+| memo | TEXT | メモ |
 | start_date | DATETIME | 連携開始日 |
-| instagram_business_account_id | JSON | Instagram ビジネスアカウントID配列 |
-| instagram_business_account_name | JSON | Instagram アカウント名配列 |
+| status | INT | ステータス（0=無効, 1=有効） |
+| delete_hash | TINYINT | 削除フラグ |
+| customer_type | INT | 顧客種別 |
+| update_at | DATETIME | 更新日時 |
+| create_at | DATETIME | 作成日時 |
+
+### token テーブル
+
+Instagram APIトークンを管理します。
+
+| カラム名 | 型 | 説明 |
+|---------|---|------|
+| id | INT | 主キー |
+| token | VARCHAR(500) | Instagram Graph APIトークン |
+| update_at | DATETIME | 更新日時 |
+| create_at | DATETIME | 作成日時 |
 
 ### posts テーブル
 
@@ -222,7 +236,7 @@ http://localhost:8090/swagger/index.html
 |---------|---|------|
 | id | INT | 主キー |
 | media_id | VARCHAR(45) | Instagram メディアID |
-| customer_id | INT | 顧客ID（外部キー） |
+| customer_id | INT | 顧客ID（wordpress_instagrams.id + 100000） |
 | timestamp | VARCHAR(45) | 投稿日時 |
 | media_url | MEDIUMTEXT | メディアURL |
 | permalink | VARCHAR(255) | Instagram パーマリンク |
@@ -334,6 +348,7 @@ mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST -P $DB_PORT -e "SHOW DATABASES;"
    - 連携開始日フィルターで、過去データの不要な連携を回避
 
 3. **パフォーマンス**
+   - **セマフォパターンによる20件並列処理**で大量アカウントの高速同期を実現
    - HTTPクライアントのタイムアウト設定
    - 一時ファイルの適切なクリーンアップ
 

@@ -166,7 +166,5 @@ func buildQueryParams(params any) (url.Values, error) {
 		}
 	}
 
-	fmt.Println(values)
-
 	return values, nil
 }
