@@ -5,15 +5,18 @@ import (
 )
 
 type Environment struct {
-	Address         string `envconfig:"ADDRESS"`
-	SecretPhrase    string `envconfig:"SECRET_PHRASE"`
-	AdminEmail      string `envconfig:"ADMIN_EMAIL"`
-	SlackWebhookUrl string `envconfig:"SLACK_WEBHOOK_URL"`
-	DBHost          string `envconfig:"DB_HOST"`
-	DBPort          string `envconfig:"DB_PORT" default:"3306"`
-	DBUser          string `envconfig:"DB_USER"`
-	DBPassword      string `envconfig:"DB_PASSWORD"`
-	DBName          string `envconfig:"DB_NAME"`
+	Address                string `envconfig:"ADDRESS"`
+	SecretPhrase           string `envconfig:"SECRET_PHRASE"`
+	AdminEmail             string `envconfig:"ADMIN_EMAIL"`
+	NoticeWebAppChannelUrl string `envconfig:"NOTICE_WEB_APP_CHANNEL_URL"`
+	PrjARootChannelUrl     string `envconfig:"PRJ_AROOT_CHANNEL_URL"`
+	DBHost                 string `envconfig:"DB_HOST"`
+	DBPort                 string `envconfig:"DB_PORT" default:"3306"`
+	DBUser                 string `envconfig:"DB_USER"`
+	DBPassword             string `envconfig:"DB_PASSWORD"`
+	DBName                 string `envconfig:"DB_NAME"`
+	ClientID               string `envconfig:"CLIENT_ID"`
+	ClientSecret           string `envconfig:"CLIENT_SECRET"`
 }
 
 var Env Environment

@@ -45,6 +45,32 @@ const docTemplate = `{
             }
         },
         "/api/token": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "token"
+                ],
+                "summary": "トークンを取得します。",
+                "responses": {
+                    "200": {
+                        "description": "トークン情報",
+                        "schema": {
+                            "$ref": "#/definitions/res.Token"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -58,7 +84,7 @@ const docTemplate = `{
                 "summary": "トークンを保存します。",
                 "responses": {
                     "200": {
-                        "description": "全顧客同期完了",
+                        "description": "更新完了",
                         "schema": {
                             "type": "string"
                         }
@@ -69,6 +95,19 @@ const docTemplate = `{
                             "type": "string"
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "res.Token": {
+            "type": "object",
+            "properties": {
+                "expire_at": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         }

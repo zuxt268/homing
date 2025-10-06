@@ -44,20 +44,37 @@ func (h *APIHandler) SyncAll(c echo.Context) error {
 // @Tags         token
 // @Accept       json
 // @Produce      json
-// @Success      200  {string}  string  "全顧客同期完了"
+// @Success      200  {string}  string  "更新完了"
 // @Failure      500  {string}  string  "内部サーバーエラー"
 // @Router       /api/token [post]
 func (h *APIHandler) SaveToken(c echo.Context) error {
 
-	var token req.Token
+	var token req.UpdateToken
 	if err := c.Bind(&token); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	err := h.customerUsecase.SaveToken(c.Request().Context(), token.Token)
+	err := h.customerUsecase.UpdateToken(c.Request().Context(), token)
 	if err != nil {
 		return handleError(c, err)
 	}
-	return c.JSON(http.StatusOK, "sync all")
+	return c.JSON(http.StatusOK, "ok")
+}
+
+// GetToken godoc
+// @Summary      トークンを取得します。
+// @Description
+// @Tags         token
+// @Accept       json
+// @Produce      json
+// @Success 200 {object} res.Token "トークン情報"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/token [get]
+func (h *APIHandler) GetToken(c echo.Context) error {
+	token, err := h.customerUsecase.GetToken(c.Request().Context())
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, token)
 }
 
 func handleError(c echo.Context, err error) error {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/zuxt268/homing/internal/config"
 	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
@@ -12,11 +13,14 @@ import (
 
 type InstagramAdapter interface {
 	GetPosts(ctx context.Context, token, instagramID string) ([]domain.InstagramPost, error)
+	DebugToken(ctx context.Context, userToken string) (*external.DebugTokenResponse, error)
 }
 
 func NewInstagramAdapter(httpDriver driver.HttpDriver) InstagramAdapter {
 	return &instagramAdapter{
-		httpDriver: httpDriver,
+		httpDriver:   httpDriver,
+		clientID:     config.Env.ClientID,
+		clientSecret: config.Env.ClientSecret,
 	}
 }
 
@@ -25,7 +29,9 @@ const (
 )
 
 type instagramAdapter struct {
-	httpDriver driver.HttpDriver
+	httpDriver   driver.HttpDriver
+	clientID     string
+	clientSecret string
 }
 
 func (a *instagramAdapter) GetAccount(ctx context.Context, accessToken string) ([]domain.InstagramAccount, error) {
@@ -60,4 +66,25 @@ func (a *instagramAdapter) GetPosts(ctx context.Context, token string, instagram
 		return nil, fmt.Errorf("failed to unmarshal instagram posts response: %w", err)
 	}
 	return external.ToInstagramPostsEntity(&postsDto), nil
+}
+
+func (a *instagramAdapter) DebugToken(ctx context.Context, userToken string) (*external.DebugTokenResponse, error) {
+	appToken := fmt.Sprintf("%s|%s", a.clientID, a.clientSecret)
+	endpoint := "https://graph.facebook.com/debug_token"
+	req := external.DebugTokenRequest{
+		AccessToken: appToken,
+		InputToken:  userToken,
+	}
+
+	respBody, err := a.httpDriver.Get(ctx, endpoint, req, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to debug token: %w", err)
+	}
+
+	var dto external.DebugTokenResponse
+	if err := json.Unmarshal(respBody, &dto); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal debug token response: %w", err)
+	}
+
+	return &dto, nil
 }

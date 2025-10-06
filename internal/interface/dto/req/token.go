@@ -1,5 +1,5 @@
 package req
 
-type Token struct {
+type UpdateToken struct {
 	Token string `json:"token" binding:"required"`
 }

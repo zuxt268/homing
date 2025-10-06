@@ -54,6 +54,8 @@ func Run() {
 	api.POST("/sync", apiHandler.SyncAll)
 	api.POST("/token", apiHandler.SaveToken)
 
+	api.GET("/token", apiHandler.GetToken)
+
 	srv := &http.Server{
 		Addr:    config.Env.Address,
 		Handler: e,

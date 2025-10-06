@@ -14,16 +14,21 @@ import (
 type Slack interface {
 	Alert(ctx context.Context, msg string, wi domain.WordpressInstagram) error
 	SendMessage(ctx context.Context, payload external.SlackRequest) error
+	SendTokenExpired(ctx context.Context) error
 	Success(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error
 }
 
 type slack struct {
-	httpDriver driver.HttpDriver
+	httpDriver             driver.HttpDriver
+	noticeWebAppChannelUrl string
+	prjARootChannelUrl     string
 }
 
 func NewSlack(httpDriver driver.HttpDriver) Slack {
 	return &slack{
-		httpDriver: httpDriver,
+		httpDriver:             httpDriver,
+		noticeWebAppChannelUrl: config.Env.NoticeWebAppChannelUrl,
+		prjARootChannelUrl:     config.Env.PrjARootChannelUrl,
 	}
 }
 
@@ -36,7 +41,7 @@ func (s *slack) Alert(ctx context.Context, msg string, wi domain.WordpressInstag
 	sb.WriteString("<@U04P797HYPM>\n")
 	sb.WriteString(fmt.Sprintf(template, strings.TrimSpace(msg), wi.ID, wi.Name))
 	sb.WriteString("｀｀｀")
-	return s.SendMessage(ctx, external.SlackRequest{
+	return s.noticeWebAppChannel(ctx, external.SlackRequest{
 		Text:      sb.String(),
 		Username:  "homing",
 		IconEmoji: ":cat:",
@@ -44,7 +49,26 @@ func (s *slack) Alert(ctx context.Context, msg string, wi domain.WordpressInstag
 }
 
 func (s *slack) SendMessage(ctx context.Context, payload external.SlackRequest) error {
-	_, err := s.httpDriver.Post(ctx, config.Env.SlackWebhookUrl, payload, map[string]string{
+	return s.noticeWebAppChannel(ctx, payload)
+}
+
+func (s *slack) SendTokenExpired(ctx context.Context) error {
+	return s.prjARootChannel(ctx, external.SlackRequest{
+		Text:      "トークンの有効期限が近づいています",
+		Username:  "homing",
+		IconEmoji: ":cat:",
+	})
+}
+
+func (s *slack) noticeWebAppChannel(ctx context.Context, payload external.SlackRequest) error {
+	_, err := s.httpDriver.Post(ctx, config.Env.NoticeWebAppChannelUrl, payload, map[string]string{
+		"Content-Type": "application/json",
+	})
+	return err
+}
+
+func (s *slack) prjARootChannel(ctx context.Context, payload external.SlackRequest) error {
+	_, err := s.httpDriver.Post(ctx, config.Env.PrjARootChannelUrl, payload, map[string]string{
 		"Content-Type": "application/json",
 	})
 	return err
@@ -62,7 +86,7 @@ func (s *slack) Success(ctx context.Context, wi *domain.WordpressInstagram, word
 	sb.WriteString("｀｀｀")
 	sb.WriteString(fmt.Sprintf(templateSuccess, wi.ID, wi.Name, wordpressUrl, instagramUrl))
 	sb.WriteString("｀｀｀")
-	return s.SendMessage(ctx, external.SlackRequest{
+	return s.noticeWebAppChannel(ctx, external.SlackRequest{
 		Text:      sb.String(),
 		Username:  "homing",
 		IconEmoji: ":cat:",
