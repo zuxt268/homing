@@ -13,6 +13,7 @@ import (
 
 type InstagramAdapter interface {
 	GetPosts(ctx context.Context, token, instagramID string) ([]domain.InstagramPost, error)
+	GetAccount(ctx context.Context, token, instagramID string) (*domain.InstagramAccount, error)
 	DebugToken(ctx context.Context, userToken string) (*external.DebugTokenResponse, error)
 }
 
@@ -34,23 +35,6 @@ type instagramAdapter struct {
 	clientSecret string
 }
 
-func (a *instagramAdapter) GetAccount(ctx context.Context, accessToken string) ([]domain.InstagramAccount, error) {
-	req := external.InstagramRequest{
-		AccessToken: accessToken,
-		Fields:      "accounts{name,instagram_business_account{name,username}}",
-	}
-	endpoint := baseURL + "/me"
-	respBody, err := a.httpDriver.Get(ctx, endpoint, req, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get instagram account: %w", err)
-	}
-	var accountDto external.InstagramGetAccountResponse
-	if err := json.Unmarshal(respBody, &accountDto); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal instagram account response: %w", err)
-	}
-	return external.ToInstagramAccountEntity(&accountDto), nil
-}
-
 func (a *instagramAdapter) GetPosts(ctx context.Context, token string, instagramID string) ([]domain.InstagramPost, error) {
 	req := &external.InstagramRequest{
 		AccessToken: token,
@@ -68,12 +52,12 @@ func (a *instagramAdapter) GetPosts(ctx context.Context, token string, instagram
 	return external.ToInstagramPostsEntity(&postsDto), nil
 }
 
-func (a *instagramAdapter) DebugToken(ctx context.Context, userToken string) (*external.DebugTokenResponse, error) {
+func (a *instagramAdapter) DebugToken(ctx context.Context, token string) (*external.DebugTokenResponse, error) {
 	appToken := fmt.Sprintf("%s|%s", a.clientID, a.clientSecret)
 	endpoint := "https://graph.facebook.com/debug_token"
 	req := external.DebugTokenRequest{
 		AccessToken: appToken,
-		InputToken:  userToken,
+		InputToken:  token,
 	}
 
 	respBody, err := a.httpDriver.Get(ctx, endpoint, req, nil)
@@ -87,4 +71,25 @@ func (a *instagramAdapter) DebugToken(ctx context.Context, userToken string) (*e
 	}
 
 	return &dto, nil
+}
+
+func (a *instagramAdapter) GetAccount(ctx context.Context, token, instagramID string) (*domain.InstagramAccount, error) {
+	req := external.InstagramRequest{
+		AccessToken: token,
+		Fields:      "name,username",
+	}
+	endpoint := baseURL + "/" + instagramID
+	respBody, err := a.httpDriver.Get(ctx, endpoint, req, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get instagram account: %w", err)
+	}
+	var accountDto external.InstagramAccount
+	if err := json.Unmarshal(respBody, &accountDto); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal instagram account response: %w", err)
+	}
+	return &domain.InstagramAccount{
+		InstagramAccountUserName: accountDto.Username,
+		InstagramAccountName:     accountDto.Name,
+		InstagramAccountID:       accountDto.ID,
+	}, nil
 }

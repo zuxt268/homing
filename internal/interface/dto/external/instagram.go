@@ -51,20 +51,6 @@ type InstagramGetPostsResponse struct {
 	Id string `json:"id"`
 }
 
-func ToInstagramAccountEntity(dto *InstagramGetAccountResponse) []domain.InstagramAccount {
-	accounts := make([]domain.InstagramAccount, 0, len(dto.Accounts.Data))
-	for _, account := range dto.Accounts.Data {
-		if account.InstagramBusinessAccount.Name != "" {
-			accounts = append(accounts, domain.InstagramAccount{
-				InstagramAccountName:     account.InstagramBusinessAccount.Name,
-				InstagramAccountID:       account.InstagramBusinessAccount.Id,
-				InstagramAccountUsername: account.InstagramBusinessAccount.Username,
-			})
-		}
-	}
-	return accounts
-}
-
 func ToInstagramPostsEntity(dto *InstagramGetPostsResponse) []domain.InstagramPost {
 	var posts []domain.InstagramPost
 	for _, post := range dto.Media.Data {

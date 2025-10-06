@@ -86,17 +86,399 @@
                     }
                 }
             }
+        },
+        "/api/wordpress-instagram": {
+            "get": {
+                "description": "Wordpress Instagramの一覧を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-instagram"
+                ],
+                "summary": "Wordpress Instagram一覧取得",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "オフセット",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "名前",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "WordPress URL",
+                        "name": "wordpress",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Instagram ID",
+                        "name": "instagram_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ステータス",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "削除ハッシュ",
+                        "name": "delete_hash",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "顧客タイプ",
+                        "name": "customer_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Wordpress Instagram一覧",
+                        "schema": {
+                            "$ref": "#/definitions/res.WordpressInstagramList"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Wordpress Instagramを作成します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-instagram"
+                ],
+                "summary": "Wordpress Instagram作成",
+                "parameters": [
+                    {
+                        "description": "作成データ",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/req.CreateWordpressInstagram"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "作成されたWordpress Instagram",
+                        "schema": {
+                            "$ref": "#/definitions/res.WordpressInstagram"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/wordpress-instagram/{id}": {
+            "get": {
+                "description": "Wordpress Instagramの詳細を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-instagram"
+                ],
+                "summary": "Wordpress Instagram詳細取得",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Wordpress Instagram ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Wordpress Instagram詳細",
+                        "schema": {
+                            "$ref": "#/definitions/res.WordpressInstagram"
+                        }
+                    },
+                    "404": {
+                        "description": "見つかりません",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Wordpress Instagramを更新します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-instagram"
+                ],
+                "summary": "Wordpress Instagram更新",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Wordpress Instagram ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新データ",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/req.UpdateWordpressInstagram"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新されたWordpress Instagram",
+                        "schema": {
+                            "$ref": "#/definitions/res.WordpressInstagram"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "見つかりません",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Wordpress Instagramを削除します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-instagram"
+                ],
+                "summary": "Wordpress Instagram削除",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Wordpress Instagram ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "削除成功",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "見つかりません",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "req.CreateWordpressInstagram": {
+            "type": "object",
+            "properties": {
+                "customer_type": {
+                    "type": "integer"
+                },
+                "delete_hash": {
+                    "type": "boolean"
+                },
+                "instagram_id": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "wordpress_domain": {
+                    "type": "string"
+                }
+            }
+        },
+        "req.UpdateWordpressInstagram": {
+            "type": "object",
+            "properties": {
+                "customer_type": {
+                    "type": "integer"
+                },
+                "delete_hash": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "instagram_id": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "wordpress_domain": {
+                    "type": "string"
+                }
+            }
+        },
         "res.Token": {
             "type": "object",
             "properties": {
-                "expire_at": {
+                "expired_at": {
                     "type": "string"
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "res.WordpressInstagram": {
+            "type": "object",
+            "properties": {
+                "customer_type": {
+                    "type": "integer"
+                },
+                "delete_hash": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "instagram_id": {
+                    "type": "string"
+                },
+                "instagram_name": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "wordpress_domain": {
+                    "type": "string"
+                },
+                "wordpress_site_title": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.WordpressInstagramList": {
+            "type": "object",
+            "properties": {
+                "instagram_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/res.WordpressInstagram"
+                    }
                 }
             }
         }

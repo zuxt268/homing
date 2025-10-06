@@ -8,7 +8,7 @@ import (
 type InstagramAccount struct {
 	InstagramAccountName     string
 	InstagramAccountID       string
-	InstagramAccountUsername string
+	InstagramAccountUserName string
 }
 
 type InstagramPost struct {

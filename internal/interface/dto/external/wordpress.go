@@ -72,3 +72,7 @@ type WordpressFileUploadResponse struct {
 	SourceUrl string `json:"source_url"`
 	MimeType  string `json:"mime_type"`
 }
+
+type WordpressTitleResponse struct {
+	Title string `json:"title"`
+}

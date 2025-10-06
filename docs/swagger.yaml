@@ -1,10 +1,82 @@
 definitions:
+  req.CreateWordpressInstagram:
+    properties:
+      customer_type:
+        type: integer
+      delete_hash:
+        type: boolean
+      instagram_id:
+        type: string
+      memo:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: integer
+      wordpress_domain:
+        type: string
+    type: object
+  req.UpdateWordpressInstagram:
+    properties:
+      customer_type:
+        type: integer
+      delete_hash:
+        type: boolean
+      id:
+        type: integer
+      instagram_id:
+        type: string
+      memo:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: integer
+      wordpress_domain:
+        type: string
+    type: object
   res.Token:
     properties:
-      expire_at:
+      expired_at:
         type: string
       token:
         type: string
+    type: object
+  res.WordpressInstagram:
+    properties:
+      customer_type:
+        type: integer
+      delete_hash:
+        type: boolean
+      id:
+        type: integer
+      instagram_id:
+        type: string
+      instagram_name:
+        type: string
+      memo:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: integer
+      wordpress_domain:
+        type: string
+      wordpress_site_title:
+        type: string
+    type: object
+  res.WordpressInstagramList:
+    properties:
+      instagram_list:
+        items:
+          $ref: '#/definitions/res.WordpressInstagram'
+        type: array
     type: object
 info:
   contact: {}
@@ -63,4 +135,184 @@ paths:
       summary: トークンを保存します。
       tags:
       - token
+  /api/wordpress-instagram:
+    get:
+      consumes:
+      - application/json
+      description: Wordpress Instagramの一覧を取得します
+      parameters:
+      - description: 取得件数
+        in: query
+        name: limit
+        type: integer
+      - description: オフセット
+        in: query
+        name: offset
+        type: integer
+      - description: 名前
+        in: query
+        name: name
+        type: string
+      - description: WordPress URL
+        in: query
+        name: wordpress
+        type: string
+      - description: Instagram ID
+        in: query
+        name: instagram_id
+        type: string
+      - description: ステータス
+        in: query
+        name: status
+        type: integer
+      - description: 削除ハッシュ
+        in: query
+        name: delete_hash
+        type: boolean
+      - description: 顧客タイプ
+        in: query
+        name: customer_type
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Wordpress Instagram一覧
+          schema:
+            $ref: '#/definitions/res.WordpressInstagramList'
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Wordpress Instagram一覧取得
+      tags:
+      - wordpress-instagram
+    post:
+      consumes:
+      - application/json
+      description: Wordpress Instagramを作成します
+      parameters:
+      - description: 作成データ
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/req.CreateWordpressInstagram'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 作成されたWordpress Instagram
+          schema:
+            $ref: '#/definitions/res.WordpressInstagram'
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Wordpress Instagram作成
+      tags:
+      - wordpress-instagram
+  /api/wordpress-instagram/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Wordpress Instagramを削除します
+      parameters:
+      - description: Wordpress Instagram ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 削除成功
+          schema:
+            type: string
+        "404":
+          description: 見つかりません
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Wordpress Instagram削除
+      tags:
+      - wordpress-instagram
+    get:
+      consumes:
+      - application/json
+      description: Wordpress Instagramの詳細を取得します
+      parameters:
+      - description: Wordpress Instagram ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Wordpress Instagram詳細
+          schema:
+            $ref: '#/definitions/res.WordpressInstagram'
+        "404":
+          description: 見つかりません
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Wordpress Instagram詳細取得
+      tags:
+      - wordpress-instagram
+    put:
+      consumes:
+      - application/json
+      description: Wordpress Instagramを更新します
+      parameters:
+      - description: Wordpress Instagram ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新データ
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/req.UpdateWordpressInstagram'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新されたWordpress Instagram
+          schema:
+            $ref: '#/definitions/res.WordpressInstagram'
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "404":
+          description: 見つかりません
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Wordpress Instagram更新
+      tags:
+      - wordpress-instagram
 swagger: "2.0"

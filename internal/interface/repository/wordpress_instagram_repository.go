@@ -13,7 +13,8 @@ type WordpressInstagramRepository interface {
 	Get(ctx context.Context, f WordpressInstagramFilter) (*domain.WordpressInstagram, error)
 	FindAll(ctx context.Context, f WordpressInstagramFilter) ([]*domain.WordpressInstagram, error)
 	Exists(ctx context.Context, f WordpressInstagramFilter) (bool, error)
-	Save(ctx context.Context, wordpressInstagram *domain.WordpressInstagram) error
+	Update(ctx context.Context, item *domain.WordpressInstagram, f WordpressInstagramFilter) error
+	Create(ctx context.Context, wordpressInstagram *domain.WordpressInstagram) error
 	Delete(ctx context.Context, f WordpressInstagramFilter) error
 }
 
@@ -34,15 +35,17 @@ func (r *wordpressInstagramRepository) Get(ctx context.Context, f WordpressInsta
 		return nil, err
 	}
 	return &domain.WordpressInstagram{
-		ID:           wi.ID,
-		Name:         wi.Name,
-		Wordpress:    wi.Wordpress,
-		InstagramID:  wi.InstagramID,
-		Memo:         wi.Memo,
-		StartDate:    wi.StartDate,
-		Status:       domain.Status(wi.Status),
-		DeleteHash:   wi.DeleteHash,
-		CustomerType: domain.CustomerType(wi.CustomerType),
+		ID:                 wi.ID,
+		Name:               wi.Name,
+		WordpressDomain:    wi.WordpressDomain,
+		WordpressSiteTitle: wi.WordpressSiteTitle,
+		InstagramID:        wi.InstagramID,
+		InstagramName:      wi.InstagramName,
+		Memo:               wi.Memo,
+		StartDate:          wi.StartDate,
+		Status:             domain.Status(wi.Status),
+		DeleteHash:         wi.DeleteHash,
+		CustomerType:       domain.CustomerType(wi.CustomerType),
 	}, nil
 }
 
@@ -55,15 +58,17 @@ func (r *wordpressInstagramRepository) FindAll(ctx context.Context, f WordpressI
 	wordpressInstagramList := make([]*domain.WordpressInstagram, 0, len(wiList))
 	for _, wi := range wiList {
 		wordpressInstagramList = append(wordpressInstagramList, &domain.WordpressInstagram{
-			ID:           wi.ID,
-			Name:         wi.Name,
-			Wordpress:    wi.Wordpress,
-			InstagramID:  wi.InstagramID,
-			Memo:         wi.Memo,
-			StartDate:    wi.StartDate,
-			Status:       domain.Status(wi.Status),
-			DeleteHash:   wi.DeleteHash,
-			CustomerType: domain.CustomerType(wi.CustomerType),
+			ID:                 wi.ID,
+			Name:               wi.Name,
+			WordpressDomain:    wi.WordpressDomain,
+			WordpressSiteTitle: wi.WordpressSiteTitle,
+			InstagramID:        wi.InstagramID,
+			InstagramName:      wi.InstagramName,
+			Memo:               wi.Memo,
+			StartDate:          wi.StartDate,
+			Status:             domain.Status(wi.Status),
+			DeleteHash:         wi.DeleteHash,
+			CustomerType:       domain.CustomerType(wi.CustomerType),
 		})
 	}
 	return wordpressInstagramList, nil
@@ -78,16 +83,34 @@ func (r *wordpressInstagramRepository) Exists(ctx context.Context, f WordpressIn
 	return len(wiList) > 0, nil
 }
 
-func (r *wordpressInstagramRepository) Save(ctx context.Context, wordpressInstagram *domain.WordpressInstagram) error {
-	return r.getDB(ctx).Save(&model.WordpressInstagram{
-		Name:         wordpressInstagram.Name,
-		Wordpress:    wordpressInstagram.Wordpress,
-		InstagramID:  wordpressInstagram.InstagramID,
-		Memo:         wordpressInstagram.Memo,
-		StartDate:    wordpressInstagram.StartDate,
-		Status:       int(wordpressInstagram.Status),
-		DeleteHash:   wordpressInstagram.DeleteHash,
-		CustomerType: int(wordpressInstagram.CustomerType),
+func (r *wordpressInstagramRepository) Update(ctx context.Context, wordpressInstagram *domain.WordpressInstagram, f WordpressInstagramFilter) error {
+	return f.Mod(r.getDB(ctx)).Updates(&model.WordpressInstagram{
+		ID:                 wordpressInstagram.ID,
+		Name:               wordpressInstagram.Name,
+		WordpressDomain:    wordpressInstagram.WordpressDomain,
+		WordpressSiteTitle: wordpressInstagram.WordpressSiteTitle,
+		InstagramID:        wordpressInstagram.InstagramID,
+		InstagramName:      wordpressInstagram.InstagramName,
+		Memo:               wordpressInstagram.Memo,
+		StartDate:          wordpressInstagram.StartDate,
+		Status:             int(wordpressInstagram.Status),
+		DeleteHash:         wordpressInstagram.DeleteHash,
+		CustomerType:       int(wordpressInstagram.CustomerType),
+	}).Error
+}
+
+func (r *wordpressInstagramRepository) Create(ctx context.Context, wordpressInstagram *domain.WordpressInstagram) error {
+	return r.getDB(ctx).Create(&model.WordpressInstagram{
+		Name:               wordpressInstagram.Name,
+		WordpressDomain:    wordpressInstagram.WordpressDomain,
+		WordpressSiteTitle: wordpressInstagram.WordpressSiteTitle,
+		InstagramID:        wordpressInstagram.InstagramID,
+		InstagramName:      wordpressInstagram.InstagramName,
+		Memo:               wordpressInstagram.Memo,
+		StartDate:          wordpressInstagram.StartDate,
+		Status:             int(wordpressInstagram.Status),
+		DeleteHash:         wordpressInstagram.DeleteHash,
+		CustomerType:       int(wordpressInstagram.CustomerType),
 	}).Error
 }
 
@@ -103,15 +126,19 @@ func (r *wordpressInstagramRepository) getDB(ctx context.Context) *gorm.DB {
 }
 
 type WordpressInstagramFilter struct {
-	ID           *int
-	Name         *string
-	Wordpress    *string
-	InstagramID  *string
-	Memo         *string
-	StartDate    *time.Time
-	Status       *int
-	DeleteHash   *bool
-	CustomerType *int
+	ID                 *int
+	Name               *string
+	WordpressDomain    *string
+	WordpressSiteTitle *string
+	InstagramID        *string
+	InstagramName      *string
+	Memo               *string
+	StartDate          *time.Time
+	Status             *int
+	DeleteHash         *bool
+	CustomerType       *int
+	Limit              *int
+	Offset             *int
 }
 
 func (p *WordpressInstagramFilter) Mod(db *gorm.DB) *gorm.DB {
@@ -121,11 +148,17 @@ func (p *WordpressInstagramFilter) Mod(db *gorm.DB) *gorm.DB {
 	if p.Name != nil {
 		db = db.Where("name = ?", *p.Name)
 	}
-	if p.Wordpress != nil {
-		db = db.Where("wordpress = ?", *p.Wordpress)
+	if p.WordpressDomain != nil {
+		db = db.Where("wordpress_domain = ?", *p.WordpressDomain)
+	}
+	if p.WordpressSiteTitle != nil {
+		db = db.Where("wordpress_site_title = ?", *p.WordpressSiteTitle)
 	}
 	if p.InstagramID != nil {
 		db = db.Where("instagram_id = ?", *p.InstagramID)
+	}
+	if p.InstagramName != nil {
+		db = db.Where("instagram_name = ?", *p.InstagramName)
 	}
 	if p.Memo != nil {
 		db = db.Where("memo = ?", *p.Memo)
@@ -141,6 +174,12 @@ func (p *WordpressInstagramFilter) Mod(db *gorm.DB) *gorm.DB {
 	}
 	if p.CustomerType != nil {
 		db = db.Where("customer_type = ?", *p.CustomerType)
+	}
+	if p.Limit != nil {
+		db = db.Limit(*p.Limit)
+		if p.Offset != nil {
+			db = db.Offset(*p.Offset)
+		}
 	}
 	return db
 }

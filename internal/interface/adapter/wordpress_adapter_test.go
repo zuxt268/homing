@@ -27,7 +27,7 @@ func TestWordpressAdapter_Post(t *testing.T) {
 			},
 		},
 	}
-	wordpressInstagram := domain.WordpressInstagram{Wordpress: "hp-standard.moe"}
+	wordpressInstagram := domain.WordpressInstagram{WordpressDomain: "hp-standard.moe"}
 
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
@@ -47,7 +47,7 @@ func TestUploadFile(t *testing.T) {
 
 	t.Skip()
 
-	wordpressInstagram := domain.WordpressInstagram{Wordpress: "hp-standard.moe"}
+	wordpressInstagram := domain.WordpressInstagram{WordpressDomain: "hp-standard.moe"}
 
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)

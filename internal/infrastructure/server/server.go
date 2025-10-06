@@ -19,7 +19,6 @@ import (
 	"github.com/zuxt268/homing/internal/di"
 	"github.com/zuxt268/homing/internal/infrastructure/database"
 	"github.com/zuxt268/homing/internal/infrastructure/driver"
-	"github.com/zuxt268/homing/internal/interface/handler"
 )
 
 func Run() {
@@ -31,8 +30,6 @@ func Run() {
 	httpClient := &http.Client{Timeout: time.Second * 10}
 	httpDriver := driver.NewClient(httpClient)
 
-	customerUsecase := di.NewCustomerUsecase(httpDriver, db)
-
 	e := echo.New()
 
 	// ミドルウェア設定
@@ -41,7 +38,7 @@ func Run() {
 	e.Use(middleware.Recover())
 
 	// ハンドラー初期化
-	apiHandler := handler.NewAPIHandler(customerUsecase)
+	apiHandler := di.NewHandler(httpDriver, db)
 
 	// Swagger ルート
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -53,8 +50,14 @@ func Run() {
 	})
 	api.POST("/sync", apiHandler.SyncAll)
 	api.POST("/token", apiHandler.SaveToken)
-
 	api.GET("/token", apiHandler.GetToken)
+
+	// WordPress Instagram ルート
+	api.GET("/wordpress-instagram", apiHandler.GetWordpressInstagramList)
+	api.GET("/wordpress-instagram/:id", apiHandler.GetWordpressInstagram)
+	api.POST("/wordpress-instagram", apiHandler.CreateWordpressInstagram)
+	api.PUT("/wordpress-instagram/:id", apiHandler.UpdateWordpressInstagram)
+	api.DELETE("/wordpress-instagram/:id", apiHandler.DeleteWordpressInstagram)
 
 	srv := &http.Server{
 		Addr:    config.Env.Address,

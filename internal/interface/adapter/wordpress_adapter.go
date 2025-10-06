@@ -27,6 +27,7 @@ import (
 )
 
 type WordpressAdapter interface {
+	GetTitle(ctx context.Context, domain string) (string, error)
 	Post(ctx context.Context, in external.WordpressPostInput) (*domain.Post, error)
 	FileUpload(ctx context.Context, in external.WordpressFileUploadInput) (*external.WordpressFileUploadResponse, error)
 }
@@ -49,6 +50,27 @@ type wordpressAdapter struct {
 	secretPhrase string
 }
 
+func (a *wordpressAdapter) GetTitle(ctx context.Context, domain string) (string, error) {
+	u, err := url.Parse(domain)
+	if err != nil {
+		return "", err
+	}
+	q := u.Query()
+	q.Set("rest_route", "/rodut/v1/title")
+	u.RawQuery = q.Encode()
+
+	endpoint := "https://" + u.String()
+	resp, err := a.httpDriver.Get(ctx, endpoint, nil, nil)
+	if err != nil {
+		return "", err
+	}
+	var titleResponse external.WordpressTitleResponse
+	if err := json.Unmarshal(resp, &titleResponse); err != nil {
+		return "", fmt.Errorf("JSONの変換に失敗: %w", err)
+	}
+	return titleResponse.Title, nil
+}
+
 func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostInput) (*domain.Post, error) {
 	reqBody := external.WordpressPostPayload{
 		Email:         a.adminEmail,
@@ -62,7 +84,7 @@ func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostIn
 	if err != nil {
 		return nil, err
 	}
-	u, err := url.Parse(in.WordpressInstagram.Wordpress)
+	u, err := url.Parse(in.WordpressInstagram.WordpressDomain)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +159,7 @@ func (a *wordpressAdapter) FileUpload(ctx context.Context, in external.Wordpress
 	}()
 
 	// WordPressのアップロードURLを構築
-	u, err := url.Parse(in.WordpressInstagram.Wordpress)
+	u, err := url.Parse(in.WordpressInstagram.WordpressDomain)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse WordPress URL: %w", err)
 	}

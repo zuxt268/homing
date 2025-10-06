@@ -3,8 +3,10 @@
 CREATE TABLE IF NOT EXISTS `wordpress_instagrams` (
     `id` int NOT NULL AUTO_INCREMENT,
     `name` varchar(255) NOT NULL,
-    `wordpress` varchar(255) NOT NULL,
+    `wordpress_domain` varchar(255) NOT NULL,
+    `wordpress_site_title` varchar(255) NOT NULL,
     `instagram_id` varchar(255) NOT NULL,
+    `instagram_name` varchar(255) NOT NULL,
     `memo` text,
     `start_date` datetime NOT NULL,
     `status` int NOT NULL DEFAULT '0',
