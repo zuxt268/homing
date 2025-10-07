@@ -65,6 +65,7 @@ func NewWordpressInstagramUsecase(httpDriver driver.HttpDriver, db *gorm.DB) use
 	return usecase.NewWordpressInstagramUsecase(
 		NewWordpressInstagramRepository(db),
 		NewTokenRepository(db),
+		NewPostRepository(db),
 		NewInstagramAdapter(httpDriver),
 		NewWordpressAdapter(httpDriver),
 	)

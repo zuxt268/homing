@@ -56,7 +56,7 @@ func (s *slack) SendTokenExpired(ctx context.Context) error {
 	return s.prjARootChannel(ctx, external.SlackRequest{
 		Text:      "トークンの有効期限が近づいています",
 		Username:  "homing",
-		IconEmoji: ":cat:",
+		IconEmoji: ":heavy_exclamation:",
 	})
 }
 
@@ -74,7 +74,7 @@ func (s *slack) prjARootChannel(ctx context.Context, payload external.SlackReque
 	return err
 }
 
-const templateSuccess = `[system user]
+const templateSuccess = `[SYSTEM USER]
 id: %d
 name: %s
 wordpress: %s

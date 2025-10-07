@@ -86,6 +86,23 @@ func (h *APIHandler) GetToken(c echo.Context) error {
 	return c.JSON(http.StatusOK, token)
 }
 
+// CheckToken godoc
+// @Summary      トークンの認証情報を取得する
+// @Description
+// @Tags         token
+// @Accept       json
+// @Produce      json
+// @Success 200 {object} string "ok"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/token/check [get]
+func (h *APIHandler) CheckToken(c echo.Context) error {
+	err := h.tokenUsecase.CheckToken(c.Request().Context())
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, "ok")
+}
+
 // GetWordpressInstagramList godoc
 // @Summary      Wordpress Instagram一覧取得
 // @Description  Wordpress Instagramの一覧を取得します
@@ -190,6 +207,10 @@ func (h *APIHandler) UpdateWordpressInstagram(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	body.ID = &id
+
+	fmt.Println("UpdateWordpressInstagram status", *body.Status)
+	fmt.Println("UpdateWordpressInstagram delete_hash", *body.DeleteHash)
+	fmt.Println("UpdateWordpressInstagram start_date", *body.StartDate)
 
 	item, err := h.wordpressInstagramUsecase.UpdateWordpressInstagram(c.Request().Context(), body)
 	if err != nil {

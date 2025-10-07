@@ -98,6 +98,34 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/token/check": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "token"
+                ],
+                "summary": "トークンの認証情報を取得する",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/wordpress-instagram": {
             "get": {
                 "description": "Wordpress Instagramの一覧を取得します",
@@ -433,6 +461,20 @@ const docTemplate = `{
                 }
             }
         },
+        "res.Post": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "instagram_url": {
+                    "type": "string"
+                },
+                "wordpress_url": {
+                    "type": "string"
+                }
+            }
+        },
         "res.Token": {
             "type": "object",
             "properties": {
@@ -467,6 +509,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/res.Post"
+                    }
                 },
                 "start_date": {
                     "type": "string"

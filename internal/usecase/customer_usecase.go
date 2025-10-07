@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"sort"
 	"sync"
 	"time"
 
@@ -52,7 +53,9 @@ const template = `<@U04P797HYPM>
 顧客 id=%d, name=%s`
 
 func (u *customerUsecase) SyncAll(ctx context.Context) error {
-	wiList, err := u.wordpressInstagramRepo.FindAll(ctx, repository.WordpressInstagramFilter{})
+	wiList, err := u.wordpressInstagramRepo.FindAll(ctx, repository.WordpressInstagramFilter{
+		Status: util.Pointer(1),
+	})
 	if err != nil {
 		return err
 	}
@@ -100,6 +103,9 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 	/*
 		まだ連携していない投稿をWordpressに連携する
 	*/
+	sort.Slice(posts, func(i, j int) bool {
+		return posts[i].Timestamp > posts[j].Timestamp
+	})
 	for _, post := range posts {
 		err := u.transfer(ctx, wi, post)
 		if err != nil {
@@ -191,4 +197,3 @@ func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInst
 
 	return nil
 }
-

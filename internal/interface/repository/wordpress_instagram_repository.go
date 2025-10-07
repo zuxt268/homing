@@ -46,6 +46,8 @@ func (r *wordpressInstagramRepository) Get(ctx context.Context, f WordpressInsta
 		Status:             domain.Status(wi.Status),
 		DeleteHash:         wi.DeleteHash,
 		CustomerType:       domain.CustomerType(wi.CustomerType),
+		UpdatedAt:          wi.UpdatedAt,
+		CreatedAt:          wi.UpdatedAt,
 	}, nil
 }
 
@@ -69,6 +71,8 @@ func (r *wordpressInstagramRepository) FindAll(ctx context.Context, f WordpressI
 			Status:             domain.Status(wi.Status),
 			DeleteHash:         wi.DeleteHash,
 			CustomerType:       domain.CustomerType(wi.CustomerType),
+			UpdatedAt:          wi.UpdatedAt,
+			CreatedAt:          wi.CreatedAt,
 		})
 	}
 	return wordpressInstagramList, nil
@@ -84,7 +88,8 @@ func (r *wordpressInstagramRepository) Exists(ctx context.Context, f WordpressIn
 }
 
 func (r *wordpressInstagramRepository) Update(ctx context.Context, wordpressInstagram *domain.WordpressInstagram, f WordpressInstagramFilter) error {
-	return f.Mod(r.getDB(ctx)).Updates(&model.WordpressInstagram{
+	// Save()を使用してゼロ値（false, 0, ""）も含めて全フィールドを更新
+	m := &model.WordpressInstagram{
 		ID:                 wordpressInstagram.ID,
 		Name:               wordpressInstagram.Name,
 		WordpressDomain:    wordpressInstagram.WordpressDomain,
@@ -96,7 +101,8 @@ func (r *wordpressInstagramRepository) Update(ctx context.Context, wordpressInst
 		Status:             int(wordpressInstagram.Status),
 		DeleteHash:         wordpressInstagram.DeleteHash,
 		CustomerType:       int(wordpressInstagram.CustomerType),
-	}).Error
+	}
+	return r.getDB(ctx).Omit("created_at").Save(m).Error
 }
 
 func (r *wordpressInstagramRepository) Create(ctx context.Context, wordpressInstagram *domain.WordpressInstagram) error {

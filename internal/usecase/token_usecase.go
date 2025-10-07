@@ -13,6 +13,7 @@ import (
 type TokenUsecase interface {
 	GetToken(ctx context.Context) (*res.Token, error)
 	UpdateToken(ctx context.Context, body req.UpdateToken) error
+	CheckToken(ctx context.Context) error
 }
 
 type tokenUsecase struct {
@@ -43,11 +44,6 @@ func (u *tokenUsecase) GetToken(ctx context.Context) (*res.Token, error) {
 		return nil, err
 	}
 	expiredAt := time.Unix(debug.Data.ExpiresAt, 0)
-	tenDaysLater := time.Now().AddDate(0, 0, 10)
-
-	if tenDaysLater.After(expiredAt) {
-		_ = u.slack.SendTokenExpired(ctx)
-	}
 
 	return &res.Token{
 		Token:    token,
@@ -57,4 +53,22 @@ func (u *tokenUsecase) GetToken(ctx context.Context) (*res.Token, error) {
 
 func (u *tokenUsecase) UpdateToken(ctx context.Context, req req.UpdateToken) error {
 	return u.tokenRepo.DeleteInsert(ctx, req.Token)
+}
+
+func (u *tokenUsecase) CheckToken(ctx context.Context) error {
+	token, err := u.tokenRepo.First(ctx)
+	if err != nil {
+		return err
+	}
+	debug, err := u.instagramAdapter.DebugToken(ctx, token)
+	if err != nil {
+		return err
+	}
+	expiredAt := time.Unix(debug.Data.ExpiresAt, 0)
+	tenDaysLater := time.Now().AddDate(0, 0, 10)
+
+	if tenDaysLater.After(expiredAt) {
+		_ = u.slack.SendTokenExpired(ctx)
+	}
+	return nil
 }

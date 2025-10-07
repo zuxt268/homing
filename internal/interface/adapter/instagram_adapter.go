@@ -39,6 +39,7 @@ func (a *instagramAdapter) GetPosts(ctx context.Context, token string, instagram
 	req := &external.InstagramRequest{
 		AccessToken: token,
 		Fields:      "media{id,permalink,caption,timestamp,media_type,media_url,children{media_type,media_url}}",
+		Limit:       100,
 	}
 	endpoint := baseURL + "/" + instagramID
 	resp, err := a.httpDriver.Get(ctx, endpoint, req, nil)
@@ -77,6 +78,7 @@ func (a *instagramAdapter) GetAccount(ctx context.Context, token, instagramID st
 	req := external.InstagramRequest{
 		AccessToken: token,
 		Fields:      "name,username",
+		Limit:       100,
 	}
 	endpoint := baseURL + "/" + instagramID
 	respBody, err := a.httpDriver.Get(ctx, endpoint, req, nil)

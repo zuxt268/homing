@@ -74,8 +74,8 @@ func (a *wordpressAdapter) GetTitle(ctx context.Context, domain string) (string,
 func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostInput) (*domain.Post, error) {
 	reqBody := external.WordpressPostPayload{
 		Email:         a.adminEmail,
-		Title:         in.Post.GetTitle(),
-		Content:       in.Post.GetContent(),
+		Title:         in.Post.GetTitle(in.WordpressInstagram.DeleteHash),
+		Content:       in.Post.GetContent(in.WordpressInstagram.DeleteHash),
 		FeaturedMedia: in.FeaturedMediaID,
 	}
 	apiKey := in.WordpressInstagram.GenerateAPIKey(a.secretPhrase)

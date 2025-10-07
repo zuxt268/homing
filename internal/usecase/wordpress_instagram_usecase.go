@@ -8,6 +8,7 @@ import (
 	"github.com/zuxt268/homing/internal/interface/dto/req"
 	"github.com/zuxt268/homing/internal/interface/dto/res"
 	"github.com/zuxt268/homing/internal/interface/repository"
+	"github.com/zuxt268/homing/internal/interface/util"
 )
 
 type WordpressInstagramUsecase interface {
@@ -21,6 +22,7 @@ type WordpressInstagramUsecase interface {
 type wordpressInstagramUsecase struct {
 	wordpressInstagramRepo repository.WordpressInstagramRepository
 	tokenRepo              repository.TokenRepository
+	postRepo               repository.PostRepository
 	instagramAdapter       adapter.InstagramAdapter
 	wordpressAdapter       adapter.WordpressAdapter
 }
@@ -28,12 +30,14 @@ type wordpressInstagramUsecase struct {
 func NewWordpressInstagramUsecase(
 	wordpressInstagramRepo repository.WordpressInstagramRepository,
 	tokenRepo repository.TokenRepository,
+	postRepo repository.PostRepository,
 	instagramAdapter adapter.InstagramAdapter,
 	wordpressAdapter adapter.WordpressAdapter,
 ) WordpressInstagramUsecase {
 	return &wordpressInstagramUsecase{
 		wordpressInstagramRepo: wordpressInstagramRepo,
 		tokenRepo:              tokenRepo,
+		postRepo:               postRepo,
 		instagramAdapter:       instagramAdapter,
 		wordpressAdapter:       wordpressAdapter,
 	}
@@ -88,6 +92,23 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, i
 		return nil, err
 	}
 
+	posts, err := u.postRepo.GetPosts(ctx, repository.PostFilter{
+		CustomerID:           util.Pointer(100000 + wi.ID),
+		OrderByCreatedAtDesc: util.Pointer(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	respPosts := make([]res.Post, len(posts))
+	for i, post := range posts {
+		respPosts[i] = res.Post{
+			WordpressUrl: post.WordpressURL,
+			InstagramUrl: post.InstagramURL,
+			CreatedAt:    post.CreatedAt,
+		}
+	}
+
 	return &res.WordpressInstagram{
 		ID:                 wi.ID,
 		Name:               wi.Name,
@@ -100,6 +121,7 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, i
 		Status:             int(wi.Status),
 		DeleteHash:         wi.DeleteHash,
 		CustomerType:       int(wi.CustomerType),
+		Posts:              respPosts,
 	}, nil
 }
 

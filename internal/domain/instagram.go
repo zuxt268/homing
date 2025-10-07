@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -19,6 +20,8 @@ type InstagramPost struct {
 	MediaType string
 	MediaURL  string
 	Children  []InstagramPostChildren
+
+	DeleteHash bool
 }
 
 type InstagramPostChildren struct {
@@ -27,47 +30,70 @@ type InstagramPostChildren struct {
 	ID        string
 }
 
-func (i *InstagramPost) GetTitle() string {
-	return strings.Split(i.Caption, "\n")[0]
+func (i *InstagramPost) GetTitle(deleteHash bool) string {
+	caption := i.Caption
+	if deleteHash {
+		caption = removeHashtags(caption)
+	}
+	for _, w := range strings.Split(caption, "\n") {
+		if strings.TrimSpace(w) == "" {
+			continue
+		}
+		return w
+	}
+	return " "
 }
 
-func (i *InstagramPost) GetContent() string {
+func (i *InstagramPost) GetContent(deleteHash bool) string {
 	switch i.MediaType {
 	case "IMAGE":
-		return i.getHTMLForImage()
+		return i.getHTMLForImage(deleteHash)
 	case "VIDEO":
-		return i.getHTMLForVideo()
+		return i.getHTMLForVideo(deleteHash)
 	case "CAROUSEL_ALBUM":
-		return i.getHTMLForCarousel()
+		return i.getHTMLForCarousel(deleteHash)
 	default:
-		return i.getContentsHTML()
+		return i.getContentsHTML(deleteHash)
 	}
 }
 
-func (i *InstagramPost) getContentsHTML() string {
+func (i *InstagramPost) getContentsHTML(deleteHash bool) string {
 	caption := i.Caption
+	// captionから#のタグ（#からスペースまたは改行まで）を削除
+	if deleteHash {
+		caption = removeHashtags(caption)
+	}
+
 	contents := "<p>"
 	lines := strings.Split(caption, "\n")
 	for _, line := range lines {
+		// 空行はスキップしない（改行を保持）
 		contents += line + "<br>"
 	}
 	contents += "</p>"
 	return contents
 }
 
-func (i *InstagramPost) getHTMLForImage() string {
+// removeHashtags はキャプションからハッシュタグを削除する
+func removeHashtags(text string) string {
+	re := regexp.MustCompile(`#\S+`)
+	result := re.ReplaceAllString(text, "")
+	return strings.TrimSpace(result)
+}
+
+func (i *InstagramPost) getHTMLForImage(deleteHash bool) string {
 	imageHTML := fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='margin: 0 auto;' width='500px' height='500px'/></div>", i.MediaURL)
-	imageHTML += i.getContentsHTML()
+	imageHTML += i.getContentsHTML(deleteHash)
 	return imageHTML
 }
 
-func (i *InstagramPost) getHTMLForVideo() string {
+func (i *InstagramPost) getHTMLForVideo(deleteHash bool) string {
 	videoHTML := fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='margin: 0 auto;' width='500px' height='500px' controls>Sorry, your browser does not support embedded videos.</video></div>", i.MediaURL)
-	videoHTML += i.getContentsHTML()
+	videoHTML += i.getContentsHTML(deleteHash)
 	return videoHTML
 }
 
-func (i *InstagramPost) getHTMLForCarousel() string {
+func (i *InstagramPost) getHTMLForCarousel(deleteHash bool) string {
 	html := "<div class='a-root-wordpress-instagram-slider'>"
 	for _, child := range i.Children {
 		if child.MediaType == "IMAGE" {
@@ -77,6 +103,6 @@ func (i *InstagramPost) getHTMLForCarousel() string {
 		}
 	}
 	html += "</div>"
-	html += i.getContentsHTML()
+	html += i.getContentsHTML(deleteHash)
 	return html
 }

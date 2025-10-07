@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/interface/dto/model"
 	"gorm.io/gorm"
 )
@@ -10,6 +11,7 @@ import (
 type PostRepository interface {
 	ExistPost(ctx context.Context, filter PostFilter) (bool, error)
 	SavePost(ctx context.Context, post *model.Post) error
+	GetPosts(ctx context.Context, filter PostFilter) ([]domain.Post, error)
 }
 
 type postRepository struct {
@@ -17,13 +19,14 @@ type postRepository struct {
 }
 
 type PostFilter struct {
-	ID            *int
-	MediaID       *string
-	CustomerID    *int
-	Timestamp     *string
-	MediaURL      *string
-	Permalink     *string
-	WordpressLink *string
+	ID                   *int
+	MediaID              *string
+	CustomerID           *int
+	Timestamp            *string
+	MediaURL             *string
+	Permalink            *string
+	WordpressLink        *string
+	OrderByCreatedAtDesc *bool
 }
 
 func (p *PostFilter) Mod(db *gorm.DB) *gorm.DB {
@@ -48,7 +51,9 @@ func (p *PostFilter) Mod(db *gorm.DB) *gorm.DB {
 	if p.WordpressLink != nil {
 		db = db.Where("wordpress_link = ?", *p.WordpressLink)
 	}
-
+	if p.OrderByCreatedAtDesc != nil {
+		db = db.Order("created_at desc")
+	}
 	return db
 }
 
@@ -70,4 +75,22 @@ func (r *postRepository) ExistPost(ctx context.Context, filter PostFilter) (bool
 
 func (r *postRepository) SavePost(ctx context.Context, post *model.Post) error {
 	return r.db.WithContext(ctx).Create(post).Error
+}
+
+func (r *postRepository) GetPosts(ctx context.Context, filter PostFilter) ([]domain.Post, error) {
+	var posts []*model.Post
+	err := filter.Mod(r.db).WithContext(ctx).Find(&posts).Error
+	if err != nil {
+		return nil, err
+	}
+	result := make([]domain.Post, len(posts))
+	for i, post := range posts {
+		result[i] = domain.Post{
+			ID:           post.ID,
+			WordpressURL: post.WordpressLink,
+			InstagramURL: post.Permalink,
+			CreatedAt:    post.CreatedAt,
+		}
+	}
+	return result, nil
 }

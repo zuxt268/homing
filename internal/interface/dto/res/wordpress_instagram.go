@@ -18,4 +18,11 @@ type WordpressInstagram struct {
 	Status             int       `json:"status"`
 	DeleteHash         bool      `json:"delete_hash"`
 	CustomerType       int       `json:"customer_type"`
+	Posts              []Post    `json:"posts"`
+}
+
+type Post struct {
+	WordpressUrl string    `json:"wordpress_url"`
+	InstagramUrl string    `json:"instagram_url"`
+	CreatedAt    time.Time `json:"created_at"`
 }

@@ -16,8 +16,8 @@ type WordpressInstagram struct {
 	Status             int       `gorm:"column:status"`
 	DeleteHash         bool      `gorm:"column:delete_hash"`
 	CustomerType       int       `gorm:"column:customer_type"`
-	UpdateAt           time.Time `gorm:"column:update_at;autoUpdateTime"`
-	CreateAt           time.Time `gorm:"column:create_at;autoCreateTime"`
+	UpdatedAt          time.Time `gorm:"column:updated_at;autoUpdateTime"`
+	CreatedAt          time.Time `gorm:"column:created_at;autoCreateTime"`
 }
 
 func (*WordpressInstagram) TableName() string {

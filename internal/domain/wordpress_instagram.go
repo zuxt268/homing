@@ -18,6 +18,8 @@ type WordpressInstagram struct {
 	Status             Status
 	DeleteHash         bool
 	CustomerType       CustomerType
+	UpdatedAt          time.Time
+	CreatedAt          time.Time
 }
 
 func (c *WordpressInstagram) GenerateAPIKey(secretPhrase string) string {

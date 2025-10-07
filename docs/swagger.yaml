@@ -39,6 +39,15 @@ definitions:
       wordpress_domain:
         type: string
     type: object
+  res.Post:
+    properties:
+      created_at:
+        type: string
+      instagram_url:
+        type: string
+      wordpress_url:
+        type: string
+    type: object
   res.Token:
     properties:
       expired_at:
@@ -62,6 +71,10 @@ definitions:
         type: string
       name:
         type: string
+      posts:
+        items:
+          $ref: '#/definitions/res.Post'
+        type: array
       start_date:
         type: string
       status:
@@ -133,6 +146,24 @@ paths:
           schema:
             type: string
       summary: トークンを保存します。
+      tags:
+      - token
+  /api/token/check:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: トークンの認証情報を取得する
       tags:
       - token
   /api/wordpress-instagram:

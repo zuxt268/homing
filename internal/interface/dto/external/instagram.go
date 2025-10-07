@@ -7,6 +7,7 @@ import (
 type InstagramRequest struct {
 	AccessToken string `param:"access_token"`
 	Fields      string `param:"fields"`
+	Limit       int    `param:"limit"`
 }
 
 type InstagramGetAccountResponse struct {

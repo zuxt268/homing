@@ -41,8 +41,6 @@ func (c *httpDriver) Get(ctx context.Context, endpoint string, params any, heade
 		parsedURL.RawQuery = queryParams.Encode()
 	}
 
-	fmt.Println(parsedURL.String())
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, parsedURL.String(), nil)
 	if err != nil {
 		return nil, err
