@@ -100,7 +100,7 @@ func (r *wordpressInstagramRepository) Update(ctx context.Context, wordpressInst
 }
 
 func (r *wordpressInstagramRepository) Create(ctx context.Context, wordpressInstagram *domain.WordpressInstagram) error {
-	return r.getDB(ctx).Create(&model.WordpressInstagram{
+	m := model.WordpressInstagram{
 		Name:               wordpressInstagram.Name,
 		WordpressDomain:    wordpressInstagram.WordpressDomain,
 		WordpressSiteTitle: wordpressInstagram.WordpressSiteTitle,
@@ -111,7 +111,12 @@ func (r *wordpressInstagramRepository) Create(ctx context.Context, wordpressInst
 		Status:             int(wordpressInstagram.Status),
 		DeleteHash:         wordpressInstagram.DeleteHash,
 		CustomerType:       int(wordpressInstagram.CustomerType),
-	}).Error
+	}
+	if err := r.getDB(ctx).Create(&m).Error; err != nil {
+		return err
+	}
+	wordpressInstagram.ID = m.ID
+	return nil
 }
 
 func (r *wordpressInstagramRepository) Delete(ctx context.Context, f WordpressInstagramFilter) error {

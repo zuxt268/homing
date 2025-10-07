@@ -5,7 +5,7 @@ import (
 )
 
 type WordpressInstagram struct {
-	ID                 int       `gorm:"column:id;primaryKey"`
+	ID                 int       `gorm:"column:id;primaryKey;autoIncrement"`
 	Name               string    `gorm:"column:name"`
 	WordpressDomain    string    `gorm:"column:wordpress_domain"`
 	WordpressSiteTitle string    `gorm:"column:wordpress_site_title"`

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,9 +12,6 @@ import (
 )
 
 func TestWordpressInstagramRepository_Create(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
 	repo := NewWordpressInstagramRepository(db)
 	ctx := context.Background()
 
@@ -83,9 +81,6 @@ func TestWordpressInstagramRepository_Create(t *testing.T) {
 }
 
 func TestWordpressInstagramRepository_Get(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
 	repo := NewWordpressInstagramRepository(db)
 	ctx := context.Background()
 
@@ -147,9 +142,6 @@ func TestWordpressInstagramRepository_Get(t *testing.T) {
 }
 
 func TestWordpressInstagramRepository_Update(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
 	repo := NewWordpressInstagramRepository(db)
 	ctx := context.Background()
 
@@ -199,9 +191,6 @@ func TestWordpressInstagramRepository_Update(t *testing.T) {
 }
 
 func TestWordpressInstagramRepository_FindAll(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
 	repo := NewWordpressInstagramRepository(db)
 	ctx := context.Background()
 
@@ -307,9 +296,6 @@ func TestWordpressInstagramRepository_FindAll(t *testing.T) {
 }
 
 func TestWordpressInstagramRepository_Delete(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
 	repo := NewWordpressInstagramRepository(db)
 	ctx := context.Background()
 
@@ -341,9 +327,6 @@ func TestWordpressInstagramRepository_Delete(t *testing.T) {
 }
 
 func TestWordpressInstagramRepository_Exists(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	defer cleanup()
-
 	repo := NewWordpressInstagramRepository(db)
 	ctx := context.Background()
 
@@ -361,6 +344,7 @@ func TestWordpressInstagramRepository_Exists(t *testing.T) {
 		CustomerType:       1,
 	}
 	err := repo.Create(ctx, testWI)
+	fmt.Println(testWI.ID)
 	assert.NoError(t, err)
 
 	tests := []struct {
