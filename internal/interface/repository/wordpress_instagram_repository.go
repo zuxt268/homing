@@ -144,9 +144,13 @@ type WordpressInstagramFilter struct {
 	CustomerType       *int
 	Limit              *int
 	Offset             *int
+	All                *bool
 }
 
 func (p *WordpressInstagramFilter) Mod(db *gorm.DB) *gorm.DB {
+	if p.All != nil && *p.All {
+		return db.Where("1")
+	}
 	if p.ID != nil {
 		db = db.Where("id = ?", *p.ID)
 	}
