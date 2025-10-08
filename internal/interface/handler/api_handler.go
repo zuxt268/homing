@@ -116,7 +116,7 @@ func (h *APIHandler) GetToken(c echo.Context) error {
 // @Produce      json
 // @Success 200 {object} string "ok"
 // @Failure      500  {string}  string  "内部サーバーエラー"
-// @Router       /api/token/check [get]
+// @Router       /api/token/check [post]
 func (h *APIHandler) CheckToken(c echo.Context) error {
 	err := h.tokenUsecase.CheckToken(c.Request().Context())
 	if err != nil {

@@ -52,6 +52,7 @@ func Run() {
 	api.POST("/sync/:id", apiHandler.SyncOne)
 	api.POST("/token", apiHandler.SaveToken)
 	api.GET("/token", apiHandler.GetToken)
+	api.POST("/token/check", apiHandler.CheckToken)
 
 	// WordPress Instagram ルート
 	api.GET("/wordpress-instagram", apiHandler.GetWordpressInstagramList)
