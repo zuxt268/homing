@@ -1,6 +1,9 @@
 package config
 
 import (
+	"fmt"
+
+	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -27,6 +30,9 @@ const (
 )
 
 func init() {
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("No .env file found")
+	}
 	err := envconfig.Process("", &Env)
 	if err != nil {
 		panic(err)
