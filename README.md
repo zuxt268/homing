@@ -27,7 +27,7 @@ Homingは、複数の顧客のInstagramビジネスアカウントから投稿�
 - ✅ WordPressへの画像/動画アップロードと記事投稿
 - ✅ 複数顧客・複数アカウント対応（マルチテナント）
 - ✅ 連携開始日以降の投稿のみ同期（柔軟なフィルタリング）
-- ✅ **20件並列処理による高速同期**（セマフォパターン）
+- ✅ 20件並列処理による同期（セマフォパターン）
 - ✅ Slack通知によるエラーアラート・成功通知
 - ✅ 重複投稿の防止（冪等性の保証）
 - ✅ Graceful Shutdown対応
@@ -401,11 +401,9 @@ mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST -P $DB_PORT -e "SHOW DATABASES;"
 
 ## 🚀 今後の改善案
 
-- [ ] テストカバレッジの向上（目標: 80%以上）
-- [ ] CI/CDパイプラインの構築（GitHub Actions）
+- [ ] テストカバレッジの向上
 - [ ] ログ構造化とログレベル管理
 - [ ] メトリクス監視（Prometheus対応）
-- [x] Docker/Docker Compose対応
 - [ ] レート制限対策（指数バックオフ）
 - [ ] Webhook対応（Instagram投稿時の即座連携）
 
@@ -418,29 +416,3 @@ mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST -P $DB_PORT -e "SHOW DATABASES;"
 - **外部API連携数**: 3サービス（Instagram Graph API、WordPress REST API、Slack Webhook）
 - **エンドポイント数**: 10以上（同期、トークン管理、WordPress-Instagram連携CRUD）
 - **マイグレーションファイル数**: 5ファイル
-
-## 💼 想定されるユースケース
-
-### SaaS事業者向け
-- Instagram連携機能を持つCMS/マーケティングツールの開発
-- マルチテナント対応のソーシャルメディア管理ツール
-
-### Web制作会社向け
-- クライアントのWebサイト制作時の付加価値サービス
-- 運用代行サービスの自動化基盤
-
-### 企業のマーケティング部門向け
-- オウンドメディアとSNSの一元管理
-- コンテンツマーケティングの効率化
-
-## 📞 お問い合わせ
-
-本プロジェクトに関するご質問や、採用に関するお問い合わせは以下までご連絡ください。
-
-- Email: [your-email@example.com]
-- GitHub: [your-github-profile]
-- Portfolio: [your-portfolio-url]
-
----
-
-**このプロジェクトは、実用的なビジネス課題の解決と、モダンなGoアプリケーション開発のベストプラクティスの実践を目的として開発されました。**
