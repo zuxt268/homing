@@ -64,10 +64,11 @@ Homingは、複数の顧客のInstagramビジネスアカウントから投稿�
 - **API仕様書**: Swagger/OpenAPIによる自動生成
 - **ホットリロード**: Airによる開発効率向上
 - **統合テスト**: Testcontainersで実際のMySQLを使用したテスト
+- **Docker対応**: Docker ComposeによるコンテナベースのデプロイとMakefileによる自動化
 
 ### 5. コード品質
 
-- **総コード行数**: 2,130行（Go）
+- **総コード行数**: 4,500行以上（Go）
 - **テストカバレッジ**: リポジトリ層を中心にテスト実装
 - **Go標準スタイル**: gofmtに準拠
 
@@ -77,15 +78,31 @@ Homingは、複数の顧客のInstagramビジネスアカウントから投稿�
 
 ```
 internal/
-├── domain/          # ドメインモデル（Customer, Post, InstagramPost）
-├── usecase/         # ビジネスロジック（CustomerUsecase）
+├── domain/          # ドメインモデル（Customer, Post, WordpressInstagram, Instagram）
+├── usecase/         # ビジネスロジック
+│   ├── customer_usecase.go                # 顧客同期ロジック
+│   ├── token_usecase.go                   # トークン管理ロジック
+│   └── wordpress_instagram_usecase.go     # WordPress-Instagram連携管理
 ├── interface/       # 外部とのインターフェース
-│   ├── adapter/     # 外部API連携（Instagram, WordPress, Slack）
-│   ├── handler/     # HTTPハンドラー
+│   ├── adapter/     # 外部API連携
+│   │   ├── instagram_adapter.go           # Instagram Graph API
+│   │   ├── wordpress_adapter.go           # WordPress REST API
+│   │   ├── slack.go                       # Slack通知
+│   │   └── file_downloader.go             # ファイルダウンロード
+│   ├── handler/     # HTTPハンドラー（APIエンドポイント）
 │   ├── repository/  # データベースアクセス
-│   └── dto/         # データ転送オブジェクト
+│   │   ├── customer_repository.go
+│   │   ├── post_repository.go
+│   │   ├── token_repository.go
+│   │   └── wordpress_instagram_repository.go
+│   ├── dto/         # データ転送オブジェクト
+│   │   ├── req/     # リクエストDTO
+│   │   ├── res/     # レスポンスDTO
+│   │   ├── model/   # データベースモデル
+│   │   └── external/ # 外部API用DTO
+│   └── util/        # ユーティリティ関数
 ├── infrastructure/  # インフラ層
-│   ├── database/    # DB接続
+│   ├── database/    # DB接続・マイグレーション
 │   ├── driver/      # HTTPクライアント
 │   └── server/      # Echoサーバー設定
 ├── config/          # 環境変数管理
@@ -191,11 +208,27 @@ http://localhost:8090/swagger/index.html
 
 ### 主要エンドポイント
 
+#### 同期
 | メソッド | パス | 説明 |
 |---------|------|------|
-| GET | `/api/healthcheck` | ヘルスチェック |
 | POST | `/api/sync` | 全顧客の投稿を同期（20件並列処理） |
+| POST | `/api/sync/{id}` | 特定顧客の投稿を同期 |
+
+#### トークン管理
+| メソッド | パス | 説明 |
+|---------|------|------|
+| GET | `/api/token` | Instagram APIトークンを取得 |
 | POST | `/api/token` | Instagram APIトークンを保存 |
+| POST | `/api/token/check` | トークンの認証情報を確認 |
+
+#### WordPress-Instagram連携管理
+| メソッド | パス | 説明 |
+|---------|------|------|
+| GET | `/api/wordpress-instagram` | 連携情報一覧取得（ページング、フィルタリング対応） |
+| GET | `/api/wordpress-instagram/{id}` | 連携情報詳細取得 |
+| POST | `/api/wordpress-instagram` | 連携情報作成 |
+| PUT | `/api/wordpress-instagram/{id}` | 連携情報更新 |
+| DELETE | `/api/wordpress-instagram/{id}` | 連携情報削除 |
 
 ## データベーススキーマ
 
@@ -372,18 +405,19 @@ mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST -P $DB_PORT -e "SHOW DATABASES;"
 - [ ] CI/CDパイプラインの構築（GitHub Actions）
 - [ ] ログ構造化とログレベル管理
 - [ ] メトリクス監視（Prometheus対応）
-- [ ] Docker/Docker Compose対応
+- [x] Docker/Docker Compose対応
 - [ ] レート制限対策（指数バックオフ）
 - [ ] Webhook対応（Instagram投稿時の即座連携）
 
 ## 📊 プロジェクト統計
 
 - **開発期間**: [期間を記載]
-- **総コード行数**: 2,130行（Go）
-- **ファイル数**: 34ファイル
+- **総コード行数**: 4,500行以上（Go）
+- **ファイル数**: 47ファイル
 - **テストファイル数**: 7ファイル
-- **外部API連携数**: 3サービス
-- **エンドポイント数**: 5つ
+- **外部API連携数**: 3サービス（Instagram Graph API、WordPress REST API、Slack Webhook）
+- **エンドポイント数**: 10以上（同期、トークン管理、WordPress-Instagram連携CRUD）
+- **マイグレーションファイル数**: 5ファイル
 
 ## 💼 想定されるユースケース
 

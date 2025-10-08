@@ -1,8 +1,6 @@
 definitions:
   req.CreateWordpressInstagram:
     properties:
-      customer_type:
-        type: integer
       delete_hash:
         type: boolean
       instagram_id:
@@ -20,8 +18,6 @@ definitions:
     type: object
   req.UpdateWordpressInstagram:
     properties:
-      customer_type:
-        type: integer
       delete_hash:
         type: boolean
       id:
@@ -57,8 +53,6 @@ definitions:
     type: object
   res.WordpressInstagram:
     properties:
-      customer_type:
-        type: integer
       delete_hash:
         type: boolean
       id:
@@ -113,6 +107,25 @@ paths:
       summary: 全顧客データ同期
       tags:
       - sync
+  /api/sync/{id}:
+    post:
+      consumes:
+      - application/json
+      description: 全ての顧客のデータを同期します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 全顧客同期完了
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: 全顧客データ同期
+      tags:
+      - sync
   /api/token:
     get:
       consumes:
@@ -149,7 +162,7 @@ paths:
       tags:
       - token
   /api/token/check:
-    get:
+    post:
       consumes:
       - application/json
       produces:

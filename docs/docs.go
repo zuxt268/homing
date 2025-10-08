@@ -44,6 +44,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/sync/{id}": {
+            "post": {
+                "description": "全ての顧客のデータを同期します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sync"
+                ],
+                "summary": "全顧客データ同期",
+                "responses": {
+                    "200": {
+                        "description": "全顧客同期完了",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/token": {
             "get": {
                 "consumes": [
@@ -99,7 +128,7 @@ const docTemplate = `{
             }
         },
         "/api/token/check": {
-            "get": {
+            "post": {
                 "consumes": [
                     "application/json"
                 ],
@@ -403,9 +432,6 @@ const docTemplate = `{
         "req.CreateWordpressInstagram": {
             "type": "object",
             "properties": {
-                "customer_type": {
-                    "type": "integer"
-                },
                 "delete_hash": {
                     "type": "boolean"
                 },
@@ -432,9 +458,6 @@ const docTemplate = `{
         "req.UpdateWordpressInstagram": {
             "type": "object",
             "properties": {
-                "customer_type": {
-                    "type": "integer"
-                },
                 "delete_hash": {
                     "type": "boolean"
                 },
@@ -489,9 +512,6 @@ const docTemplate = `{
         "res.WordpressInstagram": {
             "type": "object",
             "properties": {
-                "customer_type": {
-                    "type": "integer"
-                },
                 "delete_hash": {
                     "type": "boolean"
                 },
