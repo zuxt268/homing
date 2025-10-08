@@ -86,7 +86,7 @@ func (s *slack) prjARootChannel(ctx context.Context, payload external.SlackReque
 }
 
 func (s *slack) noticeRpaChannel(ctx context.Context, payload external.SlackRequest) error {
-	_, err := s.httpDriver.Post(ctx, config.Env.PrjARootChannelUrl, payload, map[string]string{
+	_, err := s.httpDriver.Post(ctx, config.Env.NoticeRpaChannelUrl, payload, map[string]string{
 		"Content-Type": "application/json",
 	})
 	return err
