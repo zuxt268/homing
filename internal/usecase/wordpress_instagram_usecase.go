@@ -52,7 +52,6 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagramList(ctx context.Contex
 		InstagramName:      params.InstagramName,
 		Status:             params.Status,
 		DeleteHash:         params.DeleteHash,
-		CustomerType:       params.CustomerType,
 		Limit:              params.Limit,
 		Offset:             params.Offset,
 	}
@@ -75,7 +74,6 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagramList(ctx context.Contex
 			StartDate:          wi.StartDate,
 			Status:             int(wi.Status),
 			DeleteHash:         wi.DeleteHash,
-			CustomerType:       int(wi.CustomerType),
 		})
 	}
 
@@ -120,7 +118,6 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, i
 		StartDate:          wi.StartDate,
 		Status:             int(wi.Status),
 		DeleteHash:         wi.DeleteHash,
-		CustomerType:       int(wi.CustomerType),
 		Posts:              respPosts,
 	}, nil
 }
@@ -129,19 +126,22 @@ func (u *wordpressInstagramUsecase) CreateWordpressInstagram(ctx context.Context
 
 	token, err := u.tokenRepo.First(ctx)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrTokenNotFound
 	}
 
 	// システムユーザーで取得できるか確認
 	account, err := u.instagramAdapter.GetAccount(ctx, token, req.InstagramID)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInstagramConnection
+	}
+	if account.InstagramAccountUserName == "" {
+		return nil, domain.ErrInstagramConnection
 	}
 
 	// ワードプレスと疎通できるか
 	title, err := u.wordpressAdapter.GetTitle(ctx, req.WordpressDomain)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrWordpressConnection
 	}
 
 	wi := &domain.WordpressInstagram{
@@ -154,7 +154,6 @@ func (u *wordpressInstagramUsecase) CreateWordpressInstagram(ctx context.Context
 		StartDate:          req.StartDate,
 		Status:             domain.Status(req.Status),
 		DeleteHash:         req.DeleteHash,
-		CustomerType:       domain.CustomerType(req.CustomerType),
 	}
 
 	if err := u.wordpressInstagramRepo.Create(ctx, wi); err != nil {
@@ -172,7 +171,6 @@ func (u *wordpressInstagramUsecase) CreateWordpressInstagram(ctx context.Context
 		StartDate:          wi.StartDate,
 		Status:             int(wi.Status),
 		DeleteHash:         wi.DeleteHash,
-		CustomerType:       int(wi.CustomerType),
 	}, nil
 }
 
@@ -191,7 +189,7 @@ func (u *wordpressInstagramUsecase) UpdateWordpressInstagram(ctx context.Context
 		wi.WordpressDomain = *req.Wordpress
 		title, err := u.wordpressAdapter.GetTitle(ctx, wi.WordpressDomain)
 		if err != nil {
-			return nil, err
+			return nil, domain.ErrWordpressConnection
 		}
 		wi.WordpressSiteTitle = title
 	}
@@ -203,7 +201,10 @@ func (u *wordpressInstagramUsecase) UpdateWordpressInstagram(ctx context.Context
 		}
 		account, err := u.instagramAdapter.GetAccount(ctx, token, wi.InstagramID)
 		if err != nil {
-			return nil, err
+			return nil, domain.ErrInstagramConnection
+		}
+		if account.InstagramAccountUserName == "" {
+			return nil, domain.ErrInstagramConnection
 		}
 		wi.InstagramName = account.InstagramAccountUserName
 	}
@@ -218,9 +219,6 @@ func (u *wordpressInstagramUsecase) UpdateWordpressInstagram(ctx context.Context
 	}
 	if req.DeleteHash != nil {
 		wi.DeleteHash = *req.DeleteHash
-	}
-	if req.CustomerType != nil {
-		wi.CustomerType = domain.CustomerType(*req.CustomerType)
 	}
 
 	err = u.wordpressInstagramRepo.Update(ctx, wi, repository.WordpressInstagramFilter{
@@ -241,7 +239,6 @@ func (u *wordpressInstagramUsecase) UpdateWordpressInstagram(ctx context.Context
 		StartDate:          wi.StartDate,
 		Status:             int(wi.Status),
 		DeleteHash:         wi.DeleteHash,
-		CustomerType:       int(wi.CustomerType),
 	}, nil
 }
 

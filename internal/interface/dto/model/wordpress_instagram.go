@@ -15,7 +15,6 @@ type WordpressInstagram struct {
 	StartDate          time.Time `gorm:"column:start_date"`
 	Status             int       `gorm:"column:status"`
 	DeleteHash         bool      `gorm:"column:delete_hash"`
-	CustomerType       int       `gorm:"column:customer_type"`
 	UpdatedAt          time.Time `gorm:"column:updated_at;autoUpdateTime"`
 	CreatedAt          time.Time `gorm:"column:created_at;autoCreateTime"`
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/interface/dto/req"
+	"github.com/zuxt268/homing/internal/interface/dto/res"
 	_ "github.com/zuxt268/homing/internal/interface/dto/res"
 	"github.com/zuxt268/homing/internal/usecase"
 )
@@ -41,6 +42,27 @@ func NewAPIHandler(
 // @Router       /api/sync [post]
 func (h *APIHandler) SyncAll(c echo.Context) error {
 	err := h.customerUsecase.SyncAll(c.Request().Context())
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, "sync all")
+}
+
+// SyncOne godoc
+// @Summary      全顧客データ同期
+// @Description  全ての顧客のデータを同期します
+// @Tags         sync
+// @Accept       json
+// @Produce      json
+// @Success      200  {string}  string  "全顧客同期完了"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/sync/{id} [post]
+func (h *APIHandler) SyncOne(c echo.Context) error {
+	var id int
+	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	err := h.customerUsecase.SyncOne(c.Request().Context(), id)
 	if err != nil {
 		return handleError(c, err)
 	}
@@ -208,10 +230,6 @@ func (h *APIHandler) UpdateWordpressInstagram(c echo.Context) error {
 	}
 	body.ID = &id
 
-	fmt.Println("UpdateWordpressInstagram status", *body.Status)
-	fmt.Println("UpdateWordpressInstagram delete_hash", *body.DeleteHash)
-	fmt.Println("UpdateWordpressInstagram start_date", *body.StartDate)
-
 	item, err := h.wordpressInstagramUsecase.UpdateWordpressInstagram(c.Request().Context(), body)
 	if err != nil {
 		return handleError(c, err)
@@ -246,8 +264,14 @@ func (h *APIHandler) DeleteWordpressInstagram(c echo.Context) error {
 func handleError(c echo.Context, err error) error {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
-		return c.JSON(http.StatusNotFound, err.Error())
+		return c.JSON(http.StatusNotFound, res.ErrorResponse{Message: err.Error()})
+	case errors.Is(err, domain.ErrBadRequest):
+		return c.JSON(http.StatusBadRequest, res.ErrorResponse{Message: err.Error()})
+	case errors.Is(err, domain.ErrWordpressConnection):
+		return c.JSON(http.StatusBadRequest, res.ErrorResponse{Message: err.Error()})
+	case errors.Is(err, domain.ErrInstagramConnection):
+		return c.JSON(http.StatusBadRequest, res.ErrorResponse{Message: err.Error()})
 	default:
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, res.ErrorResponse{Message: err.Error()})
 	}
 }

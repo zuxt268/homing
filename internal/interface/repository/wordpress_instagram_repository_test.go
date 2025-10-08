@@ -32,7 +32,6 @@ func TestWordpressInstagramRepository_Create(t *testing.T) {
 				StartDate:          time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
 				Status:             1,
 				DeleteHash:         false,
-				CustomerType:       1,
 			},
 			wantErr: false,
 		},
@@ -48,7 +47,6 @@ func TestWordpressInstagramRepository_Create(t *testing.T) {
 				StartDate:          time.Date(2025, 2, 1, 0, 0, 0, 0, time.UTC),
 				Status:             0,
 				DeleteHash:         true,
-				CustomerType:       2,
 			},
 			wantErr: false,
 		},
@@ -75,7 +73,6 @@ func TestWordpressInstagramRepository_Create(t *testing.T) {
 			assert.Equal(t, tt.wi.Memo, got.Memo)
 			assert.Equal(t, tt.wi.Status, got.Status)
 			assert.Equal(t, tt.wi.DeleteHash, got.DeleteHash)
-			assert.Equal(t, tt.wi.CustomerType, got.CustomerType)
 		})
 	}
 }
@@ -95,7 +92,6 @@ func TestWordpressInstagramRepository_Get(t *testing.T) {
 		StartDate:          time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC),
 		Status:             1,
 		DeleteHash:         false,
-		CustomerType:       1,
 	}
 	err := repo.Create(ctx, testWI)
 	assert.NoError(t, err)
@@ -156,7 +152,6 @@ func TestWordpressInstagramRepository_Update(t *testing.T) {
 		StartDate:          time.Date(2025, 4, 1, 0, 0, 0, 0, time.UTC),
 		Status:             1,
 		DeleteHash:         false,
-		CustomerType:       1,
 	}
 	err := repo.Create(ctx, testWI)
 	assert.NoError(t, err)
@@ -170,7 +165,6 @@ func TestWordpressInstagramRepository_Update(t *testing.T) {
 		testWI.Memo = "Updated memo"
 		testWI.Status = 2
 		testWI.DeleteHash = true
-		testWI.CustomerType = 2
 
 		err := repo.Update(ctx, testWI, WordpressInstagramFilter{ID: &testWI.ID})
 		assert.NoError(t, err)
@@ -186,7 +180,6 @@ func TestWordpressInstagramRepository_Update(t *testing.T) {
 		assert.Equal(t, "Updated memo", got.Memo)
 		assert.Equal(t, domain.Status(2), got.Status)
 		assert.Equal(t, true, got.DeleteHash)
-		assert.Equal(t, domain.CustomerType(2), got.CustomerType)
 	})
 }
 
@@ -205,7 +198,6 @@ func TestWordpressInstagramRepository_Delete(t *testing.T) {
 		StartDate:          time.Date(2025, 5, 1, 0, 0, 0, 0, time.UTC),
 		Status:             1,
 		DeleteHash:         false,
-		CustomerType:       1,
 	}
 	err := repo.Create(ctx, testWI)
 	assert.NoError(t, err)
@@ -236,7 +228,6 @@ func TestWordpressInstagramRepository_Exists(t *testing.T) {
 		StartDate:          time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC),
 		Status:             1,
 		DeleteHash:         false,
-		CustomerType:       1,
 	}
 	err := repo.Create(ctx, testWI)
 	fmt.Println(testWI.ID)

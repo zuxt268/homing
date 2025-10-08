@@ -45,7 +45,6 @@ func (r *wordpressInstagramRepository) Get(ctx context.Context, f WordpressInsta
 		StartDate:          wi.StartDate,
 		Status:             domain.Status(wi.Status),
 		DeleteHash:         wi.DeleteHash,
-		CustomerType:       domain.CustomerType(wi.CustomerType),
 		UpdatedAt:          wi.UpdatedAt,
 		CreatedAt:          wi.UpdatedAt,
 	}, nil
@@ -70,7 +69,6 @@ func (r *wordpressInstagramRepository) FindAll(ctx context.Context, f WordpressI
 			StartDate:          wi.StartDate,
 			Status:             domain.Status(wi.Status),
 			DeleteHash:         wi.DeleteHash,
-			CustomerType:       domain.CustomerType(wi.CustomerType),
 			UpdatedAt:          wi.UpdatedAt,
 			CreatedAt:          wi.CreatedAt,
 		})
@@ -100,7 +98,6 @@ func (r *wordpressInstagramRepository) Update(ctx context.Context, wordpressInst
 		StartDate:          wordpressInstagram.StartDate,
 		Status:             int(wordpressInstagram.Status),
 		DeleteHash:         wordpressInstagram.DeleteHash,
-		CustomerType:       int(wordpressInstagram.CustomerType),
 	}
 	return r.getDB(ctx).Omit("created_at").Save(m).Error
 }
@@ -116,7 +113,6 @@ func (r *wordpressInstagramRepository) Create(ctx context.Context, wordpressInst
 		StartDate:          wordpressInstagram.StartDate,
 		Status:             int(wordpressInstagram.Status),
 		DeleteHash:         wordpressInstagram.DeleteHash,
-		CustomerType:       int(wordpressInstagram.CustomerType),
 	}
 	if err := r.getDB(ctx).Create(&m).Error; err != nil {
 		return err
@@ -147,7 +143,6 @@ type WordpressInstagramFilter struct {
 	StartDate          *time.Time
 	Status             *int
 	DeleteHash         *bool
-	CustomerType       *int
 	Limit              *int
 	Offset             *int
 	All                *bool
@@ -186,9 +181,6 @@ func (p *WordpressInstagramFilter) Mod(db *gorm.DB) *gorm.DB {
 	}
 	if p.DeleteHash != nil {
 		db = db.Where("delete_hash = ?", *p.DeleteHash)
-	}
-	if p.CustomerType != nil {
-		db = db.Where("customer_type = ?", *p.CustomerType)
 	}
 	if p.Limit != nil {
 		db = db.Limit(*p.Limit)

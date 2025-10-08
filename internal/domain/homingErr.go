@@ -12,6 +12,9 @@ var (
 	ErrForbidden           = errors.New("forbidden")
 	ErrInternalServerError = errors.New("internal server error")
 	ErrNotImplemented      = errors.New("not implemented")
+	ErrWordpressConnection = errors.New("ワードプレスとの疎通に失敗しました。ドメインを確認してください")
+	ErrInstagramConnection = errors.New("インスタグラムとの疎通に失敗しました。ID、トークンの権限を確認してください")
+	ErrTokenNotFound       = errors.New("トークンが登録されていません。")
 )
 
 type HomingErr struct {

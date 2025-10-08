@@ -49,6 +49,7 @@ func Run() {
 		return c.String(http.StatusOK, "OK")
 	})
 	api.POST("/sync", apiHandler.SyncAll)
+	api.POST("/sync/:id", apiHandler.SyncOne)
 	api.POST("/token", apiHandler.SaveToken)
 	api.GET("/token", apiHandler.GetToken)
 

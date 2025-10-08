@@ -16,6 +16,7 @@ import (
 
 type CustomerUsecase interface {
 	SyncAll(ctx context.Context) error
+	SyncOne(ctx context.Context, id int) error
 }
 
 type customerUsecase struct {
@@ -195,5 +196,20 @@ func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInst
 	*/
 	_ = u.slack.Success(ctx, wi, postResp.WordpressURL, post.Permalink)
 
+	return nil
+}
+
+func (u *customerUsecase) SyncOne(ctx context.Context, id int) error {
+	wi, err := u.wordpressInstagramRepo.Get(ctx, repository.WordpressInstagramFilter{
+		ID: util.Pointer(id),
+	})
+	if err != nil {
+		return err
+	}
+	err = u.syncOne(ctx, wi)
+	if err != nil {
+		_ = u.slack.Alert(ctx, err.Error(), *wi)
+		return err
+	}
 	return nil
 }

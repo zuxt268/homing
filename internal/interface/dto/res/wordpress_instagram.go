@@ -17,7 +17,6 @@ type WordpressInstagram struct {
 	StartDate          time.Time `json:"start_date"`
 	Status             int       `json:"status"`
 	DeleteHash         bool      `json:"delete_hash"`
-	CustomerType       int       `json:"customer_type"`
 	Posts              []Post    `json:"posts"`
 }
 
