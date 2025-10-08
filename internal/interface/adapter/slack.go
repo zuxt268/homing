@@ -15,6 +15,7 @@ type Slack interface {
 	Alert(ctx context.Context, msg string, wi domain.WordpressInstagram) error
 	SendMessage(ctx context.Context, payload external.SlackRequest) error
 	SendTokenExpired(ctx context.Context) error
+	SendHealthy(ctx context.Context) error
 	Success(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error
 }
 
@@ -22,6 +23,7 @@ type slack struct {
 	httpDriver             driver.HttpDriver
 	noticeWebAppChannelUrl string
 	prjARootChannelUrl     string
+	noticeRpaChannelUrl    string
 }
 
 func NewSlack(httpDriver driver.HttpDriver) Slack {
@@ -29,6 +31,7 @@ func NewSlack(httpDriver driver.HttpDriver) Slack {
 		httpDriver:             httpDriver,
 		noticeWebAppChannelUrl: config.Env.NoticeWebAppChannelUrl,
 		prjARootChannelUrl:     config.Env.PrjARootChannelUrl,
+		noticeRpaChannelUrl:    config.Env.NoticeRpaChannelUrl,
 	}
 }
 
@@ -52,11 +55,19 @@ func (s *slack) SendMessage(ctx context.Context, payload external.SlackRequest) 
 	return s.noticeWebAppChannel(ctx, payload)
 }
 
+func (s *slack) SendHealthy(ctx context.Context) error {
+	return s.noticeRpaChannel(ctx, external.SlackRequest{
+		Text:      "```healthy```",
+		Username:  "[A-Root Systemトークン]",
+		IconEmoji: ":panda_face:",
+	})
+}
+
 func (s *slack) SendTokenExpired(ctx context.Context) error {
 	return s.prjARootChannel(ctx, external.SlackRequest{
-		Text:      "トークンの有効期限が近づいています",
-		Username:  "homing",
-		IconEmoji: ":heavy_exclamation:",
+		Text:      "‼️トークンの有効期限が近づいています",
+		Username:  "[A-Root Systemトークン]",
+		IconEmoji: ":panda_face:",
 	})
 }
 
@@ -68,6 +79,13 @@ func (s *slack) noticeWebAppChannel(ctx context.Context, payload external.SlackR
 }
 
 func (s *slack) prjARootChannel(ctx context.Context, payload external.SlackRequest) error {
+	_, err := s.httpDriver.Post(ctx, config.Env.PrjARootChannelUrl, payload, map[string]string{
+		"Content-Type": "application/json",
+	})
+	return err
+}
+
+func (s *slack) noticeRpaChannel(ctx context.Context, payload external.SlackRequest) error {
 	_, err := s.httpDriver.Post(ctx, config.Env.PrjARootChannelUrl, payload, map[string]string{
 		"Content-Type": "application/json",
 	})

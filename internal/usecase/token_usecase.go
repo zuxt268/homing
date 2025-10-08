@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/zuxt268/homing/internal/interface/adapter"
-	"github.com/zuxt268/homing/internal/interface/dto/external"
 	"github.com/zuxt268/homing/internal/interface/dto/req"
 	"github.com/zuxt268/homing/internal/interface/dto/res"
 	"github.com/zuxt268/homing/internal/interface/repository"
@@ -71,11 +70,7 @@ func (u *tokenUsecase) CheckToken(ctx context.Context) error {
 	if tenDaysLater.After(expiredAt) {
 		_ = u.slack.SendTokenExpired(ctx)
 	} else {
-		_ = u.slack.SendMessage(ctx, external.SlackRequest{
-			Text:      "```healthy```",
-			Username:  "[A-Root Systemトークン]",
-			IconEmoji: ":パンダの顔:",
-		})
+		_ = u.slack.SendHealthy(ctx)
 	}
 	return nil
 }
