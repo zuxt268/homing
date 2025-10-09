@@ -146,6 +146,11 @@ type WordpressInstagramFilter struct {
 	Limit              *int
 	Offset             *int
 	All                *bool
+
+	PartialName            *string
+	PartialWordpressDomain *string
+	PartialInstagramName   *string
+	OrderByIDDesc          *bool
 }
 
 func (p *WordpressInstagramFilter) Mod(db *gorm.DB) *gorm.DB {
@@ -181,6 +186,33 @@ func (p *WordpressInstagramFilter) Mod(db *gorm.DB) *gorm.DB {
 	}
 	if p.DeleteHash != nil {
 		db = db.Where("delete_hash = ?", *p.DeleteHash)
+	}
+
+	if p.PartialName != nil || p.PartialWordpressDomain != nil || p.PartialInstagramName != nil {
+		var orConditions []string
+		var orValues []interface{}
+		if p.PartialName != nil {
+			orConditions = append(orConditions, "partial_name like ?")
+			orValues = append(orValues, "%"+*p.PartialName+"%")
+		}
+		if p.PartialWordpressDomain != nil {
+			orConditions = append(orConditions, "wordpress_domain like ?")
+			orValues = append(orValues, "%"+*p.PartialWordpressDomain+"%")
+		}
+		if p.PartialInstagramName != nil {
+			orConditions = append(orConditions, "instagram_name like ?")
+			orValues = append(orValues, "%"+*p.PartialInstagramName+"%")
+		}
+		if len(orConditions) > 0 {
+			query := orConditions[0]
+			for i := 1; i < len(orConditions); i++ {
+				query += " OR " + orConditions[i]
+			}
+			db = db.Where(query, orValues...)
+		}
+	}
+	if p.OrderByIDDesc != nil {
+		db = db.Order("id desc")
 	}
 	if p.Limit != nil {
 		db = db.Limit(*p.Limit)

@@ -45,15 +45,15 @@ func NewWordpressInstagramUsecase(
 
 func (u *wordpressInstagramUsecase) GetWordpressInstagramList(ctx context.Context, params req.GetWordpressInstagram) (*res.WordpressInstagramList, error) {
 	filter := repository.WordpressInstagramFilter{
-		Name:               params.Name,
-		WordpressDomain:    params.WordpressDomain,
-		WordpressSiteTitle: params.WordpressSiteTitle,
-		InstagramID:        params.InstagramID,
-		InstagramName:      params.InstagramName,
-		Status:             params.Status,
-		DeleteHash:         params.DeleteHash,
-		Limit:              params.Limit,
-		Offset:             params.Offset,
+		PartialName:            params.Name,
+		PartialWordpressDomain: params.WordpressDomain,
+		PartialInstagramName:   params.InstagramName,
+		WordpressSiteTitle:     params.WordpressSiteTitle,
+		InstagramID:            params.InstagramID,
+		Status:                 params.Status,
+		DeleteHash:             params.DeleteHash,
+		Limit:                  params.Limit,
+		Offset:                 params.Offset,
 	}
 
 	wiList, err := u.wordpressInstagramRepo.FindAll(ctx, filter)

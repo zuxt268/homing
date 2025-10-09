@@ -18,8 +18,8 @@ FROM alpine:latest
 
 WORKDIR /root/
 
-# 証明書のインストール（外部APIへのHTTPS通信用）
-RUN apk --no-cache add ca-certificates
+# 証明書のインストール（外部APIへのHTTPS通信用）とヘルスチェック用ツール
+RUN apk --no-cache add ca-certificates wget
 
 # ビルドステージからバイナリをコピー
 COPY --from=builder /app/homing .
