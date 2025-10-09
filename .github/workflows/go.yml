@@ -44,11 +44,10 @@ jobs:
           script: |
             cd /var/www/homing
             git pull
-            docker-compose build app
-            docker-compose up -d --no-deps --build app
-            docker-compose exec -T app sleep 5
-            # 古いイメージとコンテナのクリーンアップ
-            docker image prune -f
+            docker-compose down
+            git pull
+            docker-compose build
+            docker-compose up -d
 
       - name: Notify Slack on success
         uses: 8398a7/action-slack@v3
