@@ -135,7 +135,7 @@ func TestPostRepository_SavePost(t *testing.T) {
 			CreatedAt:     time.Now(),
 		}
 
-		err := repo.SavePost(ctx, newPost)
+		err := repo.CreatePost(ctx, newPost)
 		assert.NoError(t, err)
 		assert.NotZero(t, newPost.ID) // IDが自動で設定されることを確認
 
@@ -156,7 +156,7 @@ func TestPostRepository_SavePost(t *testing.T) {
 			CreatedAt:  time.Now(),
 		}
 
-		err := repo.SavePost(ctx, minimumPost)
+		err := repo.CreatePost(ctx, minimumPost)
 		assert.NoError(t, err)
 		assert.NotZero(t, minimumPost.ID)
 
@@ -186,7 +186,7 @@ func TestPostRepository_SavePost(t *testing.T) {
 		}
 
 		for _, post := range posts {
-			err := repo.SavePost(ctx, post)
+			err := repo.CreatePost(ctx, post)
 			assert.NoError(t, err)
 			assert.NotZero(t, post.ID)
 		}
@@ -225,7 +225,7 @@ func TestPostRepository_Integration(t *testing.T) {
 		assert.False(t, exists)
 
 		// 2. 投稿を保存
-		err = repo.SavePost(ctx, testPost)
+		err = repo.CreatePost(ctx, testPost)
 		require.NoError(t, err)
 		require.NotZero(t, testPost.ID)
 

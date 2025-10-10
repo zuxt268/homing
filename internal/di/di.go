@@ -43,7 +43,6 @@ func NewFileDownloader() adapter.FileDownloader {
 
 func NewCustomerUsecase(httpDriver driver.HttpDriver, db *gorm.DB) usecase.CustomerUsecase {
 	return usecase.NewCustomerUsecase(
-		NewFileDownloader(),
 		NewInstagramAdapter(httpDriver),
 		NewSlack(httpDriver),
 		NewWordpressAdapter(httpDriver),

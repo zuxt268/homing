@@ -20,17 +20,16 @@ type CustomerUsecase interface {
 }
 
 type customerUsecase struct {
-	fileDownloader         adapter.FileDownloader
 	instagramAdapter       adapter.InstagramAdapter
 	slack                  adapter.Slack
 	wordpressAdapter       adapter.WordpressAdapter
 	postRepo               repository.PostRepository
 	wordpressInstagramRepo repository.WordpressInstagramRepository
 	tokenRepo              repository.TokenRepository
+	customerLocks          sync.Map
 }
 
 func NewCustomerUsecase(
-	fileDownloader adapter.FileDownloader,
 	instagramAdapter adapter.InstagramAdapter,
 	slack adapter.Slack,
 	wordpressAdapter adapter.WordpressAdapter,
@@ -39,7 +38,6 @@ func NewCustomerUsecase(
 	tokenRepo repository.TokenRepository,
 ) CustomerUsecase {
 	return &customerUsecase{
-		fileDownloader:         fileDownloader,
 		instagramAdapter:       instagramAdapter,
 		slack:                  slack,
 		wordpressAdapter:       wordpressAdapter,
@@ -73,7 +71,13 @@ func (u *customerUsecase) SyncAll(ctx context.Context) error {
 			defer wg.Done()
 			defer func() { <-semaphore }() // セマフォを解放
 
-			err := u.syncOne(ctx, wi)
+			// 各goroutine専用のFileDownloaderを作成
+			fd := adapter.NewFileDownloader()
+			defer func() {
+				_ = fd.DeleteTempDirectory()
+			}()
+
+			err := u.syncOne(ctx, wi, fd)
 			if err != nil {
 				_ = u.slack.Alert(ctx, err.Error(), *wi)
 			}
@@ -84,7 +88,13 @@ func (u *customerUsecase) SyncAll(ctx context.Context) error {
 	return nil
 }
 
-func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInstagram) error {
+func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInstagram, fd adapter.FileDownloader) error {
+	// 顧客IDごとのロックを取得
+	lockInterface, _ := u.customerLocks.LoadOrStore(wi.ID, &sync.Mutex{})
+	mu := lockInterface.(*sync.Mutex)
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	/*
 		トークンを取得する
@@ -108,19 +118,16 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 		return posts[i].Timestamp > posts[j].Timestamp
 	})
 	for _, post := range posts {
-		err := u.transfer(ctx, wi, post)
+		err := u.transfer(ctx, wi, post, fd)
 		if err != nil {
 			return err
 		}
 	}
 
-	/*
-		tempディレクトリを削除
-	*/
-	return u.fileDownloader.DeleteTempDirectory()
+	return nil
 }
 
-func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInstagram, post domain.InstagramPost) error {
+func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInstagram, post domain.InstagramPost, fd adapter.FileDownloader) error {
 
 	/*
 		すでに投稿しているものかどうかをチェック
@@ -147,7 +154,7 @@ func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInst
 	/*
 		インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
 	*/
-	localPath, err := u.fileDownloader.Download(ctx, post.MediaURL)
+	localPath, err := fd.Download(ctx, post.MediaURL)
 	if err != nil {
 		return err
 	}
@@ -178,7 +185,7 @@ func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInst
 	/*
 		投稿したことをDBに保存
 	*/
-	err = u.postRepo.SavePost(ctx, &model.Post{
+	err = u.postRepo.CreatePost(ctx, &model.Post{
 		MediaID:       post.ID,
 		CustomerID:    100000 + wi.ID,
 		Timestamp:     post.Timestamp,
@@ -206,7 +213,13 @@ func (u *customerUsecase) SyncOne(ctx context.Context, id int) error {
 	if err != nil {
 		return err
 	}
-	err = u.syncOne(ctx, wi)
+
+	fd := adapter.NewFileDownloader()
+	defer func() {
+		_ = fd.DeleteTempDirectory()
+	}()
+
+	err = u.syncOne(ctx, wi, fd)
 	if err != nil {
 		_ = u.slack.Alert(ctx, err.Error(), *wi)
 		return err

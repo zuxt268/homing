@@ -10,7 +10,7 @@ import (
 
 type PostRepository interface {
 	ExistPost(ctx context.Context, filter PostFilter) (bool, error)
-	SavePost(ctx context.Context, post *model.Post) error
+	CreatePost(ctx context.Context, post *model.Post) error
 	GetPosts(ctx context.Context, filter PostFilter) ([]domain.Post, error)
 }
 
@@ -73,7 +73,7 @@ func (r *postRepository) ExistPost(ctx context.Context, filter PostFilter) (bool
 	return len(posts) > 0, nil
 }
 
-func (r *postRepository) SavePost(ctx context.Context, post *model.Post) error {
+func (r *postRepository) CreatePost(ctx context.Context, post *model.Post) error {
 	return r.db.WithContext(ctx).Create(post).Error
 }
 

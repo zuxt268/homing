@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -196,7 +195,6 @@ func (h *APIHandler) CreateWordpressInstagram(c echo.Context) error {
 	if err := c.Bind(&body); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	fmt.Println("CreateWordpressInstagram", body)
 
 	item, err := h.wordpressInstagramUsecase.CreateWordpressInstagram(c.Request().Context(), body)
 	if err != nil {
