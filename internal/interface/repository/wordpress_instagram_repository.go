@@ -192,7 +192,7 @@ func (p *WordpressInstagramFilter) Mod(db *gorm.DB) *gorm.DB {
 		var orConditions []string
 		var orValues []interface{}
 		if p.PartialName != nil {
-			orConditions = append(orConditions, "partial_name like ?")
+			orConditions = append(orConditions, "name like ?")
 			orValues = append(orValues, "%"+*p.PartialName+"%")
 		}
 		if p.PartialWordpressDomain != nil {
