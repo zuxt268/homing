@@ -304,13 +304,25 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "投稿取得件数",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "投稿オフセット",
+                        "name": "offset",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "Wordpress Instagram詳細",
                         "schema": {
-                            "$ref": "#/definitions/res.WordpressInstagram"
+                            "$ref": "#/definitions/res.WordpressInstagramDetail"
                         }
                     },
                     "404": {
@@ -498,6 +510,23 @@ const docTemplate = `{
                 }
             }
         },
+        "res.Posts": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/res.Post"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "res.Token": {
             "type": "object",
             "properties": {
@@ -530,11 +559,43 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "wordpress_domain": {
+                    "type": "string"
+                },
+                "wordpress_site_title": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.WordpressInstagramDetail": {
+            "type": "object",
+            "properties": {
+                "delete_hash": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "instagram_id": {
+                    "type": "string"
+                },
+                "instagram_name": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
                 "posts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/res.Post"
-                    }
+                    "$ref": "#/definitions/res.Posts"
                 },
                 "start_date": {
                     "type": "string"
@@ -553,11 +614,17 @@ const docTemplate = `{
         "res.WordpressInstagramList": {
             "type": "object",
             "properties": {
+                "count": {
+                    "type": "integer"
+                },
                 "instagram_list": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/res.WordpressInstagram"
                     }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         }

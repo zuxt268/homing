@@ -13,7 +13,7 @@ import (
 
 type WordpressInstagramUsecase interface {
 	GetWordpressInstagramList(ctx context.Context, params req.GetWordpressInstagram) (*res.WordpressInstagramList, error)
-	GetWordpressInstagram(ctx context.Context, id int) (*res.WordpressInstagram, error)
+	GetWordpressInstagram(ctx context.Context, id int) (*res.WordpressInstagramDetail, error)
 	CreateWordpressInstagram(ctx context.Context, body req.CreateWordpressInstagram) (*res.WordpressInstagram, error)
 	UpdateWordpressInstagram(ctx context.Context, body req.UpdateWordpressInstagram) (*res.WordpressInstagram, error)
 	DeleteWordpressInstagram(ctx context.Context, id int) error
@@ -61,6 +61,11 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagramList(ctx context.Contex
 		return nil, err
 	}
 
+	total, err := u.wordpressInstagramRepo.Count(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
 	result := make([]res.WordpressInstagram, 0, len(wiList))
 	for _, wi := range wiList {
 		result = append(result, res.WordpressInstagram{
@@ -79,10 +84,14 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagramList(ctx context.Contex
 
 	return &res.WordpressInstagramList{
 		WordpressInstagramList: result,
+		Paginate: res.Paginate{
+			Total: total,
+			Count: len(wiList),
+		},
 	}, nil
 }
 
-func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, id int) (*res.WordpressInstagram, error) {
+func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, id int) (*res.WordpressInstagramDetail, error) {
 	wi, err := u.wordpressInstagramRepo.Get(ctx, repository.WordpressInstagramFilter{
 		ID: &id,
 	})
@@ -90,10 +99,17 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, i
 		return nil, err
 	}
 
-	posts, err := u.postRepo.GetPosts(ctx, repository.PostFilter{
+	filter := repository.PostFilter{
 		CustomerID:           util.Pointer(100000 + wi.ID),
 		OrderByCreatedAtDesc: util.Pointer(true),
-	})
+	}
+
+	posts, err := u.postRepo.GetPosts(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := u.postRepo.CountPosts(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +123,7 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, i
 		}
 	}
 
-	return &res.WordpressInstagram{
+	return &res.WordpressInstagramDetail{
 		ID:                 wi.ID,
 		Name:               wi.Name,
 		WordpressDomain:    wi.WordpressDomain,
@@ -118,7 +134,13 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, i
 		StartDate:          wi.StartDate,
 		Status:             int(wi.Status),
 		DeleteHash:         wi.DeleteHash,
-		Posts:              respPosts,
+		Posts: res.Posts{
+			Posts: respPosts,
+			Paginate: res.Paginate{
+				Total: total,
+				Count: len(posts),
+			},
+		},
 	}, nil
 }
 

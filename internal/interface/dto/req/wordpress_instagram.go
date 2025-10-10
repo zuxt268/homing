@@ -14,6 +14,11 @@ type GetWordpressInstagram struct {
 	DeleteHash         *bool   `query:"delete_hash"`
 }
 
+type GetWordpressInstagramDetail struct {
+	Limit  *int `query:"limit"`
+	Offset *int `query:"offset"`
+}
+
 type CreateWordpressInstagram struct {
 	Name            string    `json:"name"`
 	WordpressDomain string    `json:"wordpress_domain"`

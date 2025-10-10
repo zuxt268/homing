@@ -4,6 +4,7 @@ import "time"
 
 type WordpressInstagramList struct {
 	WordpressInstagramList []WordpressInstagram `json:"instagram_list"`
+	Paginate
 }
 
 type WordpressInstagram struct {
@@ -17,7 +18,25 @@ type WordpressInstagram struct {
 	StartDate          time.Time `json:"start_date"`
 	Status             int       `json:"status"`
 	DeleteHash         bool      `json:"delete_hash"`
-	Posts              []Post    `json:"posts"`
+}
+
+type WordpressInstagramDetail struct {
+	ID                 int       `json:"id"`
+	Name               string    `json:"name"`
+	WordpressDomain    string    `json:"wordpress_domain"`
+	WordpressSiteTitle string    `json:"wordpress_site_title"`
+	InstagramID        string    `json:"instagram_id"`
+	InstagramName      string    `json:"instagram_name"`
+	Memo               string    `json:"memo"`
+	StartDate          time.Time `json:"start_date"`
+	Status             int       `json:"status"`
+	DeleteHash         bool      `json:"delete_hash"`
+	Posts              Posts     `json:"posts"`
+}
+
+type Posts struct {
+	Posts []Post `json:"posts"`
+	Paginate
 }
 
 type Post struct {

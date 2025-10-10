@@ -44,6 +44,17 @@ definitions:
       wordpress_url:
         type: string
     type: object
+  res.Posts:
+    properties:
+      count:
+        type: integer
+      posts:
+        items:
+          $ref: '#/definitions/res.Post'
+        type: array
+      total:
+        type: integer
+    type: object
   res.Token:
     properties:
       expired_at:
@@ -65,10 +76,31 @@ definitions:
         type: string
       name:
         type: string
+      start_date:
+        type: string
+      status:
+        type: integer
+      wordpress_domain:
+        type: string
+      wordpress_site_title:
+        type: string
+    type: object
+  res.WordpressInstagramDetail:
+    properties:
+      delete_hash:
+        type: boolean
+      id:
+        type: integer
+      instagram_id:
+        type: string
+      instagram_name:
+        type: string
+      memo:
+        type: string
+      name:
+        type: string
       posts:
-        items:
-          $ref: '#/definitions/res.Post'
-        type: array
+        $ref: '#/definitions/res.Posts'
       start_date:
         type: string
       status:
@@ -80,10 +112,14 @@ definitions:
     type: object
   res.WordpressInstagramList:
     properties:
+      count:
+        type: integer
       instagram_list:
         items:
           $ref: '#/definitions/res.WordpressInstagram'
         type: array
+      total:
+        type: integer
     type: object
 info:
   contact: {}
@@ -303,13 +339,21 @@ paths:
         name: id
         required: true
         type: integer
+      - description: 投稿取得件数
+        in: query
+        name: limit
+        type: integer
+      - description: 投稿オフセット
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: Wordpress Instagram詳細
           schema:
-            $ref: '#/definitions/res.WordpressInstagram'
+            $ref: '#/definitions/res.WordpressInstagramDetail'
         "404":
           description: 見つかりません
           schema:

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/zuxt268/homing/internal/domain"
@@ -12,6 +13,7 @@ import (
 type WordpressInstagramRepository interface {
 	Get(ctx context.Context, f WordpressInstagramFilter) (*domain.WordpressInstagram, error)
 	FindAll(ctx context.Context, f WordpressInstagramFilter) ([]*domain.WordpressInstagram, error)
+	Count(ctx context.Context, f WordpressInstagramFilter) (int64, error)
 	Exists(ctx context.Context, f WordpressInstagramFilter) (bool, error)
 	Update(ctx context.Context, item *domain.WordpressInstagram, f WordpressInstagramFilter) error
 	Create(ctx context.Context, wordpressInstagram *domain.WordpressInstagram) error
@@ -74,6 +76,17 @@ func (r *wordpressInstagramRepository) FindAll(ctx context.Context, f WordpressI
 		})
 	}
 	return wordpressInstagramList, nil
+}
+
+func (r *wordpressInstagramRepository) Count(ctx context.Context, f WordpressInstagramFilter) (int64, error) {
+	var total int64
+	f.Offset = nil
+	err := f.Mod(r.getDB(ctx)).Model(model.WordpressInstagram{}).Count(&total).Error
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+	return total, nil
 }
 
 func (r *wordpressInstagramRepository) Exists(ctx context.Context, f WordpressInstagramFilter) (bool, error) {

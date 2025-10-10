@@ -162,11 +162,17 @@ func (h *APIHandler) GetWordpressInstagramList(c echo.Context) error {
 // @Accept       json
 // @Produce      json
 // @Param        id   path      int  true  "Wordpress Instagram ID"
-// @Success      200  {object}  res.WordpressInstagram  "Wordpress Instagram詳細"
+// @Param        limit          query     int     false  "投稿取得件数"
+// @Param        offset         query     int     false  "投稿オフセット"
+// @Success      200  {object}  res.WordpressInstagramDetail  "Wordpress Instagram詳細"
 // @Failure      404  {string}  string  "見つかりません"
 // @Failure      500  {string}  string  "内部サーバーエラー"
 // @Router       /api/wordpress-instagram/{id} [get]
 func (h *APIHandler) GetWordpressInstagram(c echo.Context) error {
+	var params req.GetWordpressInstagramDetail
+	if err := c.Bind(&params); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
 	var id int
 	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
