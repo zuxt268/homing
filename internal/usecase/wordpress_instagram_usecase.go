@@ -13,7 +13,7 @@ import (
 
 type WordpressInstagramUsecase interface {
 	GetWordpressInstagramList(ctx context.Context, params req.GetWordpressInstagram) (*res.WordpressInstagramList, error)
-	GetWordpressInstagram(ctx context.Context, id int) (*res.WordpressInstagramDetail, error)
+	GetWordpressInstagram(ctx context.Context, id int, params req.GetWordpressInstagramDetail) (*res.WordpressInstagramDetail, error)
 	CreateWordpressInstagram(ctx context.Context, body req.CreateWordpressInstagram) (*res.WordpressInstagram, error)
 	UpdateWordpressInstagram(ctx context.Context, body req.UpdateWordpressInstagram) (*res.WordpressInstagram, error)
 	DeleteWordpressInstagram(ctx context.Context, id int) error
@@ -91,7 +91,7 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagramList(ctx context.Contex
 	}, nil
 }
 
-func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, id int) (*res.WordpressInstagramDetail, error) {
+func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, id int, params req.GetWordpressInstagramDetail) (*res.WordpressInstagramDetail, error) {
 	wi, err := u.wordpressInstagramRepo.Get(ctx, repository.WordpressInstagramFilter{
 		ID: &id,
 	})
@@ -102,6 +102,8 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, i
 	filter := repository.PostFilter{
 		CustomerID:           util.Pointer(100000 + wi.ID),
 		OrderByCreatedAtDesc: util.Pointer(true),
+		Limit:                params.Limit,
+		Offset:               params.Offset,
 	}
 
 	posts, err := u.postRepo.GetPosts(ctx, filter)

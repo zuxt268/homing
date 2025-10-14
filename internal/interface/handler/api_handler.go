@@ -177,8 +177,7 @@ func (h *APIHandler) GetWordpressInstagram(c echo.Context) error {
 	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-
-	item, err := h.wordpressInstagramUsecase.GetWordpressInstagram(c.Request().Context(), id)
+	item, err := h.wordpressInstagramUsecase.GetWordpressInstagram(c.Request().Context(), id, params)
 	if err != nil {
 		return handleError(c, err)
 	}

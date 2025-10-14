@@ -81,6 +81,7 @@ func (r *wordpressInstagramRepository) FindAll(ctx context.Context, f WordpressI
 func (r *wordpressInstagramRepository) Count(ctx context.Context, f WordpressInstagramFilter) (int64, error) {
 	var total int64
 	f.Offset = nil
+	f.Limit = nil
 	err := f.Mod(r.getDB(ctx)).Model(model.WordpressInstagram{}).Count(&total).Error
 	if err != nil {
 		fmt.Println(err)

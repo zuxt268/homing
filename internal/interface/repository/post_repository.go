@@ -107,6 +107,7 @@ func (r *postRepository) GetPosts(ctx context.Context, filter PostFilter) ([]dom
 func (r *postRepository) CountPosts(ctx context.Context, filter PostFilter) (int64, error) {
 	var total int64
 	filter.Offset = nil
+	filter.Limit = nil
 	err := filter.Mod(r.db).WithContext(ctx).Model(model.Post{}).Count(&total).Error
 	if err != nil {
 		return 0, err
