@@ -115,7 +115,7 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 		まだ連携していない投稿をWordpressに連携する
 	*/
 	sort.Slice(posts, func(i, j int) bool {
-		return posts[i].Timestamp > posts[j].Timestamp
+		return posts[i].Timestamp < posts[j].Timestamp
 	})
 	for _, post := range posts {
 		err := u.transfer(ctx, wi, post, fd)
