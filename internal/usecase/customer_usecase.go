@@ -65,11 +65,11 @@ func (u *customerUsecase) SyncAll(ctx context.Context) error {
 
 	for _, wi := range wiList {
 		wg.Add(1)
-		semaphore <- struct{}{} // セマフォを取得
+		semaphore <- struct{}{}
 
 		go func(wi *domain.WordpressInstagram) {
 			defer wg.Done()
-			defer func() { <-semaphore }() // セマフォを解放
+			defer func() { <-semaphore }()
 
 			// 各goroutine専用のFileDownloaderを作成
 			fd := adapter.NewFileDownloader()
@@ -128,6 +128,13 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 }
 
 func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInstagram, post domain.InstagramPost, fd adapter.FileDownloader) error {
+
+	/*
+		メディアのリンクがない場合はスキップ
+	*/
+	if post.MediaURL == "" {
+		return nil
+	}
 
 	/*
 		すでに投稿しているものかどうかをチェック
