@@ -97,20 +97,22 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 	mu.Lock()
 	defer mu.Unlock()
 
+	backGroundCtx := context.Background()
+
 	go func() {
 		/*
 			トークンを取得する
 		*/
-		token, err := u.tokenRepo.First(ctx)
+		token, err := u.tokenRepo.First(backGroundCtx)
 		if err != nil {
-			_ = u.slack.Alert(ctx, err.Error(), *wi)
+			_ = u.slack.Alert(backGroundCtx, err.Error(), *wi)
 		}
 		/*
 			インスタグラムから投稿を一覧で取得する
 		*/
-		posts, err := u.instagramAdapter.GetPostsAll(ctx, token, wi.InstagramID)
+		posts, err := u.instagramAdapter.GetPostsAll(backGroundCtx, token, wi.InstagramID)
 		if err != nil {
-			_ = u.slack.Alert(ctx, err.Error(), *wi)
+			_ = u.slack.Alert(backGroundCtx, err.Error(), *wi)
 		}
 
 		/*
@@ -120,9 +122,9 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 			return posts[i].Timestamp < posts[j].Timestamp
 		})
 		for _, post := range posts {
-			err := u.transfer(ctx, wi, post, fd)
+			err := u.transfer(backGroundCtx, wi, post, fd)
 			if err != nil {
-				_ = u.slack.Alert(ctx, err.Error(), *wi)
+				_ = u.slack.Alert(backGroundCtx, err.Error(), *wi)
 			}
 		}
 	}()
