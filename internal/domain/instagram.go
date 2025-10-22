@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type InstagramAccount struct {
@@ -55,6 +56,11 @@ func (i *InstagramPost) GetContent(deleteHash bool) string {
 	default:
 		return i.getContentsHTML(deleteHash)
 	}
+}
+
+func (i *InstagramPost) GetPostDate() string {
+	instagramPost, _ := time.Parse("2006-01-02T15:04:05-0700", i.Timestamp)
+	return instagramPost.Format("2006-01-02 15:04:05")
 }
 
 func (i *InstagramPost) getContentsHTML(deleteHash bool) string {

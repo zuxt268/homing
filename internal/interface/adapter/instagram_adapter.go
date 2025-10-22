@@ -12,7 +12,8 @@ import (
 )
 
 type InstagramAdapter interface {
-	GetPosts(ctx context.Context, token, instagramID string) ([]domain.InstagramPost, error)
+	GetPosts25(ctx context.Context, token, instagramID string) ([]domain.InstagramPost, error)
+	GetPostsAll(ctx context.Context, token, instagramID string) ([]domain.InstagramPost, error)
 	GetAccount(ctx context.Context, token, instagramID string) (*domain.InstagramAccount, error)
 	DebugToken(ctx context.Context, userToken string) (*external.DebugTokenResponse, error)
 }
@@ -35,11 +36,10 @@ type instagramAdapter struct {
 	clientSecret string
 }
 
-func (a *instagramAdapter) GetPosts(ctx context.Context, token string, instagramID string) ([]domain.InstagramPost, error) {
+func (a *instagramAdapter) GetPosts25(ctx context.Context, token string, instagramID string) ([]domain.InstagramPost, error) {
 	req := &external.InstagramRequest{
 		AccessToken: token,
 		Fields:      "media{id,permalink,caption,timestamp,media_type,media_url,children{media_type,media_url}}",
-		Limit:       100,
 	}
 	endpoint := baseURL + "/" + instagramID
 	resp, err := a.httpDriver.Get(ctx, endpoint, req, nil)
@@ -51,6 +51,47 @@ func (a *instagramAdapter) GetPosts(ctx context.Context, token string, instagram
 		return nil, fmt.Errorf("failed to unmarshal instagram posts response: %w", err)
 	}
 	return external.ToInstagramPostsEntity(&postsDto), nil
+}
+
+func (a *instagramAdapter) GetPostsAll(ctx context.Context, token, instagramID string) ([]domain.InstagramPost, error) {
+	result := make([]domain.InstagramPost, 0)
+
+	req := &external.InstagramRequest{
+		AccessToken: token,
+		Fields:      "media{id,permalink,caption,timestamp,media_type,media_url,children{media_type,media_url}}",
+	}
+	endpoint := baseURL + "/" + instagramID
+	resp, err := a.httpDriver.Get(ctx, endpoint, req, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get posts: %w", err)
+	}
+	var postsDto external.InstagramGetPostsResponse
+	if err := json.Unmarshal(resp, &postsDto); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal posts response: %w", err)
+	}
+
+	entityList := external.ToInstagramPostsEntity(&postsDto)
+	result = append(result, entityList...)
+	nextURL := postsDto.Media.Paging.Next
+
+	for {
+		if nextURL == "" {
+			break
+		}
+		respBody, err := a.httpDriver.Get(ctx, nextURL, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var postsDto external.InstagramGetPostsNextResponse
+		if err := json.Unmarshal(respBody, &postsDto); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal posts response: %w", err)
+		}
+		posts := external.NextResponseToInstagramPostsEntity(&postsDto)
+		result = append(result, posts...)
+		nextURL = postsDto.Paging.Next
+	}
+
+	return result, nil
 }
 
 func (a *instagramAdapter) DebugToken(ctx context.Context, token string) (*external.DebugTokenResponse, error) {

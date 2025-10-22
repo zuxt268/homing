@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"os"
 	"sort"
 	"sync"
 	"time"
@@ -96,33 +97,35 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 	mu.Lock()
 	defer mu.Unlock()
 
-	/*
-		トークンを取得する
-	*/
-	token, err := u.tokenRepo.First(ctx)
-	if err != nil {
-		return err
-	}
-	/*
-		インスタグラムから投稿を一覧で取得する
-	*/
-	posts, err := u.instagramAdapter.GetPosts(ctx, token, wi.InstagramID)
-	if err != nil {
-		return err
-	}
-
-	/*
-		まだ連携していない投稿をWordpressに連携する
-	*/
-	sort.Slice(posts, func(i, j int) bool {
-		return posts[i].Timestamp < posts[j].Timestamp
-	})
-	for _, post := range posts {
-		err := u.transfer(ctx, wi, post, fd)
+	go func() {
+		/*
+			トークンを取得する
+		*/
+		token, err := u.tokenRepo.First(ctx)
 		if err != nil {
-			return err
+			_ = u.slack.Alert(ctx, err.Error(), *wi)
 		}
-	}
+		/*
+			インスタグラムから投稿を一覧で取得する
+		*/
+		posts, err := u.instagramAdapter.GetPostsAll(ctx, token, wi.InstagramID)
+		if err != nil {
+			_ = u.slack.Alert(ctx, err.Error(), *wi)
+		}
+
+		/*
+			まだ連携していない投稿をWordpressに連携する
+		*/
+		sort.Slice(posts, func(i, j int) bool {
+			return posts[i].Timestamp < posts[j].Timestamp
+		})
+		for _, post := range posts {
+			err := u.transfer(ctx, wi, post, fd)
+			if err != nil {
+				_ = u.slack.Alert(ctx, err.Error(), *wi)
+			}
+		}
+	}()
 
 	return nil
 }
@@ -209,6 +212,11 @@ func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInst
 		Slackに通知
 	*/
 	_ = u.slack.Success(ctx, wi, postResp.WordpressURL, post.Permalink)
+
+	/*
+		ダウンロードファイルを都度削除
+	*/
+	_ = os.Remove(localPath)
 
 	return nil
 }

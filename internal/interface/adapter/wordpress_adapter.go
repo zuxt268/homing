@@ -76,6 +76,7 @@ func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostIn
 		Email:         a.adminEmail,
 		Title:         in.Post.GetTitle(in.WordpressInstagram.DeleteHash),
 		Content:       in.Post.GetContent(in.WordpressInstagram.DeleteHash),
+		PostDate:      in.Post.GetPostDate(),
 		FeaturedMedia: in.FeaturedMediaID,
 	}
 	apiKey := in.WordpressInstagram.GenerateAPIKey(a.secretPhrase)

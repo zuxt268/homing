@@ -43,7 +43,6 @@ func Run() {
 	// Swagger ルート
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	// API ルート設定
 	api := e.Group("/api")
 	api.GET("/healthcheck", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
@@ -54,7 +53,6 @@ func Run() {
 	api.GET("/token", apiHandler.GetToken)
 	api.POST("/token/check", apiHandler.CheckToken)
 
-	// WordPress Instagram ルート
 	api.GET("/wordpress-instagram", apiHandler.GetWordpressInstagramList)
 	api.GET("/wordpress-instagram/:id", apiHandler.GetWordpressInstagram)
 	api.POST("/wordpress-instagram", apiHandler.CreateWordpressInstagram)

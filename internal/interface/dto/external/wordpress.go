@@ -16,6 +16,7 @@ type WordpressPostPayload struct {
 	Email         string `json:"email"`
 	Title         string `json:"title"`
 	Content       string `json:"content"`
+	PostDate      string `json:"post_date"`
 	FeaturedMedia int    `json:"featured_media"`
 }
 

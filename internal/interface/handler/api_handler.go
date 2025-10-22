@@ -65,7 +65,7 @@ func (h *APIHandler) SyncOne(c echo.Context) error {
 	if err != nil {
 		return handleError(c, err)
 	}
-	return c.JSON(http.StatusOK, "sync all")
+	return c.JSON(http.StatusOK, "sync one")
 }
 
 // SaveToken godoc
