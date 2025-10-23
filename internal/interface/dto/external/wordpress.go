@@ -55,7 +55,6 @@ type WordpressPostResponse struct {
 
 type WordpressPostInput struct {
 	WordpressInstagram domain.WordpressInstagram
-	FeaturedMediaID    int
 	Post               domain.InstagramPost
 }
 

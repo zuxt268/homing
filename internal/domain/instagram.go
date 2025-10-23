@@ -14,15 +14,29 @@ type InstagramAccount struct {
 }
 
 type InstagramPost struct {
-	ID        string
-	Permalink string
-	Caption   string
-	Timestamp string
-	MediaType string
-	MediaURL  string
-	Children  []InstagramPostChildren
+	ID              string
+	Permalink       string
+	Caption         string
+	Timestamp       string
+	MediaType       string
+	MediaURL        string
+	Children        []InstagramPostChildren
+	SourceURLs      []string
+	FeaturedMediaID int
 
 	DeleteHash bool
+}
+
+func (i *InstagramPost) SetFeaturedMediaID(mediaID int) {
+	i.FeaturedMediaID = mediaID
+}
+
+func (i *InstagramPost) AppendSourceURL(imageUrl string) {
+	i.SourceURLs = append(i.SourceURLs, imageUrl)
+}
+
+func (i *InstagramPost) SetDeleteHashFlag(deleteHash bool) {
+	i.DeleteHash = deleteHash
 }
 
 type InstagramPostChildren struct {
@@ -31,9 +45,9 @@ type InstagramPostChildren struct {
 	ID        string
 }
 
-func (i *InstagramPost) GetTitle(deleteHash bool) string {
+func (i *InstagramPost) GetTitle() string {
 	caption := i.Caption
-	if deleteHash {
+	if i.DeleteHash {
 		caption = removeHashtags(caption)
 	}
 	for _, w := range strings.Split(caption, "\n") {
@@ -45,16 +59,16 @@ func (i *InstagramPost) GetTitle(deleteHash bool) string {
 	return " "
 }
 
-func (i *InstagramPost) GetContent(deleteHash bool) string {
+func (i *InstagramPost) GetContent() string {
 	switch i.MediaType {
 	case "IMAGE":
-		return i.getHTMLForImage(deleteHash)
+		return i.getHTMLForImage()
 	case "VIDEO":
-		return i.getHTMLForVideo(deleteHash)
+		return i.getHTMLForVideo()
 	case "CAROUSEL_ALBUM":
-		return i.getHTMLForCarousel(deleteHash)
+		return i.getHTMLForCarousel()
 	default:
-		return i.getContentsHTML(deleteHash)
+		return i.getContentsHTML()
 	}
 }
 
@@ -63,10 +77,10 @@ func (i *InstagramPost) GetPostDate() string {
 	return instagramPost.Format("2006-01-02 15:04:05")
 }
 
-func (i *InstagramPost) getContentsHTML(deleteHash bool) string {
+func (i *InstagramPost) getContentsHTML() string {
 	caption := i.Caption
 	// captionから#のタグ（#からスペースまたは改行まで）を削除
-	if deleteHash {
+	if i.DeleteHash {
 		caption = removeHashtags(caption)
 	}
 
@@ -87,28 +101,28 @@ func removeHashtags(text string) string {
 	return strings.TrimSpace(result)
 }
 
-func (i *InstagramPost) getHTMLForImage(deleteHash bool) string {
-	imageHTML := fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='margin: 0 auto;' width='500px' height='500px'/></div>", i.MediaURL)
-	imageHTML += i.getContentsHTML(deleteHash)
+func (i *InstagramPost) getHTMLForImage() string {
+	imageHTML := fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='margin: 0 auto;' width='500px' height='500px'/></div>", i.SourceURLs[0])
+	imageHTML += i.getContentsHTML()
 	return imageHTML
 }
 
-func (i *InstagramPost) getHTMLForVideo(deleteHash bool) string {
-	videoHTML := fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='margin: 0 auto;' width='500px' height='500px' controls>Sorry, your browser does not support embedded videos.</video></div>", i.MediaURL)
-	videoHTML += i.getContentsHTML(deleteHash)
+func (i *InstagramPost) getHTMLForVideo() string {
+	videoHTML := fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='margin: 0 auto;' width='500px' height='500px' controls>Sorry, your browser does not support embedded videos.</video></div>", i.SourceURLs[0])
+	videoHTML += i.getContentsHTML()
 	return videoHTML
 }
 
-func (i *InstagramPost) getHTMLForCarousel(deleteHash bool) string {
+func (i *InstagramPost) getHTMLForCarousel() string {
 	html := "<div class='a-root-wordpress-instagram-slider'>"
-	for _, child := range i.Children {
+	for idx, child := range i.Children {
 		if child.MediaType == "IMAGE" {
-			html += fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='margin: 0 auto;' width='500px' height='500px'/></div>", child.MediaURL)
+			html += fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='margin: 0 auto;' width='500px' height='500px'/></div>", i.SourceURLs[idx+1])
 		} else if child.MediaType == "VIDEO" {
-			html += fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='margin: 0 auto;' width='500px' height='500px' controls>Sorry, your browser does not support embedded videos.</video></div>", child.MediaURL)
+			html += fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='margin: 0 auto;' width='500px' height='500px' controls>Sorry, your browser does not support embedded videos.</video></div>", i.SourceURLs[idx+1])
 		}
 	}
 	html += "</div>"
-	html += i.getContentsHTML(deleteHash)
+	html += i.getContentsHTML()
 	return html
 }

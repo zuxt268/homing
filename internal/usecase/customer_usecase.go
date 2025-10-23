@@ -181,13 +181,37 @@ func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInst
 	if err != nil {
 		return err
 	}
+	post.SetFeaturedMediaID(uploadResp.Id)
+	post.AppendSourceURL(uploadResp.SourceUrl)
+	post.SetDeleteHashFlag(wi.DeleteHash)
+
+	for _, child := range post.Children {
+		/*
+			インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
+		*/
+		childLocalPath, err := fd.Download(ctx, child.MediaURL)
+		if err != nil {
+			return err
+		}
+
+		/*
+			ダウンロードしたファイルをWordpressにアップロード
+		*/
+		childUploadResp, err := u.wordpressAdapter.FileUpload(ctx, external.WordpressFileUploadInput{
+			Path:               childLocalPath,
+			WordpressInstagram: *wi,
+		})
+		if err != nil {
+			return err
+		}
+		post.AppendSourceURL(childUploadResp.SourceUrl)
+	}
 
 	/*
 		アップロードしたファイルをFeaturedに指定して、記事を投稿
 	*/
 	postResp, err := u.wordpressAdapter.Post(ctx, external.WordpressPostInput{
 		WordpressInstagram: *wi,
-		FeaturedMediaID:    uploadResp.Id,
 		Post:               post,
 	})
 	if err != nil {

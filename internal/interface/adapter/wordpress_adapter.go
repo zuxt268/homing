@@ -71,21 +71,21 @@ func (a *wordpressAdapter) GetTitle(ctx context.Context, domain string) (string,
 	return titleResponse.Title, nil
 }
 
-func (a *wordpressAdapter) Post(ctx context.Context, in external.WordpressPostInput) (*domain.Post, error) {
+func (a *wordpressAdapter) Post(ctx context.Context, input external.WordpressPostInput) (*domain.Post, error) {
 	reqBody := external.WordpressPostPayload{
 		Email:         a.adminEmail,
-		Title:         in.Post.GetTitle(in.WordpressInstagram.DeleteHash),
-		Content:       in.Post.GetContent(in.WordpressInstagram.DeleteHash),
-		PostDate:      in.Post.GetPostDate(),
-		FeaturedMedia: in.FeaturedMediaID,
+		Title:         input.Post.GetTitle(),
+		Content:       input.Post.GetContent(),
+		PostDate:      input.Post.GetPostDate(),
+		FeaturedMedia: input.Post.FeaturedMediaID,
 	}
-	apiKey := in.WordpressInstagram.GenerateAPIKey(a.secretPhrase)
+	apiKey := input.WordpressInstagram.GenerateAPIKey(a.secretPhrase)
 
 	header, err := external.GetWordpressHeader(reqBody, apiKey)
 	if err != nil {
 		return nil, err
 	}
-	u, err := url.Parse(in.WordpressInstagram.WordpressDomain)
+	u, err := url.Parse(input.WordpressInstagram.WordpressDomain)
 	if err != nil {
 		return nil, err
 	}
