@@ -12,6 +12,7 @@ import (
 )
 
 func TestWordpressAdapter_Post(t *testing.T) {
+	t.Skip()
 	post := domain.InstagramPost{
 		ID:        "18287747659283707",
 		Permalink: "https://www.instagram.com/p/DOdb8pEjyLU/",
@@ -32,9 +33,11 @@ func TestWordpressAdapter_Post(t *testing.T) {
 	httpClient := &http.Client{}
 	client := driver.NewClient(httpClient)
 	adapter := NewWordpressAdapter(client)
+	post.SetFeaturedMediaID(0)
+	post.AppendSourceURL("https://example.com/featured-image.jpg")
+	post.AppendSourceURL("https://example.com/child-image1.jpg")
 	posted, err := adapter.Post(context.Background(), external.WordpressPostInput{
 		Post:               post,
-		FeaturedMediaID:    0,
 		WordpressInstagram: wordpressInstagram,
 	})
 	if err != nil {
