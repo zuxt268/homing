@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"sort"
 	"sync"
@@ -163,48 +164,70 @@ func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInst
 		return nil
 	}
 
-	/*
-		インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
-	*/
-	localPath, err := fd.Download(ctx, post.MediaURL)
-	if err != nil {
-		return err
-	}
-
-	/*
-		ダウンロードしたファイルをWordpressにアップロード
-	*/
-	uploadResp, err := u.wordpressAdapter.FileUpload(ctx, external.WordpressFileUploadInput{
-		Path:               localPath,
-		WordpressInstagram: *wi,
-	})
-	if err != nil {
-		return err
-	}
-	post.SetFeaturedMediaID(uploadResp.Id)
-	post.AppendSourceURL(uploadResp.SourceUrl)
-	post.SetDeleteHashFlag(wi.DeleteHash)
-
-	for _, child := range post.Children {
+	if len(post.Children) == 0 {
 		/*
 			インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
 		*/
-		childLocalPath, err := fd.Download(ctx, child.MediaURL)
+		localPath, err := fd.Download(ctx, post.MediaURL)
 		if err != nil {
 			return err
 		}
-
 		/*
 			ダウンロードしたファイルをWordpressにアップロード
 		*/
-		childUploadResp, err := u.wordpressAdapter.FileUpload(ctx, external.WordpressFileUploadInput{
-			Path:               childLocalPath,
+		uploadResp, err := u.wordpressAdapter.FileUpload(ctx, external.WordpressFileUploadInput{
+			Path:               localPath,
 			WordpressInstagram: *wi,
 		})
 		if err != nil {
 			return err
 		}
-		post.AppendSourceURL(childUploadResp.SourceUrl)
+		post.SetFeaturedMediaID(uploadResp.Id)
+		post.SetDeleteHashFlag(wi.DeleteHash)
+		post.AppendSourceURL(uploadResp.SourceUrl)
+
+		/*
+			ダウンロードファイルを都度削除
+		*/
+		err = os.Remove(localPath)
+		if err != nil {
+			slog.Warn(err.Error())
+		}
+
+	} else {
+		for i, child := range post.Children {
+			/*
+				インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
+			*/
+			childLocalPath, err := fd.Download(ctx, child.MediaURL)
+			if err != nil {
+				return err
+			}
+
+			/*
+				ダウンロードしたファイルをWordpressにアップロード
+			*/
+			childUploadResp, err := u.wordpressAdapter.FileUpload(ctx, external.WordpressFileUploadInput{
+				Path:               childLocalPath,
+				WordpressInstagram: *wi,
+			})
+			if err != nil {
+				return err
+			}
+			if i == 0 {
+				post.SetFeaturedMediaID(childUploadResp.Id)
+				post.SetDeleteHashFlag(wi.DeleteHash)
+			}
+			post.AppendSourceURL(childUploadResp.SourceUrl)
+
+			/*
+				ダウンロードファイルを都度削除
+			*/
+			err = os.Remove(childLocalPath)
+			if err != nil {
+				slog.Warn(err.Error())
+			}
+		}
 	}
 
 	/*
@@ -238,11 +261,6 @@ func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInst
 		Slackに通知
 	*/
 	_ = u.slack.Success(ctx, wi, postResp.WordpressURL, post.Permalink)
-
-	/*
-		ダウンロードファイルを都度削除
-	*/
-	_ = os.Remove(localPath)
 
 	return nil
 }
