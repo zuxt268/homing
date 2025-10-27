@@ -117,9 +117,9 @@ func (i *InstagramPost) getHTMLForCarousel() string {
 	html := "<div class='a-root-wordpress-instagram-slider'>"
 	for idx, child := range i.Children {
 		if child.MediaType == "IMAGE" {
-			html += fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='margin: 0 auto;' width='500px' height='500px'/></div>", i.SourceURLs[idx+1])
+			html += fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='margin: 0 auto;' width='500px' height='500px'/></div>", i.SourceURLs[idx])
 		} else if child.MediaType == "VIDEO" {
-			html += fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='margin: 0 auto;' width='500px' height='500px' controls>Sorry, your browser does not support embedded videos.</video></div>", i.SourceURLs[idx+1])
+			html += fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='margin: 0 auto;' width='500px' height='500px' controls>Sorry, your browser does not support embedded videos.</video></div>", i.SourceURLs[idx])
 		}
 	}
 	html += "</div>"
