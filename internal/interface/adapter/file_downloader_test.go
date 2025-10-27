@@ -9,6 +9,8 @@ import (
 )
 
 func TestFileDownloader_Download(t *testing.T) {
+	t.Skip()
+
 	u := "https://picsum.photos/200/300"
 	downloader := NewFileDownloader()
 	path, err := downloader.Download(context.Background(), u)
