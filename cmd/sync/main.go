@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	httpClient := &http.Client{Timeout: time.Second * 10}
+	httpClient := &http.Client{Timeout: time.Second * 60}
 	httpDriver := driver.NewClient(httpClient)
 
 	customerUsecase := di.NewCustomerUsecase(httpDriver, db)
