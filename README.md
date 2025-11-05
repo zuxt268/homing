@@ -1,14 +1,20 @@
-# Homing
+# 🏠 Homing
 
 **Instagram投稿を自動的にWordPressへ連携するバックエンドサービス**
 
 [![Go Version](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://golang.org/)
 [![Echo](https://img.shields.io/badge/Echo-v4-00ADD8)](https://echo.labstack.com/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![Docker](https://img.shields.io/badge/Docker-Supported-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+> **マルチテナント対応のSaaS型自動連携システム**で、SNSマーケティングの効率化を実現
+
+[📺 デモ](#-デモ) • [🚀 始め方](#セットアップ) • [📖 ドキュメント](#api仕様) • [💡 アピールポイント](#-技術的なアピールポイント)
 
 ## 🎯 プロジェクトの背景と目的
 
-SNSマーケティングを活用する企業にとって、InstagramからWebサイトへのコンテンツ連携は手作業では時間がかかり、ヒューマンエラーも発生しやすい課題でした。本プロジェクトは、この課題を解決するために開発した**マルチテナント対応のSaaS型自動連携システム**です。
+SNSマーケティングを活用する企業にとって、InstagramからWebサイトへのコンテンツ連携は手作業では時間がかかり、ヒューマンエラーも発生しやすい課題でした。本プロジェクトは、この課題を解決するために開発した**マルチテナント対応の自動連携システム**です。
 
 ### ビジネス価値
 
@@ -72,9 +78,59 @@ Homingは、複数の顧客のInstagramビジネスアカウントから投稿�
 - **テストカバレッジ**: リポジトリ層を中心にテスト実装
 - **Go標準スタイル**: gofmtに準拠
 
-## アーキテクチャ
+## 📺 デモ
 
-クリーンアーキテクチャ(DDD)を採用しています。
+### システム構成図
+
+```
+┌─────────────┐         ┌──────────────┐         ┌────────────────┐
+│  Instagram  │────────▶│    Homing    │────────▶│   WordPress    │
+│  Graph API  │   取得   │  (Go/Echo)   │   投稿   │   REST API     │
+└─────────────┘         └──────────────┘         └────────────────┘
+                               │
+                               │ 通知
+                               ▼
+                        ┌──────────────┐
+                        │     Slack    │
+                        │    Webhook   │
+                        └──────────────┘
+```
+
+### 処理フロー
+
+```
+1. Instagram Graph APIから投稿を取得
+   ↓
+2. start_date以降の投稿をフィルタリング
+   ↓
+3. 重複チェック（既存投稿をスキップ）
+   ↓
+4. 画像/動画をダウンロード
+   ↓
+5. WordPressへアップロード
+   ↓
+6. WordPress記事を作成
+   ↓
+7. DBに連携記録を保存
+   ↓
+8. Slackへ結果を通知
+```
+
+### スクリーンショット
+
+_Swagger API仕様書の例_
+```
+http://localhost:8090/swagger/index.html
+```
+
+Swagger UIでは以下が確認できます：
+- 全エンドポイントの一覧
+- リクエスト/レスポンスのスキーマ
+- インタラクティブなAPIテスト機能
+
+## 🏗️ アーキテクチャ
+
+クリーンアーキテクチャ(DDD)を採用し、**依存性逆転の原則**に基づいた設計を実現。
 
 ```
 internal/
@@ -409,10 +465,56 @@ mysql -u $DB_USER -p$DB_PASSWORD -h $DB_HOST -P $DB_PORT -e "SHOW DATABASES;"
 
 ## 📊 プロジェクト統計
 
-- **開発期間**: [期間を記載]
-- **総コード行数**: 4,500行以上（Go）
-- **ファイル数**: 47ファイル
-- **テストファイル数**: 7ファイル
-- **外部API連携数**: 3サービス（Instagram Graph API、WordPress REST API、Slack Webhook）
-- **エンドポイント数**: 10以上（同期、トークン管理、WordPress-Instagram連携CRUD）
-- **マイグレーションファイル数**: 5ファイル
+| 項目 | 値 |
+|-----|-----|
+| **総コード行数** | 4,500行以上（Go） |
+| **ファイル数** | 47ファイル |
+| **テストファイル数** | 7ファイル |
+| **外部API連携数** | 3サービス（Instagram Graph API、WordPress REST API、Slack Webhook） |
+| **RESTエンドポイント数** | 10以上（同期、トークン管理、WordPress-Instagram連携CRUD） |
+| **マイグレーションファイル数** | 5ファイル |
+| **並列処理数** | 20件（セマフォパターン） |
+
+## 🔧 技術的なハイライト
+
+### パフォーマンス最適化
+
+- **並列処理**: セマフォパターンで20アカウントを同時処理
+- **メモリ効率**: 一時ファイルの即座クリーンアップ
+- **HTTPクライアント最適化**: タイムアウト設定とコネクション管理
+
+### セキュリティ対策
+
+- **認証**: Instagram OAuth、WordPress Basic認証
+- **環境変数管理**: direnvによる秘密情報の安全な管理
+- **SQL Injection対策**: GORMによるパラメータバインディング
+
+### 開発効率化
+
+- **Makefile**: よく使うコマンドの自動化
+  - `make dev`: ホットリロード起動
+  - `make test`: テスト実行
+  - `make swag`: Swagger仕様再生成
+- **Docker Compose**: 環境構築の簡素化
+- **Air**: ホットリロードによる開発サイクルの高速化
+
+## 🎯 このプロジェクトで実現したこと
+
+### ビジネス面での成果
+
+✅ **完全自動化**: 手作業での投稿作業を100%削減
+✅ **マルチテナント対応**: 複数顧客を単一システムで管理
+✅ **運用安定性**: Slack通知でエラーを即座検知
+✅ **データ整合性**: 重複防止と冪等性の保証
+
+### 技術面での学び
+
+✅ **クリーンアーキテクチャの実践**: DDDに基づいた設計と実装
+✅ **外部API統合**: 複数の異なるAPIの効果的な統合
+✅ **並行処理**: Goroutineとセマフォパターンの実装
+✅ **テスト戦略**: Testcontainersを活用した統合テスト
+✅ **エラーハンドリング**: 段階的なリトライとアラート設計
+
+## 📝 ライセンス
+
+MIT License
