@@ -27,7 +27,7 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	httpClient := &http.Client{Timeout: time.Second * 10}
+	httpClient := &http.Client{Timeout: time.Minute * 5}
 	httpDriver := driver.NewClient(httpClient)
 
 	e := echo.New()

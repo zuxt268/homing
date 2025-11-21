@@ -39,3 +39,4 @@ tmp/
 .env
 
 batch.log
+credentials
