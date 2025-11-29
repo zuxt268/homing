@@ -541,6 +541,12 @@ const docTemplate = `{
         "res.WordpressInstagram": {
             "type": "object",
             "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "delete_hash": {
                     "type": "boolean"
                 },
@@ -576,6 +582,12 @@ const docTemplate = `{
         "res.WordpressInstagramDetail": {
             "type": "object",
             "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "delete_hash": {
                     "type": "boolean"
                 },

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/zuxt268/homing/internal/domain"
@@ -47,6 +48,7 @@ func (r *wordpressInstagramRepository) Get(ctx context.Context, f WordpressInsta
 		StartDate:          wi.StartDate,
 		Status:             domain.Status(wi.Status),
 		DeleteHash:         wi.DeleteHash,
+		Categories:         strings.Split(wi.Categories, ","),
 		UpdatedAt:          wi.UpdatedAt,
 		CreatedAt:          wi.UpdatedAt,
 	}, nil
@@ -71,6 +73,7 @@ func (r *wordpressInstagramRepository) FindAll(ctx context.Context, f WordpressI
 			StartDate:          wi.StartDate,
 			Status:             domain.Status(wi.Status),
 			DeleteHash:         wi.DeleteHash,
+			Categories:         strings.Split(wi.Categories, ","),
 			UpdatedAt:          wi.UpdatedAt,
 			CreatedAt:          wi.CreatedAt,
 		})
@@ -111,12 +114,14 @@ func (r *wordpressInstagramRepository) Update(ctx context.Context, wordpressInst
 		Memo:               wordpressInstagram.Memo,
 		StartDate:          wordpressInstagram.StartDate,
 		Status:             int(wordpressInstagram.Status),
+		Categories:         strings.Join(wordpressInstagram.Categories, ","),
 		DeleteHash:         wordpressInstagram.DeleteHash,
 	}
 	return r.getDB(ctx).Omit("created_at").Save(m).Error
 }
 
 func (r *wordpressInstagramRepository) Create(ctx context.Context, wordpressInstagram *domain.WordpressInstagram) error {
+
 	m := model.WordpressInstagram{
 		Name:               wordpressInstagram.Name,
 		WordpressDomain:    wordpressInstagram.WordpressDomain,
@@ -127,6 +132,7 @@ func (r *wordpressInstagramRepository) Create(ctx context.Context, wordpressInst
 		StartDate:          wordpressInstagram.StartDate,
 		Status:             int(wordpressInstagram.Status),
 		DeleteHash:         wordpressInstagram.DeleteHash,
+		Categories:         strings.Join(wordpressInstagram.Categories, ","),
 	}
 	if err := r.getDB(ctx).Create(&m).Error; err != nil {
 		return err

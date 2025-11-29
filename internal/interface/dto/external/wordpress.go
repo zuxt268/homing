@@ -13,11 +13,12 @@ import (
 )
 
 type WordpressPostPayload struct {
-	Email         string `json:"email"`
-	Title         string `json:"title"`
-	Content       string `json:"content"`
-	PostDate      string `json:"post_date"`
-	FeaturedMedia int    `json:"featured_media"`
+	Email         string   `json:"email"`
+	Title         string   `json:"title"`
+	Content       string   `json:"content"`
+	PostDate      string   `json:"post_date"`
+	FeaturedMedia int      `json:"featured_media"`
+	PostCategory  []string `json:"post_category"`
 }
 
 func GetWordpressHeader(payload any, apiKeyHex string) (map[string]string, error) {

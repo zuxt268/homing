@@ -27,6 +27,7 @@ type CreateWordpressInstagram struct {
 	StartDate       time.Time `json:"start_date"`
 	Status          int       `json:"status"`
 	DeleteHash      bool      `json:"delete_hash"`
+	Categories      []string  `json:"categories"`
 }
 
 type UpdateWordpressInstagram struct {
@@ -38,4 +39,5 @@ type UpdateWordpressInstagram struct {
 	StartDate   *time.Time `json:"start_date"`
 	Status      *int       `json:"status"`
 	DeleteHash  *bool      `json:"delete_hash"`
+	Categories  []string   `json:"categories"`
 }

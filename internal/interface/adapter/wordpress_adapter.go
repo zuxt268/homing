@@ -78,6 +78,7 @@ func (a *wordpressAdapter) Post(ctx context.Context, input external.WordpressPos
 		Content:       input.Post.GetContent(),
 		PostDate:      input.Post.GetPostDate(),
 		FeaturedMedia: input.Post.FeaturedMediaID,
+		PostCategory:  input.WordpressInstagram.Categories,
 	}
 	apiKey := input.WordpressInstagram.GenerateAPIKey(a.secretPhrase)
 

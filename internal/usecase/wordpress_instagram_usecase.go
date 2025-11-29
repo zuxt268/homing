@@ -68,6 +68,14 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagramList(ctx context.Contex
 
 	result := make([]res.WordpressInstagram, 0, len(wiList))
 	for _, wi := range wiList {
+
+		categories := make([]string, 0, len(wi.Categories))
+		for _, category := range wi.Categories {
+			if category != "" {
+				categories = append(categories, category)
+			}
+		}
+
 		result = append(result, res.WordpressInstagram{
 			ID:                 wi.ID,
 			Name:               wi.Name,
@@ -79,6 +87,7 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagramList(ctx context.Contex
 			StartDate:          wi.StartDate,
 			Status:             int(wi.Status),
 			DeleteHash:         wi.DeleteHash,
+			Categories:         categories,
 		})
 	}
 
@@ -125,6 +134,13 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, i
 		}
 	}
 
+	categories := make([]string, 0, len(wi.Categories))
+	for _, category := range wi.Categories {
+		if category != "" {
+			categories = append(categories, category)
+		}
+	}
+
 	return &res.WordpressInstagramDetail{
 		ID:                 wi.ID,
 		Name:               wi.Name,
@@ -136,6 +152,7 @@ func (u *wordpressInstagramUsecase) GetWordpressInstagram(ctx context.Context, i
 		StartDate:          wi.StartDate,
 		Status:             int(wi.Status),
 		DeleteHash:         wi.DeleteHash,
+		Categories:         categories,
 		Posts: res.Posts{
 			Posts: respPosts,
 			Paginate: res.Paginate{
@@ -178,6 +195,7 @@ func (u *wordpressInstagramUsecase) CreateWordpressInstagram(ctx context.Context
 		StartDate:          req.StartDate,
 		Status:             domain.Status(req.Status),
 		DeleteHash:         req.DeleteHash,
+		Categories:         req.Categories,
 	}
 
 	if err := u.wordpressInstagramRepo.Create(ctx, wi); err != nil {
@@ -195,6 +213,7 @@ func (u *wordpressInstagramUsecase) CreateWordpressInstagram(ctx context.Context
 		StartDate:          wi.StartDate,
 		Status:             int(wi.Status),
 		DeleteHash:         wi.DeleteHash,
+		Categories:         req.Categories,
 	}, nil
 }
 
@@ -244,6 +263,9 @@ func (u *wordpressInstagramUsecase) UpdateWordpressInstagram(ctx context.Context
 	if req.DeleteHash != nil {
 		wi.DeleteHash = *req.DeleteHash
 	}
+	if req.Categories != nil {
+		wi.Categories = req.Categories
+	}
 
 	err = u.wordpressInstagramRepo.Update(ctx, wi, repository.WordpressInstagramFilter{
 		ID: req.ID,
@@ -263,6 +285,7 @@ func (u *wordpressInstagramUsecase) UpdateWordpressInstagram(ctx context.Context
 		StartDate:          wi.StartDate,
 		Status:             int(wi.Status),
 		DeleteHash:         wi.DeleteHash,
+		Categories:         wi.Categories,
 	}, nil
 }
 

@@ -29,6 +29,7 @@ func TestWordpressInstagramRepository_Create(t *testing.T) {
 				InstagramID:        "123456789",
 				InstagramName:      "testuser",
 				Memo:               "Test memo",
+				Categories:         []string{"カテゴリ1", "カテゴリ2"},
 				StartDate:          time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
 				Status:             1,
 				DeleteHash:         false,
@@ -44,6 +45,7 @@ func TestWordpressInstagramRepository_Create(t *testing.T) {
 				InstagramID:        "987654321",
 				InstagramName:      "testuser2",
 				Memo:               "",
+				Categories:         []string{""},
 				StartDate:          time.Date(2025, 2, 1, 0, 0, 0, 0, time.UTC),
 				Status:             0,
 				DeleteHash:         true,
@@ -71,6 +73,7 @@ func TestWordpressInstagramRepository_Create(t *testing.T) {
 			assert.Equal(t, tt.wi.InstagramID, got.InstagramID)
 			assert.Equal(t, tt.wi.InstagramName, got.InstagramName)
 			assert.Equal(t, tt.wi.Memo, got.Memo)
+			assert.Equal(t, tt.wi.Categories, got.Categories)
 			assert.Equal(t, tt.wi.Status, got.Status)
 			assert.Equal(t, tt.wi.DeleteHash, got.DeleteHash)
 		})

@@ -17,6 +17,7 @@ type WordpressInstagram struct {
 	StartDate          time.Time
 	Status             Status
 	DeleteHash         bool
+	Categories         []string
 	UpdatedAt          time.Time
 	CreatedAt          time.Time
 }

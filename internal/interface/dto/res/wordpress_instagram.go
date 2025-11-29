@@ -18,6 +18,7 @@ type WordpressInstagram struct {
 	StartDate          time.Time `json:"start_date"`
 	Status             int       `json:"status"`
 	DeleteHash         bool      `json:"delete_hash"`
+	Categories         []string  `json:"categories"`
 }
 
 type WordpressInstagramDetail struct {
@@ -32,6 +33,7 @@ type WordpressInstagramDetail struct {
 	Status             int       `json:"status"`
 	DeleteHash         bool      `json:"delete_hash"`
 	Posts              Posts     `json:"posts"`
+	Categories         []string  `json:"categories"`
 }
 
 type Posts struct {

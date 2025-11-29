@@ -530,6 +530,12 @@
         "res.WordpressInstagram": {
             "type": "object",
             "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "delete_hash": {
                     "type": "boolean"
                 },
@@ -565,6 +571,12 @@
         "res.WordpressInstagramDetail": {
             "type": "object",
             "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "delete_hash": {
                     "type": "boolean"
                 },
