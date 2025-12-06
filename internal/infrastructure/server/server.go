@@ -30,6 +30,16 @@ func Run() {
 	httpClient := &http.Client{Timeout: time.Minute * 5}
 	httpDriver := driver.NewClient(httpClient)
 
+	// GbpAdapter初期化
+	credentialsData, err := os.ReadFile(config.Env.GoogleCredentialPath)
+	if err != nil {
+		log.Fatal("Failed to read credentials file:", err)
+	}
+	gbpAdapter, err := di.NewGbpAdapter(credentialsData)
+	if err != nil {
+		log.Fatal("Failed to initialize GBP adapter:", err)
+	}
+
 	e := echo.New()
 
 	// ミドルウェア設定
@@ -38,7 +48,7 @@ func Run() {
 	e.Use(middleware.Recover())
 
 	// ハンドラー初期化
-	apiHandler := di.NewHandler(httpDriver, db)
+	apiHandler := di.NewHandler(httpDriver, db, gbpAdapter)
 
 	// Swagger ルート
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -58,6 +68,13 @@ func Run() {
 	api.POST("/wordpress-instagram", apiHandler.CreateWordpressInstagram)
 	api.PUT("/wordpress-instagram/:id", apiHandler.UpdateWordpressInstagram)
 	api.DELETE("/wordpress-instagram/:id", apiHandler.DeleteWordpressInstagram)
+
+	api.GET("/google-business", apiHandler.GetGoogleBusinessList)
+	api.GET("/google-business/fetch", apiHandler.FetchGoogleBusinessList)
+
+	api.POST("/business-instagram", apiHandler.CreateBusinessInstagram)
+	api.POST("/business-instagram", apiHandler.CreateBusinessInstagram)
+	api.PUT("/business-instagram/:id", apiHandler.UpdateBusinessInstagram)
 
 	srv := &http.Server{
 		Addr:    config.Env.Address,

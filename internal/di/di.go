@@ -37,18 +37,37 @@ func NewTokenRepository(db *gorm.DB) repository.TokenRepository {
 	return repository.NewTokenRepository(db)
 }
 
+func NewGoogleBusinessRepository(db *gorm.DB) repository.GoogleBusinessRepository {
+	return repository.NewGoogleBusinessRepository(db)
+}
+
+func NewBusinessInstagramRepository(db *gorm.DB) repository.BusinessInstagramRepository {
+	return repository.NewBusinessInstagramRepository(db)
+}
+
+func NewGooglePostRepository(db *gorm.DB) repository.GooglePostRepository {
+	return repository.NewGooglePostRepository(db)
+}
+
+func NewGbpAdapter(credentialsData []byte) (adapter.GbpAdapter, error) {
+	return adapter.NewGbpAdapter(credentialsData)
+}
+
 func NewFileDownloader() adapter.FileDownloader {
 	return adapter.NewFileDownloader()
 }
 
-func NewCustomerUsecase(httpDriver driver.HttpDriver, db *gorm.DB) usecase.CustomerUsecase {
+func NewCustomerUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.GbpAdapter) usecase.CustomerUsecase {
 	return usecase.NewCustomerUsecase(
 		NewInstagramAdapter(httpDriver),
 		NewSlack(httpDriver),
 		NewWordpressAdapter(httpDriver),
+		gbpAdapter,
 		NewPostRepository(db),
 		NewWordpressInstagramRepository(db),
 		NewTokenRepository(db),
+		NewBusinessInstagramRepository(db),
+		NewGooglePostRepository(db),
 	)
 }
 
@@ -70,10 +89,21 @@ func NewWordpressInstagramUsecase(httpDriver driver.HttpDriver, db *gorm.DB) use
 	)
 }
 
-func NewHandler(httpDriver driver.HttpDriver, db *gorm.DB) handler.APIHandler {
+func NewBusinessInstagramUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.GbpAdapter) usecase.BusinessInstagramUsecase {
+	return usecase.NewBusinessInstagramUsecase(
+		NewGoogleBusinessRepository(db),
+		NewTokenRepository(db),
+		NewBusinessInstagramRepository(db),
+		NewInstagramAdapter(httpDriver),
+		gbpAdapter,
+	)
+}
+
+func NewHandler(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.GbpAdapter) handler.APIHandler {
 	return handler.NewAPIHandler(
-		NewCustomerUsecase(httpDriver, db),
+		NewCustomerUsecase(httpDriver, db, gbpAdapter),
 		NewTokenUsecase(httpDriver, db),
 		NewWordpressInstagramUsecase(httpDriver, db),
+		NewBusinessInstagramUsecase(httpDriver, db, gbpAdapter),
 	)
 }

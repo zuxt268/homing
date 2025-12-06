@@ -31,7 +31,6 @@ type CreateWordpressInstagram struct {
 }
 
 type UpdateWordpressInstagram struct {
-	ID          *int       `json:"id"`
 	Name        *string    `json:"name"`
 	Wordpress   *string    `json:"wordpress_domain"`
 	InstagramID *string    `json:"instagram_id"`

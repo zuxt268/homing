@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/zuxt268/homing/internal/interface/adapter"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
@@ -84,6 +85,31 @@ func getClient(config *oauth2.Config) *http.Client {
 func main() {
 	ctx := context.Background()
 
+	credentialsData, err := os.ReadFile("credentials/client_secret.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	gptAdapter, err := adapter.NewGbpAdapter(credentialsData)
+	if err != nil {
+		log.Fatal(err)
+	}
+	businesses, err := gptAdapter.GetAllBusinesses(ctx, "accounts/YOUR_ACCOUNT_ID")
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, b := range businesses {
+		fmt.Println(b.Name)
+		fmt.Println(b.Title)
+	}
+
+	business, err := gptAdapter.GetBusiness(ctx, businesses[0].Name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("======")
+	fmt.Println(business)
+	fmt.Println("======")
+
 	// 👇 credentials.json を読み込む
 	b, err := os.ReadFile("credentials/client_secret.json")
 	if err != nil {
@@ -118,26 +144,50 @@ func main() {
 		log.Fatalf("アカウント取得エラー: %v", err)
 	}
 
+	fmt.Println("aaaaa")
+	fmt.Println(len(resp.Accounts))
+	fmt.Println("bbbbb")
+
 	fmt.Println("==== GBP アカウント一覧 ====")
 	for _, acct := range resp.Accounts {
 		fmt.Println("アカウント名:", acct.Name)
 		fmt.Println("表示名:", acct.AccountName)
 		fmt.Println()
 
-		// 各アカウント配下のロケーション（ビジネス）一覧を取得
+		// 各アカウント配下のロケーション（ビジネス）一覧を取得（全件）
 		fmt.Println("  --- ビジネス一覧 ---")
-		locResp, err := businessSvc.Accounts.Locations.List(acct.Name).
-			ReadMask("name,title,storefrontAddress,profile").
-			Do()
-		if err != nil {
-			log.Printf("  ビジネス取得エラー: %v\n", err)
-			continue
+		pageToken := ""
+		allLocations := []*mybusinessbusinessinformation.Location{}
+
+		for {
+			call := businessSvc.Accounts.Locations.List(acct.Name).
+				ReadMask("name,title,storefrontAddress,profile").
+				PageSize(100)
+
+			if pageToken != "" {
+				call = call.PageToken(pageToken)
+			}
+
+			locResp, err := call.Do()
+			if err != nil {
+				log.Printf("  ビジネス取得エラー: %v\n", err)
+				break
+			}
+
+			allLocations = append(allLocations, locResp.Locations...)
+
+			if locResp.NextPageToken == "" {
+				break // 全件取得完了
+			}
+			pageToken = locResp.NextPageToken
 		}
 
-		if locResp == nil || len(locResp.Locations) == 0 {
+		if len(allLocations) == 0 {
 			fmt.Println("  （ビジネスなし）")
 		} else {
-			for _, loc := range locResp.Locations {
+			fmt.Println("  ビジネス総数:", len(allLocations))
+
+			for _, loc := range allLocations {
 				fmt.Println("  ビジネス名:", loc.Name)
 				if loc.Title != "" {
 					fmt.Println("  店舗名:", loc.Title)

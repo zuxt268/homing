@@ -4,6 +4,183 @@
         "contact": {}
     },
     "paths": {
+        "/api/business-instagram": {
+            "post": {
+                "description": "Business Instagramを作成します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "business-instagram"
+                ],
+                "summary": "Business Instagram作成",
+                "parameters": [
+                    {
+                        "description": "作成データ",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/req.BusinessInstagram"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "作成されたBusiness Instagram",
+                        "schema": {
+                            "$ref": "#/definitions/res.BusinessInstagram"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/business-instagram/{id}": {
+            "put": {
+                "description": "Business Instagramを更新します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "business-instagram"
+                ],
+                "summary": "Business Instagram更新",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Business Instagram ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新データ",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/req.BusinessInstagram"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新されたBusiness Instagram",
+                        "schema": {
+                            "$ref": "#/definitions/res.BusinessInstagram"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "見つかりません",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/google-business": {
+            "get": {
+                "description": "Google Businessの一覧を取得します（ページング対応）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "google-business"
+                ],
+                "summary": "Google Business一覧取得",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数（デフォルト: 20）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "オフセット（デフォルト: 0）",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Google Business一覧",
+                        "schema": {
+                            "$ref": "#/definitions/res.GoogleBusinessList"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/google-business/fetch": {
+            "get": {
+                "description": "Google Businessを同期します",
+                "tags": [
+                    "google-business"
+                ],
+                "summary": "Google Businessの同期",
+                "responses": {
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/sync": {
             "post": {
                 "description": "全ての顧客のデータを同期します",
@@ -430,9 +607,38 @@
         }
     },
     "definitions": {
+        "req.BusinessInstagram": {
+            "type": "object",
+            "properties": {
+                "business_name": {
+                    "type": "string"
+                },
+                "instagram_id": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "req.CreateWordpressInstagram": {
             "type": "object",
             "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "delete_hash": {
                     "type": "boolean"
                 },
@@ -459,8 +665,43 @@
         "req.UpdateWordpressInstagram": {
             "type": "object",
             "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "delete_hash": {
                     "type": "boolean"
+                },
+                "instagram_id": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "wordpress_domain": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.BusinessInstagram": {
+            "type": "object",
+            "properties": {
+                "business_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -480,8 +721,42 @@
                 "status": {
                     "type": "integer"
                 },
-                "wordpress_domain": {
+                "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "res.GoogleBusiness": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.GoogleBusinessList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "google_business_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/res.GoogleBusiness"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

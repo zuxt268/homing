@@ -1,6 +1,25 @@
 definitions:
+  req.BusinessInstagram:
+    properties:
+      business_name:
+        type: string
+      instagram_id:
+        type: string
+      memo:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: integer
+    type: object
   req.CreateWordpressInstagram:
     properties:
+      categories:
+        items:
+          type: string
+        type: array
       delete_hash:
         type: boolean
       instagram_id:
@@ -18,10 +37,12 @@ definitions:
     type: object
   req.UpdateWordpressInstagram:
     properties:
+      categories:
+        items:
+          type: string
+        type: array
       delete_hash:
         type: boolean
-      id:
-        type: integer
       instagram_id:
         type: string
       memo:
@@ -34,6 +55,49 @@ definitions:
         type: integer
       wordpress_domain:
         type: string
+    type: object
+  res.BusinessInstagram:
+    properties:
+      business_name:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      instagram_id:
+        type: string
+      memo:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  res.GoogleBusiness:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      title:
+        type: string
+    type: object
+  res.GoogleBusinessList:
+    properties:
+      count:
+        type: integer
+      google_business_list:
+        items:
+          $ref: '#/definitions/res.GoogleBusiness'
+        type: array
+      total:
+        type: integer
     type: object
   res.Post:
     properties:
@@ -132,6 +196,122 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/business-instagram:
+    post:
+      consumes:
+      - application/json
+      description: Business Instagramを作成します
+      parameters:
+      - description: 作成データ
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/req.BusinessInstagram'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 作成されたBusiness Instagram
+          schema:
+            $ref: '#/definitions/res.BusinessInstagram'
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Business Instagram作成
+      tags:
+      - business-instagram
+  /api/business-instagram/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Business Instagramを更新します
+      parameters:
+      - description: Business Instagram ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新データ
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/req.BusinessInstagram'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新されたBusiness Instagram
+          schema:
+            $ref: '#/definitions/res.BusinessInstagram'
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "404":
+          description: 見つかりません
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Business Instagram更新
+      tags:
+      - business-instagram
+  /api/google-business:
+    get:
+      consumes:
+      - application/json
+      description: Google Businessの一覧を取得します（ページング対応）
+      parameters:
+      - description: '取得件数（デフォルト: 20）'
+        in: query
+        name: limit
+        type: integer
+      - description: 'オフセット（デフォルト: 0）'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Google Business一覧
+          schema:
+            $ref: '#/definitions/res.GoogleBusinessList'
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Google Business一覧取得
+      tags:
+      - google-business
+  /api/google-business/fetch:
+    get:
+      description: Google Businessを同期します
+      responses:
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Google Businessの同期
+      tags:
+      - google-business
   /api/sync:
     post:
       consumes:

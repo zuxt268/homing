@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/zuxt268/homing/internal/config"
 	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/interface/adapter"
 	"github.com/zuxt268/homing/internal/interface/dto/external"
@@ -17,17 +18,23 @@ import (
 )
 
 type CustomerUsecase interface {
-	SyncAll(ctx context.Context) error
-	SyncOne(ctx context.Context, id int) error
+	SyncAllWordpressInstagram(ctx context.Context) error
+	SyncOneWordpressInstagram(ctx context.Context, id int) error
+
+	SyncAllGoogleBusinessInstagram(ctx context.Context) error
+	SyncOneGoogleBusinessInstagram(ctx context.Context, id int) error
 }
 
 type customerUsecase struct {
 	instagramAdapter       adapter.InstagramAdapter
 	slack                  adapter.Slack
 	wordpressAdapter       adapter.WordpressAdapter
+	gbpAdapter             adapter.GbpAdapter
 	postRepo               repository.PostRepository
 	wordpressInstagramRepo repository.WordpressInstagramRepository
 	tokenRepo              repository.TokenRepository
+	businessInstagramRepo  repository.BusinessInstagramRepository
+	googlePostRepo         repository.GooglePostRepository
 	customerLocks          sync.Map
 }
 
@@ -35,17 +42,23 @@ func NewCustomerUsecase(
 	instagramAdapter adapter.InstagramAdapter,
 	slack adapter.Slack,
 	wordpressAdapter adapter.WordpressAdapter,
+	gbpAdapter adapter.GbpAdapter,
 	postRepo repository.PostRepository,
 	wordpressInstagramRepo repository.WordpressInstagramRepository,
 	tokenRepo repository.TokenRepository,
+	businessInstagramRepo repository.BusinessInstagramRepository,
+	googlePostRepo repository.GooglePostRepository,
 ) CustomerUsecase {
 	return &customerUsecase{
 		instagramAdapter:       instagramAdapter,
 		slack:                  slack,
 		wordpressAdapter:       wordpressAdapter,
+		gbpAdapter:             gbpAdapter,
 		postRepo:               postRepo,
 		wordpressInstagramRepo: wordpressInstagramRepo,
 		tokenRepo:              tokenRepo,
+		businessInstagramRepo:  businessInstagramRepo,
+		googlePostRepo:         googlePostRepo,
 	}
 }
 
@@ -53,7 +66,7 @@ const template = `<@U04P797HYPM>
 [%s]
 顧客 id=%d, name=%s`
 
-func (u *customerUsecase) SyncAll(ctx context.Context) error {
+func (u *customerUsecase) SyncAllWordpressInstagram(ctx context.Context) error {
 	wiList, err := u.wordpressInstagramRepo.FindAll(ctx, repository.WordpressInstagramFilter{
 		Status: util.Pointer(1),
 	})
@@ -79,10 +92,7 @@ func (u *customerUsecase) SyncAll(ctx context.Context) error {
 				_ = fd.DeleteTempDirectory()
 			}()
 
-			err := u.syncOne(ctx, wi, fd)
-			if err != nil {
-				_ = u.slack.Alert(ctx, err.Error(), *wi)
-			}
+			u.syncOne(ctx, wi, fd)
 		}(wi)
 	}
 
@@ -90,7 +100,7 @@ func (u *customerUsecase) SyncAll(ctx context.Context) error {
 	return nil
 }
 
-func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInstagram, fd adapter.FileDownloader) error {
+func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInstagram, fd adapter.FileDownloader) {
 	// 顧客IDごとのロックを取得
 	lockInterface, _ := u.customerLocks.LoadOrStore(wi.ID, &sync.Mutex{})
 	mu := lockInterface.(*sync.Mutex)
@@ -106,14 +116,16 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 		*/
 		token, err := u.tokenRepo.First(backGroundCtx)
 		if err != nil {
-			_ = u.slack.Alert(backGroundCtx, err.Error(), *wi)
+			_ = u.slack.Error(ctx, "instagram => wordpress", err, wi.ID, wi.Name)
+			return
 		}
 		/*
 			インスタグラムから投稿を一覧で取得する
 		*/
 		posts, err := u.instagramAdapter.GetPostsAll(backGroundCtx, token, wi.InstagramID)
 		if err != nil {
-			_ = u.slack.Alert(backGroundCtx, err.Error(), *wi)
+			_ = u.slack.Error(ctx, "instagram => wordpress", err, wi.ID, wi.Name)
+			return
 		}
 
 		/*
@@ -123,17 +135,16 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 			return posts[i].Timestamp < posts[j].Timestamp
 		})
 		for _, post := range posts {
-			err := u.transfer(backGroundCtx, wi, post, fd)
+			err := u.instagram2wordpress(backGroundCtx, wi, post, fd)
 			if err != nil {
-				_ = u.slack.Alert(backGroundCtx, err.Error(), *wi)
+				_ = u.slack.Error(ctx, "instagram => wordpress", err, wi.ID, wi.Name)
+				return
 			}
 		}
 	}()
-
-	return nil
 }
 
-func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInstagram, post domain.InstagramPost, fd adapter.FileDownloader) error {
+func (u *customerUsecase) instagram2wordpress(ctx context.Context, wi *domain.WordpressInstagram, post domain.InstagramPost, fd adapter.FileDownloader) error {
 
 	/*
 		メディアのリンクがない場合はスキップ
@@ -265,7 +276,7 @@ func (u *customerUsecase) transfer(ctx context.Context, wi *domain.WordpressInst
 	return nil
 }
 
-func (u *customerUsecase) SyncOne(ctx context.Context, id int) error {
+func (u *customerUsecase) SyncOneWordpressInstagram(ctx context.Context, id int) error {
 	wi, err := u.wordpressInstagramRepo.Get(ctx, repository.WordpressInstagramFilter{
 		ID: util.Pointer(id),
 	})
@@ -278,10 +289,224 @@ func (u *customerUsecase) SyncOne(ctx context.Context, id int) error {
 		_ = fd.DeleteTempDirectory()
 	}()
 
-	err = u.syncOne(ctx, wi, fd)
+	u.syncOne(ctx, wi, fd)
+	return nil
+}
+
+func (u *customerUsecase) SyncAllGoogleBusinessInstagram(ctx context.Context) error {
+	biList, err := u.businessInstagramRepo.FindAll(ctx, repository.BusinessInstagramFilter{
+		Status: util.Pointer(1),
+	})
 	if err != nil {
-		_ = u.slack.Alert(ctx, err.Error(), *wi)
 		return err
 	}
+
+	fd := adapter.NewFileDownloader()
+	defer func() {
+		_ = fd.DeleteTempDirectory()
+	}()
+
+	backGroundCtx := context.Background()
+	for _, bi := range biList {
+		token, err := u.tokenRepo.First(backGroundCtx)
+		if err != nil {
+			_ = u.slack.Error(ctx, "instagram => google business profile", err, bi.ID, bi.BusinessTitle)
+			continue
+		}
+		/*
+			インスタグラムから投稿を一覧で取得する
+		*/
+		posts, err := u.instagramAdapter.GetPosts25(backGroundCtx, token, bi.InstagramID)
+		if err != nil {
+			_ = u.slack.Error(ctx, "instagram => google business profile", err, bi.ID, bi.BusinessTitle)
+			continue
+		}
+
+		sort.Slice(posts, func(i, j int) bool {
+			return posts[i].Timestamp < posts[j].Timestamp
+		})
+
+		for _, post := range posts {
+			if err := u.instagramToGbp(backGroundCtx, bi, post, fd); err != nil {
+				_ = u.slack.Error(ctx, "instagram => google business profile", err, bi.ID, bi.BusinessTitle)
+				continue
+			}
+		}
+	}
+	return nil
+}
+
+func (u *customerUsecase) SyncOneGoogleBusinessInstagram(ctx context.Context, id int) error {
+	bi, err := u.businessInstagramRepo.Get(ctx, repository.BusinessInstagramFilter{
+		ID:     util.Pointer(id),
+		Status: util.Pointer(1),
+	})
+	if err != nil {
+		return err
+	}
+
+	fd := adapter.NewFileDownloader()
+	defer func() {
+		_ = fd.DeleteTempDirectory()
+	}()
+
+	backGroundCtx := context.Background()
+	token, err := u.tokenRepo.First(backGroundCtx)
+	if err != nil {
+		return err
+	}
+	/*
+		インスタグラムから投稿を一覧で取得する
+	*/
+	posts, err := u.instagramAdapter.GetPostsAll(backGroundCtx, token, bi.InstagramID)
+	if err != nil {
+		return err
+	}
+
+	sort.Slice(posts, func(i, j int) bool {
+		return posts[i].Timestamp < posts[j].Timestamp
+	})
+
+	for _, post := range posts {
+		if err := u.instagramToGbp(backGroundCtx, bi, post, fd); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.BusinessInstagram, post domain.InstagramPost, fd adapter.FileDownloader) error {
+
+	/*
+		メディアのリンクがない場合はスキップ
+	*/
+	if post.MediaURL == "" {
+		return nil
+	}
+
+	/*
+		連携開始日前のデータは連携しない
+	*/
+	instagramPost, _ := time.Parse("2006-01-02T15:04:05-0700", post.Timestamp)
+	if instagramPost.Before(bi.StartDate) {
+		return nil
+	}
+
+	/*
+		すでに投稿しているものかどうかをチェック
+	*/
+	exist, err := u.googlePostRepo.Exists(ctx, repository.GooglePostFilter{
+		MediaID:    &post.ID,
+		CustomerID: &bi.ID,
+	})
+	if err != nil {
+		return err
+	}
+	if exist {
+		return nil
+	}
+
+	if len(post.Children) == 0 {
+
+		/*
+			インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
+		*/
+		localPath, err := fd.Download(ctx, post.MediaURL)
+		if err != nil {
+			return err
+		}
+		/*
+			ダウンロードしたファイルをGoogleBusinessにアップロード
+		*/
+		uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, localPath)
+		if err != nil {
+			return err
+		}
+
+		/*
+			ダウンロードファイルを都度削除
+		*/
+		err = os.Remove(localPath)
+		if err != nil {
+			slog.Warn(err.Error())
+		}
+
+		/*
+			投稿したことをDBに保存
+		*/
+		err = u.googlePostRepo.Create(ctx, &domain.GooglePost{
+			GoogleBusinessURL: bi.BusinessName,
+			InstagramURL:      post.Permalink,
+			MediaID:           post.ID,
+			CustomerID:        bi.ID,
+			Name:              uploadResp.Name,
+			MediaFormat:       uploadResp.MediaFormat,
+			GoogleURL:         uploadResp.GoogleURL,
+			CreateTime:        uploadResp.CreateTime,
+		})
+		if err != nil {
+			return err
+		}
+
+	} else {
+		for _, child := range post.Children {
+			/*
+				すでに投稿しているものかどうかをチェック（子要素単位）
+			*/
+			childExist, err := u.googlePostRepo.Exists(ctx, repository.GooglePostFilter{
+				MediaID:    &child.ID,
+				CustomerID: &bi.ID,
+			})
+			if err != nil {
+				return err
+			}
+			if childExist {
+				continue
+			}
+
+			/*
+				インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
+			*/
+			childLocalPath, err := fd.Download(ctx, child.MediaURL)
+			if err != nil {
+				return err
+			}
+
+			/*
+				ダウンロードしたファイルをGoogleBusinessにアップロード
+			*/
+			uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, childLocalPath)
+			if err != nil {
+				return err
+			}
+
+			/*
+				ダウンロードファイルを都度削除
+			*/
+			err = os.Remove(childLocalPath)
+			if err != nil {
+				slog.Warn(err.Error())
+			}
+
+			/*
+				投稿したことをDBに保存
+			*/
+			err = u.googlePostRepo.Create(ctx, &domain.GooglePost{
+				GoogleBusinessURL: bi.BusinessName,
+				InstagramURL:      post.Permalink,
+				MediaID:           child.ID,
+				CustomerID:        bi.ID,
+				Name:              uploadResp.Name,
+				MediaFormat:       uploadResp.MediaFormat,
+				GoogleURL:         uploadResp.GoogleURL,
+				CreateTime:        uploadResp.CreateTime,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }

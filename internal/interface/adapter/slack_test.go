@@ -26,6 +26,6 @@ func TestSlackSendMessage(t *testing.T) {
 	assert.NoError(t, err)
 
 	wi := domain.WordpressInstagram{}
-	err = s.Alert(context.Background(), errors.New("wao").Error(), wi)
+	err = s.Error(context.Background(), errors.New("wao").Error(), wi)
 	assert.NoError(t, err)
 }

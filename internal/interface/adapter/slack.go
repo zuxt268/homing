@@ -12,7 +12,7 @@ import (
 )
 
 type Slack interface {
-	Alert(ctx context.Context, msg string, wi domain.WordpressInstagram) error
+	Error(ctx context.Context, msg string, err error, customerID int, customerName string) error
 	SendMessage(ctx context.Context, payload external.SlackRequest) error
 	SendTokenExpired(ctx context.Context) error
 	SendHealthy(ctx context.Context) error
@@ -36,13 +36,14 @@ func NewSlack(httpDriver driver.HttpDriver) Slack {
 }
 
 const template = `[%s]
+error: %s
 顧客: id=%d, name=%s`
 
-func (s *slack) Alert(ctx context.Context, msg string, wi domain.WordpressInstagram) error {
+func (s *slack) Error(ctx context.Context, msg string, err error, customerID int, customerName string) error {
 	sb := strings.Builder{}
 	sb.WriteString("｀｀｀")
 	sb.WriteString("<@U04P797HYPM>\n")
-	sb.WriteString(fmt.Sprintf(template, strings.TrimSpace(msg), wi.ID, wi.Name))
+	sb.WriteString(fmt.Sprintf(template, strings.TrimSpace(msg), err.Error(), customerID, customerName))
 	sb.WriteString("｀｀｀")
 	return s.noticeWebAppChannel(ctx, external.SlackRequest{
 		Text:      sb.String(),

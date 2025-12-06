@@ -15,7 +15,7 @@ type WordpressInstagramUsecase interface {
 	GetWordpressInstagramList(ctx context.Context, params req.GetWordpressInstagram) (*res.WordpressInstagramList, error)
 	GetWordpressInstagram(ctx context.Context, id int, params req.GetWordpressInstagramDetail) (*res.WordpressInstagramDetail, error)
 	CreateWordpressInstagram(ctx context.Context, body req.CreateWordpressInstagram) (*res.WordpressInstagram, error)
-	UpdateWordpressInstagram(ctx context.Context, body req.UpdateWordpressInstagram) (*res.WordpressInstagram, error)
+	UpdateWordpressInstagram(ctx context.Context, id int, body req.UpdateWordpressInstagram) (*res.WordpressInstagram, error)
 	DeleteWordpressInstagram(ctx context.Context, id int) error
 }
 
@@ -217,9 +217,9 @@ func (u *wordpressInstagramUsecase) CreateWordpressInstagram(ctx context.Context
 	}, nil
 }
 
-func (u *wordpressInstagramUsecase) UpdateWordpressInstagram(ctx context.Context, req req.UpdateWordpressInstagram) (*res.WordpressInstagram, error) {
+func (u *wordpressInstagramUsecase) UpdateWordpressInstagram(ctx context.Context, id int, req req.UpdateWordpressInstagram) (*res.WordpressInstagram, error) {
 	wi, err := u.wordpressInstagramRepo.Get(ctx, repository.WordpressInstagramFilter{
-		ID: req.ID,
+		ID: &id,
 	})
 	if err != nil {
 		return nil, err
@@ -268,7 +268,7 @@ func (u *wordpressInstagramUsecase) UpdateWordpressInstagram(ctx context.Context
 	}
 
 	err = u.wordpressInstagramRepo.Update(ctx, wi, repository.WordpressInstagramFilter{
-		ID: req.ID,
+		ID: &id,
 	})
 	if err != nil {
 		return nil, err
