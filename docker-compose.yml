@@ -7,6 +7,8 @@ services:
       - shared-network
     ports:
       - "8090:8090"
+    volumes:
+      - ./credentials:/credentials  # Google Service Account認証情報
     env_file:
       - .env
     healthcheck:
