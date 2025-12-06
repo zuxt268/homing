@@ -19,6 +19,7 @@ type BusinessInstagramUsecase interface {
 	GetGoogleBusinesses(ctx context.Context, limit, offset int) ([]*domain.GoogleBusinesses, int64, error)
 
 	GetBusinessInstagram(ctx context.Context, id int) (*res.BusinessInstagram, error)
+	GetBusinessInstagramList(ctx context.Context, params *req.GetBusinessInstagram) (*res.BusinessInstagramList, error)
 	CreateBusinessInstagram(ctx context.Context, body *req.BusinessInstagram) (*res.BusinessInstagram, error)
 	UpdateBusinessInstagram(ctx context.Context, id int, body *req.BusinessInstagram) (*res.BusinessInstagram, error)
 }
@@ -95,6 +96,44 @@ func (u *businessInstagramUsecase) GetGoogleBusinesses(ctx context.Context, limi
 	}
 
 	return businesses, total, nil
+}
+
+func (u *businessInstagramUsecase) GetBusinessInstagramList(ctx context.Context, params *req.GetBusinessInstagram) (*res.BusinessInstagramList, error) {
+	biList, err := u.businessInstagramRepo.FindAll(ctx, repository.BusinessInstagramFilter{
+		Limit:  params.Limit,
+		Offset: params.Offset,
+	})
+	if err != nil {
+		return nil, err
+	}
+	total, err := u.googleBusinessRepo.Count(ctx, repository.GoogleBusinessFilter{
+		All: util.Pointer(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resBusinessInstagram := make([]res.BusinessInstagram, len(biList))
+	for i, business := range biList {
+		resBusinessInstagram[i] = res.BusinessInstagram{
+			ID:           business.ID,
+			Name:         business.Name,
+			BusinessName: business.BusinessName,
+			InstagramID:  business.InstagramID,
+			Memo:         business.Memo,
+			StartDate:    business.StartDate,
+			Status:       int(business.Status),
+			CreatedAt:    business.CreatedAt,
+			UpdatedAt:    business.UpdatedAt,
+		}
+	}
+	return &res.BusinessInstagramList{
+		BusinessInstagramList: resBusinessInstagram,
+		Paginate: res.Paginate{
+			Total: total,
+			Count: len(biList),
+		},
+	}, nil
 }
 
 func (u *businessInstagramUsecase) GetBusinessInstagram(ctx context.Context, id int) (*res.BusinessInstagram, error) {

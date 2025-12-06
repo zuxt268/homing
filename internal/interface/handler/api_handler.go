@@ -328,6 +328,28 @@ func (h *APIHandler) GetGoogleBusinessList(c echo.Context) error {
 	})
 }
 
+// GetBusinessInstagramList godoc
+// @Summary      Business Instagram一覧取得
+// @Description  Business Instagram一覧を取得します
+// @Tags         business-instagram
+// @Accept       json
+// @Produce      json
+// @Success      201   {object}  res.BusinessInstagram  "Business Instagram"
+// @Failure      400   {string}  string  "不正なリクエスト"
+// @Failure      500   {string}  string  "内部サーバーエラー"
+// @Router       /api/business-instagram/{id} [get]
+func (h *APIHandler) GetBusinessInstagramList(c echo.Context) error {
+	var id int
+	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	resp, err := h.businessInstagramUsecase.GetBusinessInstagram(c.Request().Context(), id)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusCreated, resp)
+}
+
 // GetBusinessInstagram godoc
 // @Summary      Business Instagram取得
 // @Description  Business Instagramを取得します

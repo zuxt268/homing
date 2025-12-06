@@ -227,6 +227,28 @@ paths:
       tags:
       - business-instagram
   /api/business-instagram/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Business Instagramを取得します
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Business Instagram
+          schema:
+            $ref: '#/definitions/res.BusinessInstagram'
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Business Instagram取得
+      tags:
+      - business-instagram
     put:
       consumes:
       - application/json
@@ -328,7 +350,7 @@ paths:
           description: 内部サーバーエラー
           schema:
             type: string
-      summary: 全顧客データ同期
+      summary: instagram => wordpressにおける全顧客データ同期
       tags:
       - sync
   /api/sync/{id}:
@@ -347,7 +369,7 @@ paths:
           description: 内部サーバーエラー
           schema:
             type: string
-      summary: 全顧客データ同期
+      summary: instagram => wordpressにおける顧客データ同期
       tags:
       - sync
   /api/token:

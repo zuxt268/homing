@@ -1,6 +1,13 @@
 package req
 
-import "time"
+import (
+	"time"
+)
+
+type GetBusinessInstagram struct {
+	Limit  *int `query:"limit"`
+	Offset *int `query:"offset"`
+}
 
 type BusinessInstagram struct {
 	Name         string    `json:"name"`

@@ -62,6 +62,39 @@ const docTemplate = `{
             }
         },
         "/api/business-instagram/{id}": {
+            "get": {
+                "description": "Business Instagramを取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "business-instagram"
+                ],
+                "summary": "Business Instagram取得",
+                "responses": {
+                    "201": {
+                        "description": "Business Instagram",
+                        "schema": {
+                            "$ref": "#/definitions/res.BusinessInstagram"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "Business Instagramを更新します",
                 "consumes": [
@@ -204,7 +237,7 @@ const docTemplate = `{
                 "tags": [
                     "sync"
                 ],
-                "summary": "全顧客データ同期",
+                "summary": "instagram =\u003e wordpressにおける全顧客データ同期",
                 "responses": {
                     "200": {
                         "description": "全顧客同期完了",
@@ -233,7 +266,7 @@ const docTemplate = `{
                 "tags": [
                     "sync"
                 ],
-                "summary": "全顧客データ同期",
+                "summary": "instagram =\u003e wordpressにおける顧客データ同期",
                 "responses": {
                     "200": {
                         "description": "全顧客同期完了",

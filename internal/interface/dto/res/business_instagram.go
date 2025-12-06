@@ -13,3 +13,8 @@ type BusinessInstagram struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
+
+type BusinessInstagramList struct {
+	BusinessInstagramList []BusinessInstagram `json:"business_instagram_list"`
+	Paginate
+}
