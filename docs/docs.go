@@ -16,6 +16,39 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/business-instagram": {
+            "get": {
+                "description": "Business Instagram一覧を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "business-instagram"
+                ],
+                "summary": "Business Instagram一覧取得",
+                "responses": {
+                    "201": {
+                        "description": "Business Instagram",
+                        "schema": {
+                            "$ref": "#/definitions/res.BusinessInstagram"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Business Instagramを作成します",
                 "consumes": [

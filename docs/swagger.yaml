@@ -197,6 +197,28 @@ info:
   contact: {}
 paths:
   /api/business-instagram:
+    get:
+      consumes:
+      - application/json
+      description: Business Instagram一覧を取得します
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Business Instagram
+          schema:
+            $ref: '#/definitions/res.BusinessInstagram'
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Business Instagram一覧取得
+      tags:
+      - business-instagram
     post:
       consumes:
       - application/json

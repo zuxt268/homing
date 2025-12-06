@@ -337,7 +337,7 @@ func (h *APIHandler) GetGoogleBusinessList(c echo.Context) error {
 // @Success      201   {object}  res.BusinessInstagram  "Business Instagram"
 // @Failure      400   {string}  string  "不正なリクエスト"
 // @Failure      500   {string}  string  "内部サーバーエラー"
-// @Router       /api/business-instagram/{id} [get]
+// @Router       /api/business-instagram [get]
 func (h *APIHandler) GetBusinessInstagramList(c echo.Context) error {
 	var id int
 	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
