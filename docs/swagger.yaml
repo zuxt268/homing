@@ -77,6 +77,17 @@ definitions:
       updated_at:
         type: string
     type: object
+  res.BusinessInstagramList:
+    properties:
+      business_instagram_list:
+        items:
+          $ref: '#/definitions/res.BusinessInstagram'
+        type: array
+      count:
+        type: integer
+      total:
+        type: integer
+    type: object
   res.GoogleBusiness:
     properties:
       created_at:
@@ -207,7 +218,7 @@ paths:
         "201":
           description: Business Instagram
           schema:
-            $ref: '#/definitions/res.BusinessInstagram'
+            $ref: '#/definitions/res.BusinessInstagramList'
         "400":
           description: 不正なリクエスト
           schema:

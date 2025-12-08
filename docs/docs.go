@@ -32,7 +32,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Business Instagram",
                         "schema": {
-                            "$ref": "#/definitions/res.BusinessInstagram"
+                            "$ref": "#/definitions/res.BusinessInstagramList"
                         }
                     },
                     "400": {
@@ -800,6 +800,23 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "res.BusinessInstagramList": {
+            "type": "object",
+            "properties": {
+                "business_instagram_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/res.BusinessInstagram"
+                    }
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

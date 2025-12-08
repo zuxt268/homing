@@ -70,11 +70,13 @@ func Run() {
 	api.DELETE("/wordpress-instagram/:id", apiHandler.DeleteWordpressInstagram)
 
 	api.GET("/google-business", apiHandler.GetGoogleBusinessList)
-	api.GET("/google-business/fetch", apiHandler.FetchGoogleBusinessList)
+	api.POST("/google-business/fetch", apiHandler.FetchGoogleBusinessList)
 
-	api.POST("/business-instagram", apiHandler.CreateBusinessInstagram)
+	api.GET("/business-instagram", apiHandler.GetBusinessInstagramList)
+	api.GET("/business-instagram/:id", apiHandler.GetBusinessInstagram)
 	api.POST("/business-instagram", apiHandler.CreateBusinessInstagram)
 	api.PUT("/business-instagram/:id", apiHandler.UpdateBusinessInstagram)
+	api.DELETE("/business-instagram/:id", apiHandler.DeleteBusinessInstagram)
 
 	srv := &http.Server{
 		Addr:    config.Env.Address,

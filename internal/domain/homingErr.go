@@ -15,6 +15,7 @@ var (
 	ErrWordpressConnection = errors.New("ワードプレスとの疎通に失敗しました。ドメインを確認してください")
 	ErrInstagramConnection = errors.New("インスタグラムとの疎通に失敗しました。ID、トークンの権限を確認してください")
 	ErrTokenNotFound       = errors.New("トークンが登録されていません。")
+	ErrBusinessConnection  = errors.New("GBPとの疎通に失敗しました。")
 )
 
 type HomingErr struct {

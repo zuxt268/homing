@@ -5,8 +5,11 @@ import (
 )
 
 type GetBusinessInstagram struct {
-	Limit  *int `query:"limit"`
-	Offset *int `query:"offset"`
+	Limit       *int    `query:"limit"`
+	Offset      *int    `query:"offset"`
+	Name        *string `query:"name"`
+	InstagramID *string `query:"instagram_id"`
+	Status      *int    `query:"status"`
 }
 
 type BusinessInstagram struct {

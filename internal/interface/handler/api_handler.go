@@ -2,6 +2,8 @@ package handler
 
 import (
 	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -272,7 +274,7 @@ func (h *APIHandler) DeleteWordpressInstagram(c echo.Context) error {
 // @Tags         google-business
 // @Failure      400  {string}  string  "不正なリクエスト"
 // @Failure      500  {string}  string  "内部サーバーエラー"
-// @Router       /api/google-business/fetch [get]
+// @Router       /api/google-business/fetch [post]
 func (h *APIHandler) FetchGoogleBusinessList(c echo.Context) error {
 	err := h.businessInstagramUsecase.FetchGoogleBusinesses(c.Request().Context())
 	if err != nil {
@@ -334,16 +336,16 @@ func (h *APIHandler) GetGoogleBusinessList(c echo.Context) error {
 // @Tags         business-instagram
 // @Accept       json
 // @Produce      json
-// @Success      201   {object}  res.BusinessInstagram  "Business Instagram"
+// @Success      201   {object}  res.BusinessInstagramList  "Business Instagram"
 // @Failure      400   {string}  string  "不正なリクエスト"
 // @Failure      500   {string}  string  "内部サーバーエラー"
 // @Router       /api/business-instagram [get]
 func (h *APIHandler) GetBusinessInstagramList(c echo.Context) error {
-	var id int
-	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+	var params req.GetBusinessInstagram
+	if err := c.Bind(&params); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	resp, err := h.businessInstagramUsecase.GetBusinessInstagram(c.Request().Context(), id)
+	resp, err := h.businessInstagramUsecase.GetBusinessInstagramList(c.Request().Context(), params)
 	if err != nil {
 		return handleError(c, err)
 	}
@@ -369,7 +371,7 @@ func (h *APIHandler) GetBusinessInstagram(c echo.Context) error {
 	if err != nil {
 		return handleError(c, err)
 	}
-	return c.JSON(http.StatusCreated, resp)
+	return c.JSON(http.StatusOK, resp)
 }
 
 // CreateBusinessInstagram godoc
@@ -389,7 +391,9 @@ func (h *APIHandler) CreateBusinessInstagram(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	resp, err := h.businessInstagramUsecase.CreateBusinessInstagram(c.Request().Context(), &body)
+	fmt.Println(body)
+
+	resp, err := h.businessInstagramUsecase.CreateBusinessInstagram(c.Request().Context(), body)
 	if err != nil {
 		return handleError(c, err)
 	}
@@ -419,14 +423,38 @@ func (h *APIHandler) UpdateBusinessInstagram(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	resp, err := h.businessInstagramUsecase.UpdateBusinessInstagram(c.Request().Context(), id, &body)
+	resp, err := h.businessInstagramUsecase.UpdateBusinessInstagram(c.Request().Context(), id, body)
 	if err != nil {
 		return handleError(c, err)
 	}
 	return c.JSON(http.StatusOK, resp)
 }
 
+// DeleteBusinessInstagram godoc
+// @Summary      Business Instagram削除
+// @Description  Business Instagramを削除します
+// @Tags         business-instagram
+// @Param        id    path      int     true  "Business Instagram ID"
+// @Success      204
+// @Failure      400   {string}  string  "不正なリクエスト"
+// @Failure      404   {string}  string  "見つかりません"
+// @Failure      500   {string}  string  "内部サーバーエラー"
+// @Router       /api/business-instagram/{id} [delete]
+func (h *APIHandler) DeleteBusinessInstagram(c echo.Context) error {
+	var id int
+	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	err := h.businessInstagramUsecase.DeleteBusinessInstagram(c.Request().Context(), id)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
 func handleError(c echo.Context, err error) error {
+	slog.Error("handleError", "error", err.Error())
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
 		return c.JSON(http.StatusNotFound, res.ErrorResponse{Message: err.Error()})

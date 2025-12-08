@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/zuxt268/homing/internal/config"
@@ -19,9 +18,10 @@ type BusinessInstagramUsecase interface {
 	GetGoogleBusinesses(ctx context.Context, limit, offset int) ([]*domain.GoogleBusinesses, int64, error)
 
 	GetBusinessInstagram(ctx context.Context, id int) (*res.BusinessInstagram, error)
-	GetBusinessInstagramList(ctx context.Context, params *req.GetBusinessInstagram) (*res.BusinessInstagramList, error)
-	CreateBusinessInstagram(ctx context.Context, body *req.BusinessInstagram) (*res.BusinessInstagram, error)
-	UpdateBusinessInstagram(ctx context.Context, id int, body *req.BusinessInstagram) (*res.BusinessInstagram, error)
+	GetBusinessInstagramList(ctx context.Context, params req.GetBusinessInstagram) (*res.BusinessInstagramList, error)
+	CreateBusinessInstagram(ctx context.Context, body req.BusinessInstagram) (*res.BusinessInstagram, error)
+	UpdateBusinessInstagram(ctx context.Context, id int, body req.BusinessInstagram) (*res.BusinessInstagram, error)
+	DeleteBusinessInstagram(ctx context.Context, id int) error
 }
 
 type businessInstagramUsecase struct {
@@ -82,9 +82,6 @@ func (u *businessInstagramUsecase) GetGoogleBusinesses(ctx context.Context, limi
 		return nil, 0, err
 	}
 
-	fmt.Println(limit)
-	fmt.Println(offset)
-
 	// ページングして取得
 	businesses, err := u.googleBusinessRepo.FindAll(ctx, repository.GoogleBusinessFilter{
 		Limit:         &limit,
@@ -98,10 +95,13 @@ func (u *businessInstagramUsecase) GetGoogleBusinesses(ctx context.Context, limi
 	return businesses, total, nil
 }
 
-func (u *businessInstagramUsecase) GetBusinessInstagramList(ctx context.Context, params *req.GetBusinessInstagram) (*res.BusinessInstagramList, error) {
+func (u *businessInstagramUsecase) GetBusinessInstagramList(ctx context.Context, params req.GetBusinessInstagram) (*res.BusinessInstagramList, error) {
 	biList, err := u.businessInstagramRepo.FindAll(ctx, repository.BusinessInstagramFilter{
-		Limit:  params.Limit,
-		Offset: params.Offset,
+		InstagramID: params.InstagramID,
+		Limit:       params.Limit,
+		Offset:      params.Offset,
+		PartialName: params.Name,
+		Status:      params.Status,
 	})
 	if err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func (u *businessInstagramUsecase) GetBusinessInstagram(ctx context.Context, id 
 	}, nil
 }
 
-func (u *businessInstagramUsecase) CreateBusinessInstagram(ctx context.Context, body *req.BusinessInstagram) (*res.BusinessInstagram, error) {
+func (u *businessInstagramUsecase) CreateBusinessInstagram(ctx context.Context, body req.BusinessInstagram) (*res.BusinessInstagram, error) {
 	token, err := u.tokenRepo.First(ctx)
 	if err != nil {
 		return nil, err
@@ -165,10 +165,16 @@ func (u *businessInstagramUsecase) CreateBusinessInstagram(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
+	if instagram.InstagramAccountUserName == "" {
+		return nil, domain.ErrInstagramConnection
+	}
 
 	business, err := u.gbpAdapter.GetBusiness(ctx, body.BusinessName)
 	if err != nil {
 		return nil, err
+	}
+	if business.Title == "" {
+		return nil, domain.ErrBusinessConnection
 	}
 
 	bi := &domain.BusinessInstagram{
@@ -199,7 +205,7 @@ func (u *businessInstagramUsecase) CreateBusinessInstagram(ctx context.Context, 
 	}, nil
 }
 
-func (u *businessInstagramUsecase) UpdateBusinessInstagram(ctx context.Context, id int, body *req.BusinessInstagram) (*res.BusinessInstagram, error) {
+func (u *businessInstagramUsecase) UpdateBusinessInstagram(ctx context.Context, id int, body req.BusinessInstagram) (*res.BusinessInstagram, error) {
 	token, err := u.tokenRepo.First(ctx)
 	if err != nil {
 		return nil, err
@@ -247,4 +253,10 @@ func (u *businessInstagramUsecase) UpdateBusinessInstagram(ctx context.Context, 
 		CreatedAt:    bi.CreatedAt,
 		UpdatedAt:    bi.UpdatedAt,
 	}, nil
+}
+
+func (u *businessInstagramUsecase) DeleteBusinessInstagram(ctx context.Context, id int) error {
+	return u.businessInstagramRepo.Delete(ctx, repository.BusinessInstagramFilter{
+		ID: &id,
+	})
 }
