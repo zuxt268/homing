@@ -108,40 +108,36 @@ func (u *customerUsecase) syncOne(ctx context.Context, wi *domain.WordpressInsta
 	mu.Lock()
 	defer mu.Unlock()
 
-	backGroundCtx := context.Background()
+	/*
+		トークンを取得する
+	*/
+	token, err := u.tokenRepo.First(ctx)
+	if err != nil {
+		_ = u.slack.Error(ctx, "instagram => wordpress", err, wi.ID, wi.Name)
+		return
+	}
+	/*
+		インスタグラムから投稿を一覧で取得する
+	*/
+	posts, err := u.instagramAdapter.GetPostsAll(ctx, token, wi.InstagramID)
+	if err != nil {
+		_ = u.slack.Error(ctx, "instagram => wordpress", err, wi.ID, wi.Name)
+		return
+	}
 
-	go func() {
-		/*
-			トークンを取得する
-		*/
-		token, err := u.tokenRepo.First(backGroundCtx)
+	/*
+		まだ連携していない投稿をWordpressに連携する
+	*/
+	sort.Slice(posts, func(i, j int) bool {
+		return posts[i].Timestamp < posts[j].Timestamp
+	})
+	for _, post := range posts {
+		err := u.instagram2wordpress(ctx, wi, post, fd)
 		if err != nil {
 			_ = u.slack.Error(ctx, "instagram => wordpress", err, wi.ID, wi.Name)
 			return
 		}
-		/*
-			インスタグラムから投稿を一覧で取得する
-		*/
-		posts, err := u.instagramAdapter.GetPostsAll(backGroundCtx, token, wi.InstagramID)
-		if err != nil {
-			_ = u.slack.Error(ctx, "instagram => wordpress", err, wi.ID, wi.Name)
-			return
-		}
-
-		/*
-			まだ連携していない投稿をWordpressに連携する
-		*/
-		sort.Slice(posts, func(i, j int) bool {
-			return posts[i].Timestamp < posts[j].Timestamp
-		})
-		for _, post := range posts {
-			err := u.instagram2wordpress(backGroundCtx, wi, post, fd)
-			if err != nil {
-				_ = u.slack.Error(ctx, "instagram => wordpress", err, wi.ID, wi.Name)
-				return
-			}
-		}
-	}()
+	}
 }
 
 func (u *customerUsecase) instagram2wordpress(ctx context.Context, wi *domain.WordpressInstagram, post domain.InstagramPost, fd adapter.FileDownloader) error {
