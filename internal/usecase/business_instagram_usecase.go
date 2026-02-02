@@ -106,7 +106,7 @@ func (u *businessInstagramUsecase) GetBusinessInstagramList(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	total, err := u.googleBusinessRepo.Count(ctx, repository.GoogleBusinessFilter{
+	total, err := u.businessInstagramRepo.Count(ctx, repository.BusinessInstagramFilter{
 		All: util.Pointer(true),
 	})
 	if err != nil {
@@ -116,15 +116,16 @@ func (u *businessInstagramUsecase) GetBusinessInstagramList(ctx context.Context,
 	resBusinessInstagram := make([]res.BusinessInstagram, len(biList))
 	for i, business := range biList {
 		resBusinessInstagram[i] = res.BusinessInstagram{
-			ID:           business.ID,
-			Name:         business.Name,
-			BusinessName: business.BusinessName,
-			InstagramID:  business.InstagramID,
-			Memo:         business.Memo,
-			StartDate:    business.StartDate,
-			Status:       int(business.Status),
-			CreatedAt:    business.CreatedAt,
-			UpdatedAt:    business.UpdatedAt,
+			ID:            business.ID,
+			Name:          business.Name,
+			BusinessName:  business.BusinessName,
+			InstagramID:   business.InstagramID,
+			InstagramName: business.InstagramName,
+			Memo:          business.Memo,
+			StartDate:     business.StartDate,
+			Status:        int(business.Status),
+			CreatedAt:     business.CreatedAt,
+			UpdatedAt:     business.UpdatedAt,
 		}
 	}
 	return &res.BusinessInstagramList{
@@ -181,7 +182,7 @@ func (u *businessInstagramUsecase) CreateBusinessInstagram(ctx context.Context, 
 		Name:          body.Name,
 		Memo:          body.Memo,
 		InstagramID:   instagram.InstagramAccountID,
-		InstagramName: instagram.InstagramAccountName,
+		InstagramName: instagram.InstagramAccountUserName,
 		BusinessName:  business.Name,
 		BusinessTitle: business.Title,
 		StartDate:     body.StartDate,

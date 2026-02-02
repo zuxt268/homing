@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,7 +30,7 @@ type Business struct {
 
 type GbpAdapter interface {
 	GetAllBusinesses(ctx context.Context, accountName string) ([]Business, error)
-	UploadMedia(ctx context.Context, accountName, businessName string, localPath string) (*external.GoogleBusinessMediaUploadResponse, error)
+	UploadMedia(ctx context.Context, accountName, businessName string, sourceURL string) (*external.GoogleBusinessMediaUploadResponse, error)
 	GetBusiness(ctx context.Context, businessName string) (Business, error)
 }
 
@@ -109,57 +108,33 @@ func (a *gbpAdapter) GetAllBusinesses(ctx context.Context, accountName string) (
 	return businesses, nil
 }
 
-func (a *gbpAdapter) UploadMedia(ctx context.Context, accountName, businessName string, localPath string) (*external.GoogleBusinessMediaUploadResponse, error) {
-	// ファイルを読み込む
-	fileData, err := os.ReadFile(localPath)
-	if err != nil {
-		return nil, fmt.Errorf("ファイル読み込みエラー: %v", err)
-	}
-
-	// ファイル名を取得
-	fileName := filepath.Base(localPath)
-
-	// 拡張子からメディアフォーマットを判定
-	ext := filepath.Ext(localPath)
-	isVideo := ext == ".mp4" || ext == ".mov" || ext == ".avi"
-
+func (a *gbpAdapter) UploadMedia(ctx context.Context, accountName, businessName string, sourceURL string) (*external.GoogleBusinessMediaUploadResponse, error) {
 	locationID := extractLocationID(businessName)
+	parent := fmt.Sprintf("%s/locations/%s", accountName, locationID)
 
-	// My Business API v4 のメディアアップロードエンドポイント
-	uploadURL := fmt.Sprintf("https://mybusiness.googleapis.com/v4/%s/locations/%s/media",
-		accountName, locationID)
-
-	// マルチパートフォームを作成
-	var buf bytes.Buffer
-	writer := multipart.NewWriter(&buf)
-
-	// メディアフォーマット
-	mediaFormat := "PHOTO"
-	if isVideo {
-		mediaFormat = "VIDEO"
+	// sourceUrl 方式で media.create を呼ぶ
+	createURL := fmt.Sprintf("https://mybusiness.googleapis.com/v4/%s/media", parent)
+	reqBody := map[string]any{
+		"mediaFormat": "PHOTO",
+		"locationAssociation": map[string]string{
+			"category": "ADDITIONAL",
+		},
+		"sourceUrl": sourceURL,
 	}
-	writer.WriteField("mediaFormat", mediaFormat)
-	writer.WriteField("locationAssociation.category", "ADDITIONAL")
-
-	// ファイル部分
-	part, err := writer.CreateFormFile("file", fileName)
+	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("フォーム作成エラー: %v", err)
+		return nil, fmt.Errorf("JSON作成エラー: %v", err)
 	}
-	part.Write(fileData)
-	writer.Close()
 
-	// リクエスト作成
-	req, err := http.NewRequest("POST", uploadURL, &buf)
+	req, err := http.NewRequest("POST", createURL, bytes.NewReader(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("リクエスト作成エラー: %v", err)
 	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Content-Type", "application/json")
 
-	// リクエスト送信
 	resp, err := a.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("メディアアップロードエラー: %v", err)
+		return nil, fmt.Errorf("media.createエラー: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -172,7 +147,6 @@ func (a *gbpAdapter) UploadMedia(ctx context.Context, accountName, businessName 
 		return nil, fmt.Errorf("アップロード失敗 (ステータス: %d): %s", resp.StatusCode, string(body))
 	}
 
-	// レスポンスをパース
 	var uploadResponse external.GoogleBusinessMediaUploadResponse
 	if err := json.Unmarshal(body, &uploadResponse); err != nil {
 		return nil, fmt.Errorf("レスポンスパースエラー: %v", err)
@@ -216,15 +190,6 @@ func extractLocationID(locationName string) string {
 	// "accounts/xxx/locations/12345" -> "12345"
 	parts := filepath.Base(locationName)
 	return parts
-}
-
-// ヘルパー関数: ファイル読み込み
-func readFile(path string) ([]byte, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }
 
 // ヘルパー関数: OAuth2クライアント取得

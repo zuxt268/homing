@@ -40,6 +40,12 @@ func Run() {
 		log.Fatal("Failed to initialize GBP adapter:", err)
 	}
 
+	// S3Adapter初期化
+	s3Adapter, err := di.NewS3Adapter(config.Env.S3Bucket, config.Env.S3Region, config.Env.S3Prefix)
+	if err != nil {
+		log.Fatal("Failed to initialize S3 adapter:", err)
+	}
+
 	e := echo.New()
 
 	// ミドルウェア設定
@@ -48,7 +54,7 @@ func Run() {
 	e.Use(middleware.Recover())
 
 	// ハンドラー初期化
-	apiHandler := di.NewHandler(httpDriver, db, gbpAdapter)
+	apiHandler := di.NewHandler(httpDriver, db, gbpAdapter, s3Adapter)
 
 	// Swagger ルート
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -57,12 +63,17 @@ func Run() {
 	api.GET("/healthcheck", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
-	api.POST("/sync", apiHandler.SyncAll)
-	api.POST("/sync/:id", apiHandler.SyncOne)
+	api.POST("/sync/wordpress-instagram", apiHandler.SyncAllWordpressInstagram)
+	api.POST("/sync/wordpress-instagram/:id", apiHandler.SyncOneWordpressInstagram)
+
+	api.POST("/sync/business-instagram", apiHandler.SyncAllGoogleBusinessInstagram)
+	api.POST("/sync/business-instagram/:id", apiHandler.SyncOneGoogleBusinessInstagram)
+
 	api.POST("/token", apiHandler.SaveToken)
 	api.GET("/token", apiHandler.GetToken)
 	api.POST("/token/check", apiHandler.CheckToken)
 
+	api.GET("/wordpress-instagram/count", apiHandler.GetWordpressInstagramCount)
 	api.GET("/wordpress-instagram", apiHandler.GetWordpressInstagramList)
 	api.GET("/wordpress-instagram/:id", apiHandler.GetWordpressInstagram)
 	api.POST("/wordpress-instagram", apiHandler.CreateWordpressInstagram)

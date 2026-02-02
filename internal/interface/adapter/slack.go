@@ -16,7 +16,9 @@ type Slack interface {
 	SendMessage(ctx context.Context, payload external.SlackRequest) error
 	SendTokenExpired(ctx context.Context) error
 	SendHealthy(ctx context.Context) error
-	Success(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error
+
+	SuccessWI(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error
+	SuccessBI(ctx context.Context, bi *domain.BusinessInstagram, instagramUrl string) error
 }
 
 type slack struct {
@@ -93,17 +95,35 @@ func (s *slack) noticeRpaChannel(ctx context.Context, payload external.SlackRequ
 	return err
 }
 
-const templateSuccess = `[SYSTEM USER]
+const templateWiSuccess = `[Instagram => WordPress]
 id: %d
 name: %s
-wordpress: %s
-instagram: %s
+WordPress: %s
+Instagram: %s
 `
 
-func (s *slack) Success(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error {
+func (s *slack) SuccessWI(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error {
 	sb := strings.Builder{}
 	sb.WriteString("｀｀｀")
-	sb.WriteString(fmt.Sprintf(templateSuccess, wi.ID, wi.Name, wordpressUrl, instagramUrl))
+	sb.WriteString(fmt.Sprintf(templateWiSuccess, wi.ID, wi.Name, wordpressUrl, instagramUrl))
+	sb.WriteString("｀｀｀")
+	return s.noticeWebAppChannel(ctx, external.SlackRequest{
+		Text:      sb.String(),
+		Username:  "homing",
+		IconEmoji: ":cat:",
+	})
+}
+
+const templateBiSuccess = `[Instagram => GBP]
+id: %d
+name: %s
+Instagram: %s
+`
+
+func (s *slack) SuccessBI(ctx context.Context, bi *domain.BusinessInstagram, instagramUrl string) error {
+	sb := strings.Builder{}
+	sb.WriteString("｀｀｀")
+	sb.WriteString(fmt.Sprintf(templateBiSuccess, bi.ID, bi.Name, instagramUrl))
 	sb.WriteString("｀｀｀")
 	return s.noticeWebAppChannel(ctx, external.SlackRequest{
 		Text:      sb.String(),

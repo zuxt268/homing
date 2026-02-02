@@ -7,6 +7,10 @@ type WordpressInstagramList struct {
 	Paginate
 }
 
+type WordpressInstagramCount struct {
+	Count int64 `json:"count"`
+}
+
 type WordpressInstagram struct {
 	ID                 int       `json:"id"`
 	Name               string    `json:"name"`

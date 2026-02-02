@@ -12,6 +12,7 @@ import (
 )
 
 type WordpressInstagramUsecase interface {
+	GetWordpressInstagramCount(ctx context.Context) (*res.WordpressInstagramCount, error)
 	GetWordpressInstagramList(ctx context.Context, params req.GetWordpressInstagram) (*res.WordpressInstagramList, error)
 	GetWordpressInstagram(ctx context.Context, id int, params req.GetWordpressInstagramDetail) (*res.WordpressInstagramDetail, error)
 	CreateWordpressInstagram(ctx context.Context, body req.CreateWordpressInstagram) (*res.WordpressInstagram, error)
@@ -41,6 +42,17 @@ func NewWordpressInstagramUsecase(
 		instagramAdapter:       instagramAdapter,
 		wordpressAdapter:       wordpressAdapter,
 	}
+}
+
+func (u *wordpressInstagramUsecase) GetWordpressInstagramCount(ctx context.Context) (*res.WordpressInstagramCount, error) {
+
+	total, err := u.wordpressInstagramRepo.Count(ctx, repository.WordpressInstagramFilter{})
+	if err != nil {
+		return nil, err
+	}
+	return &res.WordpressInstagramCount{
+		Count: total,
+	}, nil
 }
 
 func (u *wordpressInstagramUsecase) GetWordpressInstagramList(ctx context.Context, params req.GetWordpressInstagram) (*res.WordpressInstagramList, error) {

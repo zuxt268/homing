@@ -57,7 +57,11 @@ func NewFileDownloader() adapter.FileDownloader {
 	return adapter.NewFileDownloader()
 }
 
-func NewCustomerUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.GbpAdapter) usecase.CustomerUsecase {
+func NewS3Adapter(bucket, region, prefix string) (adapter.S3Adapter, error) {
+	return adapter.NewS3Adapter(bucket, region, prefix)
+}
+
+func NewCustomerUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.GbpAdapter, s3Adapter adapter.S3Adapter) usecase.CustomerUsecase {
 	return usecase.NewCustomerUsecase(
 		NewInstagramAdapter(httpDriver),
 		NewSlack(httpDriver),
@@ -68,6 +72,7 @@ func NewCustomerUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter ad
 		NewTokenRepository(db),
 		NewBusinessInstagramRepository(db),
 		NewGooglePostRepository(db),
+		s3Adapter,
 	)
 }
 
@@ -99,9 +104,9 @@ func NewBusinessInstagramUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpA
 	)
 }
 
-func NewHandler(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.GbpAdapter) handler.APIHandler {
+func NewHandler(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.GbpAdapter, s3Adapter adapter.S3Adapter) handler.APIHandler {
 	return handler.NewAPIHandler(
-		NewCustomerUsecase(httpDriver, db, gbpAdapter),
+		NewCustomerUsecase(httpDriver, db, gbpAdapter, s3Adapter),
 		NewTokenUsecase(httpDriver, db),
 		NewWordpressInstagramUsecase(httpDriver, db),
 		NewBusinessInstagramUsecase(httpDriver, db, gbpAdapter),

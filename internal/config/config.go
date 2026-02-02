@@ -23,6 +23,9 @@ type Environment struct {
 	ClientSecret              string `envconfig:"CLIENT_SECRET"`
 	GoogleCredentialPath      string `envconfig:"GOOGLE_CREDENTIAL_PATH"`
 	GoogleBusinessAccountName string `envconfig:"GOOGLE_BUSINESS_ACCOUNT_NAME"`
+	S3Bucket                  string `envconfig:"S3_BUCKET"`
+	S3Region                  string `envconfig:"S3_REGION" default:"ap-northeast-1"`
+	S3Prefix                  string `envconfig:"S3_PREFIX" default:"tmp/gbp-media/"`
 }
 
 var Env Environment

@@ -35,6 +35,7 @@ type customerUsecase struct {
 	tokenRepo              repository.TokenRepository
 	businessInstagramRepo  repository.BusinessInstagramRepository
 	googlePostRepo         repository.GooglePostRepository
+	s3Adapter              adapter.S3Adapter
 	customerLocks          sync.Map
 }
 
@@ -48,6 +49,7 @@ func NewCustomerUsecase(
 	tokenRepo repository.TokenRepository,
 	businessInstagramRepo repository.BusinessInstagramRepository,
 	googlePostRepo repository.GooglePostRepository,
+	s3Adapter adapter.S3Adapter,
 ) CustomerUsecase {
 	return &customerUsecase{
 		instagramAdapter:       instagramAdapter,
@@ -59,6 +61,7 @@ func NewCustomerUsecase(
 		tokenRepo:              tokenRepo,
 		businessInstagramRepo:  businessInstagramRepo,
 		googlePostRepo:         googlePostRepo,
+		s3Adapter:              s3Adapter,
 	}
 }
 
@@ -267,7 +270,7 @@ func (u *customerUsecase) instagram2wordpress(ctx context.Context, wi *domain.Wo
 	/*
 		Slackに通知
 	*/
-	_ = u.slack.Success(ctx, wi, postResp.WordpressURL, post.Permalink)
+	_ = u.slack.SuccessWI(ctx, wi, postResp.WordpressURL, post.Permalink)
 
 	return nil
 }
@@ -297,11 +300,6 @@ func (u *customerUsecase) SyncAllGoogleBusinessInstagram(ctx context.Context) er
 		return err
 	}
 
-	fd := adapter.NewFileDownloader()
-	defer func() {
-		_ = fd.DeleteTempDirectory()
-	}()
-
 	backGroundCtx := context.Background()
 	for _, bi := range biList {
 		token, err := u.tokenRepo.First(backGroundCtx)
@@ -323,7 +321,7 @@ func (u *customerUsecase) SyncAllGoogleBusinessInstagram(ctx context.Context) er
 		})
 
 		for _, post := range posts {
-			if err := u.instagramToGbp(backGroundCtx, bi, post, fd); err != nil {
+			if err := u.instagramToGbp(backGroundCtx, bi, post); err != nil {
 				_ = u.slack.Error(ctx, "instagram => google business profile", err, bi.ID, bi.BusinessTitle)
 				continue
 			}
@@ -340,11 +338,6 @@ func (u *customerUsecase) SyncOneGoogleBusinessInstagram(ctx context.Context, id
 	if err != nil {
 		return err
 	}
-
-	fd := adapter.NewFileDownloader()
-	defer func() {
-		_ = fd.DeleteTempDirectory()
-	}()
 
 	backGroundCtx := context.Background()
 	token, err := u.tokenRepo.First(backGroundCtx)
@@ -364,7 +357,7 @@ func (u *customerUsecase) SyncOneGoogleBusinessInstagram(ctx context.Context, id
 	})
 
 	for _, post := range posts {
-		if err := u.instagramToGbp(backGroundCtx, bi, post, fd); err != nil {
+		if err := u.instagramToGbp(backGroundCtx, bi, post); err != nil {
 			return err
 		}
 	}
@@ -372,7 +365,7 @@ func (u *customerUsecase) SyncOneGoogleBusinessInstagram(ctx context.Context, id
 	return nil
 }
 
-func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.BusinessInstagram, post domain.InstagramPost, fd adapter.FileDownloader) error {
+func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.BusinessInstagram, post domain.InstagramPost) error {
 
 	/*
 		メディアのリンクがない場合はスキップ
@@ -406,26 +399,18 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 	if len(post.Children) == 0 {
 
 		/*
-			インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
+			InstagramのメディアをS3にアップロードして公開URLを取得
 		*/
-		localPath, err := fd.Download(ctx, post.MediaURL)
+		sourceURL, err := u.s3Adapter.UploadFromURL(ctx, post.MediaURL)
 		if err != nil {
 			return err
 		}
 		/*
-			ダウンロードしたファイルをGoogleBusinessにアップロード
+			公開URLをGoogleBusinessに渡してアップロード
 		*/
-		uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, localPath)
+		uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, sourceURL)
 		if err != nil {
 			return err
-		}
-
-		/*
-			ダウンロードファイルを都度削除
-		*/
-		err = os.Remove(localPath)
-		if err != nil {
-			slog.Warn(err.Error())
 		}
 
 		/*
@@ -462,27 +447,19 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 			}
 
 			/*
-				インスタグラムの投稿の画像、動画を一時ディレクトリにダウンロード
+				InstagramのメディアをS3にアップロードして公開URLを取得
 			*/
-			childLocalPath, err := fd.Download(ctx, child.MediaURL)
+			childSourceURL, err := u.s3Adapter.UploadFromURL(ctx, child.MediaURL)
 			if err != nil {
 				return err
 			}
 
 			/*
-				ダウンロードしたファイルをGoogleBusinessにアップロード
+				公開URLをGoogleBusinessに渡してアップロード
 			*/
-			uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, childLocalPath)
+			uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, childSourceURL)
 			if err != nil {
 				return err
-			}
-
-			/*
-				ダウンロードファイルを都度削除
-			*/
-			err = os.Remove(childLocalPath)
-			if err != nil {
-				slog.Warn(err.Error())
 			}
 
 			/*
@@ -503,6 +480,10 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 			}
 		}
 	}
+	/*
+		Slackに通知
+	*/
+	_ = u.slack.SuccessBI(ctx, bi, post.Permalink)
 
 	return nil
 }

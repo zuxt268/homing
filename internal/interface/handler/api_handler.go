@@ -35,7 +35,7 @@ func NewAPIHandler(
 	}
 }
 
-// SyncAll godoc
+// SyncAllGoogleBusinessInstagram godoc
 // @Summary      instagram => wordpressにおける全顧客データ同期
 // @Description  全ての顧客のデータを同期します
 // @Tags         sync
@@ -43,16 +43,17 @@ func NewAPIHandler(
 // @Produce      json
 // @Success      200  {string}  string  "全顧客同期完了"
 // @Failure      500  {string}  string  "内部サーバーエラー"
-// @Router       /api/sync [post]
-func (h *APIHandler) SyncAll(c echo.Context) error {
-	err := h.customerUsecase.SyncAllWordpressInstagram(c.Request().Context())
+// @Router       /api/sync/business-instagram [post]
+func (h *APIHandler) SyncAllGoogleBusinessInstagram(c echo.Context) error {
+	fmt.Println("aaaa")
+	err := h.customerUsecase.SyncAllGoogleBusinessInstagram(c.Request().Context())
 	if err != nil {
 		return handleError(c, err)
 	}
 	return c.JSON(http.StatusOK, "sync all")
 }
 
-// SyncOne godoc
+// SyncOneGoogleBusinessInstagram godoc
 // @Summary      instagram => wordpressにおける顧客データ同期
 // @Description  全ての顧客のデータを同期します
 // @Tags         sync
@@ -60,8 +61,46 @@ func (h *APIHandler) SyncAll(c echo.Context) error {
 // @Produce      json
 // @Success      200  {string}  string  "全顧客同期完了"
 // @Failure      500  {string}  string  "内部サーバーエラー"
-// @Router       /api/sync/{id} [post]
-func (h *APIHandler) SyncOne(c echo.Context) error {
+// @Router       /api/sync/business-instagram/{id} [post]
+func (h *APIHandler) SyncOneGoogleBusinessInstagram(c echo.Context) error {
+	var id int
+	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	err := h.customerUsecase.SyncOneGoogleBusinessInstagram(c.Request().Context(), id)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, "sync one")
+}
+
+// SyncAllWordpressInstagram godoc
+// @Summary      instagram => wordpressにおける全顧客データ同期
+// @Description  全ての顧客のデータを同期します
+// @Tags         sync
+// @Accept       json
+// @Produce      json
+// @Success      200  {string}  string  "全顧客同期完了"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/sync/wordpress-instagram [post]
+func (h *APIHandler) SyncAllWordpressInstagram(c echo.Context) error {
+	err := h.customerUsecase.SyncAllWordpressInstagram(c.Request().Context())
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, "sync all")
+}
+
+// SyncOneWordpressInstagram godoc
+// @Summary      instagram => wordpressにおける顧客データ同期
+// @Description  全ての顧客のデータを同期します
+// @Tags         sync
+// @Accept       json
+// @Produce      json
+// @Success      200  {string}  string  "全顧客同期完了"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/sync/wordpress-instagram/{id} [post]
+func (h *APIHandler) SyncOneWordpressInstagram(c echo.Context) error {
 	var id int
 	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
@@ -83,7 +122,6 @@ func (h *APIHandler) SyncOne(c echo.Context) error {
 // @Failure      500  {string}  string  "内部サーバーエラー"
 // @Router       /api/token [post]
 func (h *APIHandler) SaveToken(c echo.Context) error {
-
 	var token req.UpdateToken
 	if err := c.Bind(&token); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
@@ -101,7 +139,7 @@ func (h *APIHandler) SaveToken(c echo.Context) error {
 // @Tags         token
 // @Accept       json
 // @Produce      json
-// @Success 200 {object} res.Token "トークン情報"
+// @Success　　　 200 {object} res.Token "トークン情報"
 // @Failure      500  {string}  string  "内部サーバーエラー"
 // @Router       /api/token [get]
 func (h *APIHandler) GetToken(c echo.Context) error {
@@ -118,7 +156,7 @@ func (h *APIHandler) GetToken(c echo.Context) error {
 // @Tags         token
 // @Accept       json
 // @Produce      json
-// @Success 200 {object} string "ok"
+// @Success　　　 200 {object} string "ok"
 // @Failure      500  {string}  string  "内部サーバーエラー"
 // @Router       /api/token/check [post]
 func (h *APIHandler) CheckToken(c echo.Context) error {
@@ -154,6 +192,24 @@ func (h *APIHandler) GetWordpressInstagramList(c echo.Context) error {
 	}
 
 	list, err := h.wordpressInstagramUsecase.GetWordpressInstagramList(c.Request().Context(), params)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, list)
+}
+
+// GetWordpressInstagramCount godoc
+// @Summary      Wordpress Instagramの件数を取得
+// @Description  Wordpress Instagramの件数を取得します
+// @Tags         wordpress-instagram
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  res.WordpressInstagramList  "Wordpress Instagram一覧"
+// @Failure      400  {string}  string  "不正なリクエスト"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/wordpress-instagram/count [get]
+func (h *APIHandler) GetWordpressInstagramCount(c echo.Context) error {
+	list, err := h.wordpressInstagramUsecase.GetWordpressInstagramCount(c.Request().Context())
 	if err != nil {
 		return handleError(c, err)
 	}
@@ -435,7 +491,7 @@ func (h *APIHandler) UpdateBusinessInstagram(c echo.Context) error {
 // @Description  Business Instagramを削除します
 // @Tags         business-instagram
 // @Param        id    path      int     true  "Business Instagram ID"
-// @Success      204
+// @SuccessWI      204
 // @Failure      400   {string}  string  "不正なリクエスト"
 // @Failure      404   {string}  string  "見つかりません"
 // @Failure      500   {string}  string  "内部サーバーエラー"
