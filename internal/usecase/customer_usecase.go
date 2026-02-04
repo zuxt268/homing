@@ -382,62 +382,79 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 		return nil
 	}
 
-	/*
-		すでに投稿しているものかどうかをチェック
-	*/
-	exist, err := u.googlePostRepo.Exists(ctx, repository.GooglePostFilter{
-		MediaID:    &post.ID,
-		CustomerID: &bi.ID,
-	})
-	if err != nil {
-		return err
-	}
-	if exist {
-		return nil
-	}
+	var firstImageSourceURL string
 
-	if len(post.Children) == 0 {
+	if len(post.Children) == 0 && post.MediaType == "IMAGE" {
+		/*
+			動画の場合はPhotosへのアップロードをスキップ
+		*/
 
 		/*
-			InstagramのメディアをS3にアップロードして公開URLを取得
+			すでにPhotosに投稿しているものかどうかをチェック
 		*/
-		sourceURL, err := u.s3Adapter.UploadFromURL(ctx, post.MediaURL)
-		if err != nil {
-			return err
-		}
-		/*
-			公開URLをGoogleBusinessに渡してアップロード
-		*/
-		uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, sourceURL)
-		if err != nil {
-			return err
-		}
-
-		/*
-			投稿したことをDBに保存
-		*/
-		err = u.googlePostRepo.Create(ctx, &domain.GooglePost{
-			GoogleBusinessURL: bi.BusinessName,
-			InstagramURL:      post.Permalink,
-			MediaID:           post.ID,
-			CustomerID:        bi.ID,
-			Name:              uploadResp.Name,
-			MediaFormat:       uploadResp.MediaFormat,
-			GoogleURL:         uploadResp.GoogleURL,
-			CreateTime:        uploadResp.CreateTime,
+		exist, err := u.googlePostRepo.Exists(ctx, repository.GooglePostFilter{
+			MediaID:    &post.ID,
+			CustomerID: &bi.ID,
+			PostType:   util.Pointer(domain.PostTypePhoto),
 		})
 		if err != nil {
 			return err
+		}
+		if !exist {
+			/*
+				InstagramのメディアをS3にアップロードして公開URLを取得
+			*/
+			sourceURL, err := u.s3Adapter.UploadFromURL(ctx, post.MediaURL)
+			if err != nil {
+				return err
+			}
+			firstImageSourceURL = sourceURL
+
+			/*
+				公開URLをGoogleBusinessに渡してPhotosにアップロード
+			*/
+			uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, sourceURL)
+			if err != nil {
+				return err
+			}
+
+			/*
+				投稿したことをDBに保存（PostType=photo）
+			*/
+			err = u.googlePostRepo.Create(ctx, &domain.GooglePost{
+				InstagramURL: post.Permalink,
+				MediaID:      post.ID,
+				CustomerID:   bi.ID,
+				Name:         uploadResp.Name,
+				GoogleURL:    uploadResp.GoogleURL,
+				CreateTime:   uploadResp.CreateTime,
+				PostType:     domain.PostTypePhoto,
+			})
+			if err != nil {
+				return err
+			}
+			/*
+				Slackに通知
+			*/
+			_ = u.slack.SuccessBI(ctx, bi, post.Permalink, domain.PostTypePhoto)
 		}
 
 	} else {
 		for _, child := range post.Children {
 			/*
-				すでに投稿しているものかどうかをチェック（子要素単位）
+				動画の場合はスキップ
+			*/
+			if child.MediaType != "IMAGE" {
+				continue
+			}
+
+			/*
+				すでにPhotosに投稿しているものかどうかをチェック（子要素単位）
 			*/
 			childExist, err := u.googlePostRepo.Exists(ctx, repository.GooglePostFilter{
 				MediaID:    &child.ID,
 				CustomerID: &bi.ID,
+				PostType:   util.Pointer(domain.PostTypePhoto),
 			})
 			if err != nil {
 				return err
@@ -454,8 +471,13 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 				return err
 			}
 
+			// 最初の画像のURLを保存（Local Post用）
+			if firstImageSourceURL == "" {
+				firstImageSourceURL = childSourceURL
+			}
+
 			/*
-				公開URLをGoogleBusinessに渡してアップロード
+				公開URLをGoogleBusinessに渡してPhotosにアップロード
 			*/
 			uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, childSourceURL)
 			if err != nil {
@@ -463,27 +485,102 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 			}
 
 			/*
-				投稿したことをDBに保存
+				投稿したことをDBに保存（PostType=photo）
 			*/
 			err = u.googlePostRepo.Create(ctx, &domain.GooglePost{
-				GoogleBusinessURL: bi.BusinessName,
-				InstagramURL:      post.Permalink,
-				MediaID:           child.ID,
-				CustomerID:        bi.ID,
-				Name:              uploadResp.Name,
-				MediaFormat:       uploadResp.MediaFormat,
-				GoogleURL:         uploadResp.GoogleURL,
-				CreateTime:        uploadResp.CreateTime,
+				InstagramURL: post.Permalink,
+				MediaID:      child.ID,
+				CustomerID:   bi.ID,
+				Name:         uploadResp.Name,
+				GoogleURL:    uploadResp.GoogleURL,
+				CreateTime:   uploadResp.CreateTime,
+				PostType:     domain.PostTypePhoto,
 			})
 			if err != nil {
 				return err
 			}
+
+			/*
+				Slackに通知
+			*/
+			_ = u.slack.SuccessBI(ctx, bi, post.Permalink, domain.PostTypePhoto)
 		}
 	}
+
 	/*
-		Slackに通知
+		captionがある場合はLocal Postsに投稿
 	*/
-	_ = u.slack.SuccessBI(ctx, bi, post.Permalink)
+	if post.Caption != "" {
+		localPostExist, err := u.googlePostRepo.Exists(ctx, repository.GooglePostFilter{
+			MediaID:    &post.ID,
+			CustomerID: &bi.ID,
+			PostType:   util.Pointer(domain.PostTypePost),
+		})
+		if err != nil {
+			return err
+		}
+		if !localPostExist {
+			// firstImageSourceURLがない場合（すべての画像が既にアップロード済みか、動画のみの場合）は最初の画像をS3にアップロード
+			if firstImageSourceURL == "" {
+				// 最初の画像を探す
+				var firstImageURL string
+				if len(post.Children) == 0 {
+					if post.MediaType == "IMAGE" {
+						firstImageURL = post.MediaURL
+					}
+				} else {
+					for _, child := range post.Children {
+						if child.MediaType == "IMAGE" {
+							firstImageURL = child.MediaURL
+							break
+						}
+					}
+				}
+
+				// 画像がない場合（動画のみの投稿）はLocal Postをスキップ
+				if firstImageURL == "" {
+					return nil
+				}
+
+				firstImageSourceURL, err = u.s3Adapter.UploadFromURL(ctx, firstImageURL)
+				if err != nil {
+					return err
+				}
+			}
+
+			// captionが1500文字を超える場合は切り詰める
+			summary := post.Caption
+			if len(summary) > 1500 {
+				summary = summary[:1500]
+			}
+
+			localPostResp, err := u.gbpAdapter.CreateLocalPost(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, summary, firstImageSourceURL)
+			if err != nil {
+				return err
+			}
+
+			/*
+				Local Post投稿をDBに保存（PostType=post）
+			*/
+			err = u.googlePostRepo.Create(ctx, &domain.GooglePost{
+				InstagramURL: post.Permalink,
+				MediaID:      post.ID,
+				CustomerID:   bi.ID,
+				Name:         localPostResp.Name,
+				GoogleURL:    localPostResp.SearchURL,
+				CreateTime:   localPostResp.CreateTime,
+				PostType:     domain.PostTypePost,
+			})
+			if err != nil {
+				return err
+			}
+
+			/*
+				Slackに通知
+			*/
+			_ = u.slack.SuccessBI(ctx, bi, post.Permalink, domain.PostTypePost)
+		}
+	}
 
 	return nil
 }

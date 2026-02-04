@@ -18,7 +18,7 @@ type Slack interface {
 	SendHealthy(ctx context.Context) error
 
 	SuccessWI(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error
-	SuccessBI(ctx context.Context, bi *domain.BusinessInstagram, instagramUrl string) error
+	SuccessBI(ctx context.Context, bi *domain.BusinessInstagram, instagramUrl, postType string) error
 }
 
 type slack struct {
@@ -114,16 +114,16 @@ func (s *slack) SuccessWI(ctx context.Context, wi *domain.WordpressInstagram, wo
 	})
 }
 
-const templateBiSuccess = `[Instagram => GBP]
+const templateBiSuccess = `[Instagram => GBP: %s]
 id: %d
 name: %s
 Instagram: %s
 `
 
-func (s *slack) SuccessBI(ctx context.Context, bi *domain.BusinessInstagram, instagramUrl string) error {
+func (s *slack) SuccessBI(ctx context.Context, bi *domain.BusinessInstagram, instagramUrl, postType string) error {
 	sb := strings.Builder{}
 	sb.WriteString("｀｀｀")
-	sb.WriteString(fmt.Sprintf(templateBiSuccess, bi.ID, bi.Name, instagramUrl))
+	sb.WriteString(fmt.Sprintf(templateBiSuccess, postType, bi.ID, bi.Name, instagramUrl))
 	sb.WriteString("｀｀｀")
 	return s.noticeWebAppChannel(ctx, external.SlackRequest{
 		Text:      sb.String(),

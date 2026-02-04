@@ -107,11 +107,25 @@ const docTemplate = `{
                     "business-instagram"
                 ],
                 "summary": "Business Instagram取得",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "オフセット",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
-                    "201": {
-                        "description": "Business Instagram",
+                    "200": {
+                        "description": "Business Instagram Detail",
                         "schema": {
-                            "$ref": "#/definitions/res.BusinessInstagram"
+                            "$ref": "#/definitions/res.BusinessInstagramDetail"
                         }
                     },
                     "400": {
@@ -184,6 +198,42 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "Business Instagramを削除します",
+                "tags": [
+                    "business-instagram"
+                ],
+                "summary": "Business Instagram削除",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Business Instagram ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "見つかりません",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
             }
         },
         "/api/google-business": {
@@ -236,7 +286,7 @@ const docTemplate = `{
             }
         },
         "/api/google-business/fetch": {
-            "get": {
+            "post": {
                 "description": "Google Businessを同期します",
                 "tags": [
                     "google-business"
@@ -258,7 +308,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/sync": {
+        "/api/sync/business-instagram": {
             "post": {
                 "description": "全ての顧客のデータを同期します",
                 "consumes": [
@@ -287,7 +337,65 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/sync/{id}": {
+        "/api/sync/business-instagram/{id}": {
+            "post": {
+                "description": "全ての顧客のデータを同期します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sync"
+                ],
+                "summary": "instagram =\u003e wordpressにおける顧客データ同期",
+                "responses": {
+                    "200": {
+                        "description": "全顧客同期完了",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sync/wordpress-instagram": {
+            "post": {
+                "description": "全ての顧客のデータを同期します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sync"
+                ],
+                "summary": "instagram =\u003e wordpressにおける全顧客データ同期",
+                "responses": {
+                    "200": {
+                        "description": "全顧客同期完了",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sync/wordpress-instagram/{id}": {
             "post": {
                 "description": "全ての顧客のデータを同期します",
                 "consumes": [
@@ -510,6 +618,41 @@ const docTemplate = `{
                         "description": "作成されたWordpress Instagram",
                         "schema": {
                             "$ref": "#/definitions/res.WordpressInstagram"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/wordpress-instagram/count": {
+            "get": {
+                "description": "Wordpress Instagramの件数を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-instagram"
+                ],
+                "summary": "Wordpress Instagramの件数を取得",
+                "responses": {
+                    "200": {
+                        "description": "Wordpress Instagram一覧",
+                        "schema": {
+                            "$ref": "#/definitions/res.WordpressInstagramList"
                         }
                     },
                     "400": {
@@ -777,6 +920,9 @@ const docTemplate = `{
                 "business_name": {
                     "type": "string"
                 },
+                "business_title": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -784,6 +930,56 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "instagram_id": {
+                    "type": "string"
+                },
+                "instagram_name": {
+                    "type": "string"
+                },
+                "maps_url": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.BusinessInstagramDetail": {
+            "type": "object",
+            "properties": {
+                "business_name": {
+                    "type": "string"
+                },
+                "business_title": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "google_posts": {
+                    "$ref": "#/definitions/res.GooglePosts"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "instagram_id": {
+                    "type": "string"
+                },
+                "instagram_name": {
+                    "type": "string"
+                },
+                "maps_url": {
                     "type": "string"
                 },
                 "memo": {
@@ -847,6 +1043,40 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/res.GoogleBusiness"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "res.GooglePost": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "google_url": {
+                    "type": "string"
+                },
+                "instagram_url": {
+                    "type": "string"
+                },
+                "post_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.GooglePosts": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "google_posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/res.GooglePost"
                     }
                 },
                 "total": {

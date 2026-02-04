@@ -36,16 +36,15 @@ func (r *googlePostRepository) Get(ctx context.Context, f GooglePostFilter) (*do
 		return nil, err
 	}
 	return &domain.GooglePost{
-		ID:                gp.ID,
-		GoogleBusinessURL: gp.GoogleBusinessURL,
-		InstagramURL:      gp.InstagramURL,
-		MediaID:           gp.MediaID,
-		CustomerID:        gp.CustomerID,
-		Name:              gp.Name,
-		MediaFormat:       gp.MediaFormat,
-		GoogleURL:         gp.GoogleURL,
-		CreateTime:        gp.CreateTime,
-		CreatedAt:         gp.CreatedAt,
+		ID:           gp.ID,
+		InstagramURL: gp.InstagramURL,
+		MediaID:      gp.MediaID,
+		CustomerID:   gp.CustomerID,
+		Name:         gp.Name,
+		GoogleURL:    gp.GoogleURL,
+		CreateTime:   gp.CreateTime,
+		PostType:     gp.PostType,
+		CreatedAt:    gp.CreatedAt,
 	}, nil
 }
 
@@ -58,16 +57,15 @@ func (r *googlePostRepository) FindAll(ctx context.Context, f GooglePostFilter) 
 	googlePostList := make([]*domain.GooglePost, 0, len(gpList))
 	for _, gp := range gpList {
 		googlePostList = append(googlePostList, &domain.GooglePost{
-			ID:                gp.ID,
-			GoogleBusinessURL: gp.GoogleBusinessURL,
-			InstagramURL:      gp.InstagramURL,
-			MediaID:           gp.MediaID,
-			CustomerID:        gp.CustomerID,
-			Name:              gp.Name,
-			MediaFormat:       gp.MediaFormat,
-			GoogleURL:         gp.GoogleURL,
-			CreateTime:        gp.CreateTime,
-			CreatedAt:         gp.CreatedAt,
+			ID:           gp.ID,
+			InstagramURL: gp.InstagramURL,
+			MediaID:      gp.MediaID,
+			CustomerID:   gp.CustomerID,
+			Name:         gp.Name,
+			GoogleURL:    gp.GoogleURL,
+			CreateTime:   gp.CreateTime,
+			PostType:     gp.PostType,
+			CreatedAt:    gp.CreatedAt,
 		})
 	}
 	return googlePostList, nil
@@ -96,29 +94,27 @@ func (r *googlePostRepository) Exists(ctx context.Context, f GooglePostFilter) (
 
 func (r *googlePostRepository) Update(ctx context.Context, googlePost *domain.GooglePost, f GooglePostFilter) error {
 	m := &model.GooglePost{
-		ID:                googlePost.ID,
-		GoogleBusinessURL: googlePost.GoogleBusinessURL,
-		InstagramURL:      googlePost.InstagramURL,
-		MediaID:           googlePost.MediaID,
-		CustomerID:        googlePost.CustomerID,
-		Name:              googlePost.Name,
-		MediaFormat:       googlePost.MediaFormat,
-		GoogleURL:         googlePost.GoogleURL,
-		CreateTime:        googlePost.CreateTime,
+		ID:           googlePost.ID,
+		InstagramURL: googlePost.InstagramURL,
+		MediaID:      googlePost.MediaID,
+		CustomerID:   googlePost.CustomerID,
+		Name:         googlePost.Name,
+		GoogleURL:    googlePost.GoogleURL,
+		CreateTime:   googlePost.CreateTime,
+		PostType:     googlePost.PostType,
 	}
 	return r.getDB(ctx).Omit("created_at").Save(m).Error
 }
 
 func (r *googlePostRepository) Create(ctx context.Context, googlePost *domain.GooglePost) error {
 	m := model.GooglePost{
-		GoogleBusinessURL: googlePost.GoogleBusinessURL,
-		InstagramURL:      googlePost.InstagramURL,
-		MediaID:           googlePost.MediaID,
-		CustomerID:        googlePost.CustomerID,
-		Name:              googlePost.Name,
-		MediaFormat:       googlePost.MediaFormat,
-		GoogleURL:         googlePost.GoogleURL,
-		CreateTime:        googlePost.CreateTime,
+		InstagramURL: googlePost.InstagramURL,
+		MediaID:      googlePost.MediaID,
+		CustomerID:   googlePost.CustomerID,
+		Name:         googlePost.Name,
+		GoogleURL:    googlePost.GoogleURL,
+		CreateTime:   googlePost.CreateTime,
+		PostType:     googlePost.PostType,
 	}
 	if err := r.getDB(ctx).Create(&m).Error; err != nil {
 		return err
@@ -139,22 +135,20 @@ func (r *googlePostRepository) getDB(ctx context.Context) *gorm.DB {
 }
 
 type GooglePostFilter struct {
-	ID                *int
-	GoogleBusinessURL *string
-	InstagramURL      *string
-	MediaID           *string
-	CustomerID        *int
-	Name              *string
-	MediaFormat       *string
-	GoogleURL         *string
-	CreateTime        *string
-	Limit             *int
-	Offset            *int
-	All               *bool
+	ID           *int
+	InstagramURL *string
+	MediaID      *string
+	CustomerID   *int
+	Name         *string
+	GoogleURL    *string
+	CreateTime   *string
+	PostType     *string
+	Limit        *int
+	Offset       *int
+	All          *bool
 
-	PartialGoogleBusinessURL *string
-	PartialInstagramURL      *string
-	OrderByIDDesc            *bool
+	PartialInstagramURL *string
+	OrderByIDDesc       *bool
 }
 
 func (p *GooglePostFilter) Mod(db *gorm.DB) *gorm.DB {
@@ -163,9 +157,6 @@ func (p *GooglePostFilter) Mod(db *gorm.DB) *gorm.DB {
 	}
 	if p.ID != nil {
 		db = db.Where("id = ?", *p.ID)
-	}
-	if p.GoogleBusinessURL != nil {
-		db = db.Where("google_business_url = ?", *p.GoogleBusinessURL)
 	}
 	if p.InstagramURL != nil {
 		db = db.Where("instagram_url = ?", *p.InstagramURL)
@@ -179,34 +170,17 @@ func (p *GooglePostFilter) Mod(db *gorm.DB) *gorm.DB {
 	if p.Name != nil {
 		db = db.Where("name = ?", *p.Name)
 	}
-	if p.MediaFormat != nil {
-		db = db.Where("media_format = ?", *p.MediaFormat)
-	}
 	if p.GoogleURL != nil {
 		db = db.Where("google_url = ?", *p.GoogleURL)
 	}
 	if p.CreateTime != nil {
 		db = db.Where("create_time = ?", *p.CreateTime)
 	}
-
-	if p.PartialGoogleBusinessURL != nil || p.PartialInstagramURL != nil {
-		var orConditions []string
-		var orValues []interface{}
-		if p.PartialGoogleBusinessURL != nil {
-			orConditions = append(orConditions, "google_business_url like ?")
-			orValues = append(orValues, "%"+*p.PartialGoogleBusinessURL+"%")
-		}
-		if p.PartialInstagramURL != nil {
-			orConditions = append(orConditions, "instagram_url like ?")
-			orValues = append(orValues, "%"+*p.PartialInstagramURL+"%")
-		}
-		if len(orConditions) > 0 {
-			query := orConditions[0]
-			for i := 1; i < len(orConditions); i++ {
-				query += " OR " + orConditions[i]
-			}
-			db = db.Where(query, orValues...)
-		}
+	if p.PostType != nil {
+		db = db.Where("post_type = ?", *p.PostType)
+	}
+	if p.PartialInstagramURL != nil {
+		db = db.Where("instagram_url like ?", "%"+*p.PartialInstagramURL+"%")
 	}
 	if p.OrderByIDDesc != nil {
 		db = db.Order("id desc")

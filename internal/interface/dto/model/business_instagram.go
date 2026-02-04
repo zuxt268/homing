@@ -12,6 +12,7 @@ type BusinessInstagram struct {
 	InstagramName string    `gorm:"column:instagram_name"`
 	BusinessName  string    `gorm:"column:business_name"`
 	BusinessTitle string    `gorm:"column:business_title"`
+	MapsURL       string    `gorm:"column:maps_url"`
 	StartDate     time.Time `gorm:"column:start_date"`
 	Status        int       `gorm:"column:status"`
 	UpdatedAt     time.Time `gorm:"column:updated_at;autoUpdateTime"`

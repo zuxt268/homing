@@ -99,6 +99,7 @@ func NewBusinessInstagramUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpA
 		NewGoogleBusinessRepository(db),
 		NewTokenRepository(db),
 		NewBusinessInstagramRepository(db),
+		NewGooglePostRepository(db),
 		NewInstagramAdapter(httpDriver),
 		gbpAdapter,
 	)

@@ -10,6 +10,7 @@ type BusinessInstagram struct {
 	InstagramName string
 	BusinessName  string
 	BusinessTitle string
+	MapsURL       string
 	StartDate     time.Time
 	Status        Status
 	UpdatedAt     time.Time

@@ -12,6 +12,11 @@ type GetBusinessInstagram struct {
 	Status      *int    `query:"status"`
 }
 
+type GetBusinessInstagramDetail struct {
+	Limit  *int `query:"limit"`
+	Offset *int `query:"offset"`
+}
+
 type BusinessInstagram struct {
 	Name         string    `json:"name"`
 	BusinessName string    `json:"business_name"`

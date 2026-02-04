@@ -8,3 +8,10 @@ type GoogleBusinessMediaUploadResponse struct {
 	ThumbnailURL string `json:"thumbnailUrl"`
 	CreateTime   string `json:"createTime"`
 }
+
+type GoogleBusinessLocalPostResponse struct {
+	Name       string `json:"name"`
+	Summary    string `json:"summary"`
+	CreateTime string `json:"createTime"`
+	SearchURL  string `json:"searchUrl"`
+}

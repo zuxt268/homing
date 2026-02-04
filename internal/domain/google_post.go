@@ -3,14 +3,18 @@ package domain
 import "time"
 
 type GooglePost struct {
-	ID                int
-	GoogleBusinessURL string
-	InstagramURL      string
-	MediaID           string
-	CustomerID        int
-	Name              string
-	MediaFormat       string
-	GoogleURL         string
-	CreateTime        string
-	CreatedAt         time.Time
+	ID           int
+	InstagramURL string
+	MediaID      string
+	CustomerID   int
+	Name         string
+	GoogleURL    string
+	CreateTime   string
+	PostType     string
+	CreatedAt    time.Time
 }
+
+const (
+	PostTypePhoto = "photo"
+	PostTypePost  = "post"
+)

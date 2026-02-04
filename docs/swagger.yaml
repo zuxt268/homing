@@ -60,11 +60,46 @@ definitions:
     properties:
       business_name:
         type: string
+      business_title:
+        type: string
       created_at:
         type: string
       id:
         type: integer
       instagram_id:
+        type: string
+      instagram_name:
+        type: string
+      maps_url:
+        type: string
+      memo:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  res.BusinessInstagramDetail:
+    properties:
+      business_name:
+        type: string
+      business_title:
+        type: string
+      created_at:
+        type: string
+      google_posts:
+        $ref: '#/definitions/res.GooglePosts'
+      id:
+        type: integer
+      instagram_id:
+        type: string
+      instagram_name:
+        type: string
+      maps_url:
         type: string
       memo:
         type: string
@@ -106,6 +141,28 @@ definitions:
       google_business_list:
         items:
           $ref: '#/definitions/res.GoogleBusiness'
+        type: array
+      total:
+        type: integer
+    type: object
+  res.GooglePost:
+    properties:
+      created_at:
+        type: string
+      google_url:
+        type: string
+      instagram_url:
+        type: string
+      post_type:
+        type: string
+    type: object
+  res.GooglePosts:
+    properties:
+      count:
+        type: integer
+      google_posts:
+        items:
+          $ref: '#/definitions/res.GooglePost'
         type: array
       total:
         type: integer
@@ -260,17 +317,50 @@ paths:
       tags:
       - business-instagram
   /api/business-instagram/{id}:
+    delete:
+      description: Business Instagramを削除します
+      parameters:
+      - description: Business Instagram ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "404":
+          description: 見つかりません
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Business Instagram削除
+      tags:
+      - business-instagram
     get:
       consumes:
       - application/json
       description: Business Instagramを取得します
+      parameters:
+      - description: 取得件数
+        in: query
+        name: limit
+        type: integer
+      - description: オフセット
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
-        "201":
-          description: Business Instagram
+        "200":
+          description: Business Instagram Detail
           schema:
-            $ref: '#/definitions/res.BusinessInstagram'
+            $ref: '#/definitions/res.BusinessInstagramDetail'
         "400":
           description: 不正なリクエスト
           schema:
@@ -353,7 +443,7 @@ paths:
       tags:
       - google-business
   /api/google-business/fetch:
-    get:
+    post:
       description: Google Businessを同期します
       responses:
         "400":
@@ -367,7 +457,7 @@ paths:
       summary: Google Businessの同期
       tags:
       - google-business
-  /api/sync:
+  /api/sync/business-instagram:
     post:
       consumes:
       - application/json
@@ -386,7 +476,45 @@ paths:
       summary: instagram => wordpressにおける全顧客データ同期
       tags:
       - sync
-  /api/sync/{id}:
+  /api/sync/business-instagram/{id}:
+    post:
+      consumes:
+      - application/json
+      description: 全ての顧客のデータを同期します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 全顧客同期完了
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: instagram => wordpressにおける顧客データ同期
+      tags:
+      - sync
+  /api/sync/wordpress-instagram:
+    post:
+      consumes:
+      - application/json
+      description: 全ての顧客のデータを同期します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 全顧客同期完了
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: instagram => wordpressにおける全顧客データ同期
+      tags:
+      - sync
+  /api/sync/wordpress-instagram/{id}:
     post:
       consumes:
       - application/json
@@ -644,6 +772,29 @@ paths:
           schema:
             type: string
       summary: Wordpress Instagram更新
+      tags:
+      - wordpress-instagram
+  /api/wordpress-instagram/count:
+    get:
+      consumes:
+      - application/json
+      description: Wordpress Instagramの件数を取得します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Wordpress Instagram一覧
+          schema:
+            $ref: '#/definitions/res.WordpressInstagramList'
+        "400":
+          description: 不正なリクエスト
+          schema:
+            type: string
+        "500":
+          description: 内部サーバーエラー
+          schema:
+            type: string
+      summary: Wordpress Instagramの件数を取得
       tags:
       - wordpress-instagram
 swagger: "2.0"

@@ -17,7 +17,7 @@ type BusinessInstagramUsecase interface {
 	FetchGoogleBusinesses(ctx context.Context) error
 	GetGoogleBusinesses(ctx context.Context, limit, offset int) ([]*domain.GoogleBusinesses, int64, error)
 
-	GetBusinessInstagram(ctx context.Context, id int) (*res.BusinessInstagram, error)
+	GetBusinessInstagram(ctx context.Context, id int, params req.GetBusinessInstagramDetail) (*res.BusinessInstagramDetail, error)
 	GetBusinessInstagramList(ctx context.Context, params req.GetBusinessInstagram) (*res.BusinessInstagramList, error)
 	CreateBusinessInstagram(ctx context.Context, body req.BusinessInstagram) (*res.BusinessInstagram, error)
 	UpdateBusinessInstagram(ctx context.Context, id int, body req.BusinessInstagram) (*res.BusinessInstagram, error)
@@ -28,6 +28,7 @@ type businessInstagramUsecase struct {
 	googleBusinessRepo    repository.GoogleBusinessRepository
 	tokenRepo             repository.TokenRepository
 	businessInstagramRepo repository.BusinessInstagramRepository
+	googlePostRepo        repository.GooglePostRepository
 	instagramAdapter      adapter.InstagramAdapter
 	gbpAdapter            adapter.GbpAdapter
 }
@@ -36,6 +37,7 @@ func NewBusinessInstagramUsecase(
 	googleBusinessRepo repository.GoogleBusinessRepository,
 	tokenRepo repository.TokenRepository,
 	businessInstagramRepo repository.BusinessInstagramRepository,
+	googlePostRepo repository.GooglePostRepository,
 	instagramAdapter adapter.InstagramAdapter,
 	gbpAdapter adapter.GbpAdapter,
 ) BusinessInstagramUsecase {
@@ -43,6 +45,7 @@ func NewBusinessInstagramUsecase(
 		googleBusinessRepo:    googleBusinessRepo,
 		tokenRepo:             tokenRepo,
 		businessInstagramRepo: businessInstagramRepo,
+		googlePostRepo:        googlePostRepo,
 		instagramAdapter:      instagramAdapter,
 		gbpAdapter:            gbpAdapter,
 	}
@@ -119,9 +122,11 @@ func (u *businessInstagramUsecase) GetBusinessInstagramList(ctx context.Context,
 			ID:            business.ID,
 			Name:          business.Name,
 			BusinessName:  business.BusinessName,
+			BusinessTitle: business.BusinessTitle,
 			InstagramID:   business.InstagramID,
 			InstagramName: business.InstagramName,
 			Memo:          business.Memo,
+			MapsURL:       business.MapsURL,
 			StartDate:     business.StartDate,
 			Status:        int(business.Status),
 			CreatedAt:     business.CreatedAt,
@@ -137,23 +142,61 @@ func (u *businessInstagramUsecase) GetBusinessInstagramList(ctx context.Context,
 	}, nil
 }
 
-func (u *businessInstagramUsecase) GetBusinessInstagram(ctx context.Context, id int) (*res.BusinessInstagram, error) {
+func (u *businessInstagramUsecase) GetBusinessInstagram(ctx context.Context, id int, params req.GetBusinessInstagramDetail) (*res.BusinessInstagramDetail, error) {
 	bi, err := u.businessInstagramRepo.Get(ctx, repository.BusinessInstagramFilter{
 		ID: &id,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &res.BusinessInstagram{
-		ID:           bi.ID,
-		Name:         bi.Name,
-		BusinessName: bi.BusinessName,
-		InstagramID:  bi.InstagramID,
-		Memo:         bi.Memo,
-		StartDate:    bi.StartDate,
-		Status:       int(bi.Status),
-		CreatedAt:    bi.CreatedAt,
-		UpdatedAt:    bi.UpdatedAt,
+
+	filter := repository.GooglePostFilter{
+		CustomerID:    util.Pointer(bi.ID),
+		OrderByIDDesc: util.Pointer(true),
+		Limit:         params.Limit,
+		Offset:        params.Offset,
+	}
+
+	googlePosts, err := u.googlePostRepo.FindAll(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := u.googlePostRepo.Count(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	respGooglePosts := make([]res.GooglePost, len(googlePosts))
+	for i, gp := range googlePosts {
+		respGooglePosts[i] = res.GooglePost{
+			GoogleURL:    gp.GoogleURL,
+			InstagramURL: gp.InstagramURL,
+			CreatedAt:    gp.CreatedAt,
+			PostType:     gp.PostType,
+		}
+	}
+
+	return &res.BusinessInstagramDetail{
+		ID:            bi.ID,
+		Name:          bi.Name,
+		BusinessName:  bi.BusinessName,
+		BusinessTitle: bi.BusinessTitle,
+		InstagramID:   bi.InstagramID,
+		InstagramName: bi.InstagramName,
+		Memo:          bi.Memo,
+		MapsURL:       bi.MapsURL,
+		StartDate:     bi.StartDate,
+		Status:        int(bi.Status),
+		CreatedAt:     bi.CreatedAt,
+		UpdatedAt:     bi.UpdatedAt,
+		GooglePosts: res.GooglePosts{
+			GooglePosts: respGooglePosts,
+			Paginate: res.Paginate{
+				Total: total,
+				Count: len(googlePosts),
+			},
+		},
 	}, nil
 }
 
@@ -185,6 +228,7 @@ func (u *businessInstagramUsecase) CreateBusinessInstagram(ctx context.Context, 
 		InstagramName: instagram.InstagramAccountUserName,
 		BusinessName:  business.Name,
 		BusinessTitle: business.Title,
+		MapsURL:       business.MapsURL,
 		StartDate:     body.StartDate,
 		Status:        domain.Status(body.Status),
 	}
@@ -199,6 +243,7 @@ func (u *businessInstagramUsecase) CreateBusinessInstagram(ctx context.Context, 
 		BusinessName: bi.BusinessName,
 		InstagramID:  bi.InstagramID,
 		Memo:         bi.Memo,
+		MapsURL:      bi.MapsURL,
 		StartDate:    bi.StartDate,
 		Status:       int(bi.Status),
 		CreatedAt:    bi.CreatedAt,
@@ -233,6 +278,7 @@ func (u *businessInstagramUsecase) UpdateBusinessInstagram(ctx context.Context, 
 	bi.InstagramName = instagram.InstagramAccountName
 	bi.BusinessName = business.Name
 	bi.BusinessTitle = business.Title
+	bi.MapsURL = business.MapsURL
 	bi.StartDate = body.StartDate
 	bi.Status = domain.Status(body.Status)
 	bi.UpdatedAt = time.Now()
@@ -249,6 +295,7 @@ func (u *businessInstagramUsecase) UpdateBusinessInstagram(ctx context.Context, 
 		BusinessName: bi.BusinessName,
 		InstagramID:  bi.InstagramID,
 		Memo:         bi.Memo,
+		MapsURL:      bi.MapsURL,
 		StartDate:    bi.StartDate,
 		Status:       int(bi.Status),
 		CreatedAt:    bi.CreatedAt,

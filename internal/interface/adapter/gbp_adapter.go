@@ -26,12 +26,14 @@ type Business struct {
 	Locality           string
 	AddressLines       []string
 	Description        string
+	MapsURL            string
 }
 
 type GbpAdapter interface {
 	GetAllBusinesses(ctx context.Context, accountName string) ([]Business, error)
 	UploadMedia(ctx context.Context, accountName, businessName string, sourceURL string) (*external.GoogleBusinessMediaUploadResponse, error)
 	GetBusiness(ctx context.Context, businessName string) (Business, error)
+	CreateLocalPost(ctx context.Context, accountName, businessName, summary, sourceURL string) (*external.GoogleBusinessLocalPostResponse, error)
 }
 
 type gbpAdapter struct {
@@ -155,15 +157,65 @@ func (a *gbpAdapter) UploadMedia(ctx context.Context, accountName, businessName 
 	return &uploadResponse, nil
 }
 
+func (a *gbpAdapter) CreateLocalPost(ctx context.Context, accountName, businessName, summary, sourceURL string) (*external.GoogleBusinessLocalPostResponse, error) {
+	locationID := extractLocationID(businessName)
+	parent := fmt.Sprintf("%s/locations/%s", accountName, locationID)
+
+	createURL := fmt.Sprintf("https://mybusiness.googleapis.com/v4/%s/localPosts", parent)
+	reqBody := map[string]any{
+		"summary":      summary,
+		"topicType":    "STANDARD",
+		"languageCode": "ja",
+	}
+	if sourceURL != "" {
+		reqBody["media"] = map[string]string{
+			"mediaFormat": "PHOTO",
+			"sourceUrl":   sourceURL,
+		}
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("JSON作成エラー: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", createURL, bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("リクエスト作成エラー: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("localPosts.createエラー: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("レスポンス読み込みエラー: %v", err)
+	}
+
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
+		return nil, fmt.Errorf("Local Post作成失敗 (ステータス: %d): %s", resp.StatusCode, string(body))
+	}
+
+	var postResponse external.GoogleBusinessLocalPostResponse
+	if err := json.Unmarshal(body, &postResponse); err != nil {
+		return nil, fmt.Errorf("レスポンスパースエラー: %v", err)
+	}
+
+	return &postResponse, nil
+}
+
 func (a *gbpAdapter) GetBusiness(ctx context.Context, businessName string) (Business, error) {
 	businessSvc, err := mybusinessbusinessinformation.NewService(ctx, option.WithHTTPClient(a.client))
 	if err != nil {
 		return Business{}, err
 	}
-	fmt.Println(businessName)
 	locResp, err := businessSvc.Locations.
 		Get(businessName).
-		ReadMask("name,title,storefrontAddress,profile").
+		ReadMask("name,title,storefrontAddress,profile,metadata").
 		Do()
 	if err != nil {
 		return Business{}, err
@@ -181,6 +233,10 @@ func (a *gbpAdapter) GetBusiness(ctx context.Context, businessName string) (Busi
 
 	if locResp.Profile != nil {
 		business.Description = locResp.Profile.Description
+	}
+
+	if locResp.Metadata != nil {
+		business.MapsURL = locResp.Metadata.MapsUri
 	}
 	return business, nil
 }

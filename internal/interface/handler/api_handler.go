@@ -414,7 +414,9 @@ func (h *APIHandler) GetBusinessInstagramList(c echo.Context) error {
 // @Tags         business-instagram
 // @Accept       json
 // @Produce      json
-// @Success      201   {object}  res.BusinessInstagram  "Business Instagram"
+// @Param        limit   query     int  false  "取得件数"
+// @Param        offset  query     int  false  "オフセット"
+// @Success      200   {object}  res.BusinessInstagramDetail  "Business Instagram Detail"
 // @Failure      400   {string}  string  "不正なリクエスト"
 // @Failure      500   {string}  string  "内部サーバーエラー"
 // @Router       /api/business-instagram/{id} [get]
@@ -423,7 +425,11 @@ func (h *APIHandler) GetBusinessInstagram(c echo.Context) error {
 	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	resp, err := h.businessInstagramUsecase.GetBusinessInstagram(c.Request().Context(), id)
+	var params req.GetBusinessInstagramDetail
+	if err := c.Bind(&params); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	resp, err := h.businessInstagramUsecase.GetBusinessInstagram(c.Request().Context(), id, params)
 	if err != nil {
 		return handleError(c, err)
 	}
