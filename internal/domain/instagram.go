@@ -74,7 +74,8 @@ func (i *InstagramPost) GetContent() string {
 
 func (i *InstagramPost) GetPostDate() string {
 	instagramPost, _ := time.Parse("2006-01-02T15:04:05-0700", i.Timestamp)
-	return instagramPost.Format("2006-01-02 15:04:05")
+	jst := time.FixedZone("JST", 9*60*60)
+	return instagramPost.In(jst).Format("2006-01-02 15:04:05")
 }
 
 func (i *InstagramPost) getContentsHTML() string {
