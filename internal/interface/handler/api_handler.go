@@ -45,7 +45,6 @@ func NewAPIHandler(
 // @Failure      500  {string}  string  "内部サーバーエラー"
 // @Router       /api/sync/business-instagram [post]
 func (h *APIHandler) SyncAllGoogleBusinessInstagram(c echo.Context) error {
-	fmt.Println("aaaa")
 	err := h.customerUsecase.SyncAllGoogleBusinessInstagram(c.Request().Context())
 	if err != nil {
 		return handleError(c, err)

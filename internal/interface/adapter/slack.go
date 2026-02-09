@@ -59,7 +59,7 @@ func (s *slack) SendMessage(ctx context.Context, payload external.SlackRequest) 
 }
 
 func (s *slack) SendHealthy(ctx context.Context) error {
-	return s.noticeRpaChannel(ctx, external.SlackRequest{
+	return s.noticeWebAppChannel(ctx, external.SlackRequest{
 		Text:      "```healthy```",
 		Username:  "[A-Root Systemトークン]",
 		IconEmoji: ":panda_face:",
@@ -67,7 +67,7 @@ func (s *slack) SendHealthy(ctx context.Context) error {
 }
 
 func (s *slack) SendTokenExpired(ctx context.Context) error {
-	return s.prjARootChannel(ctx, external.SlackRequest{
+	return s.noticeWebAppChannel(ctx, external.SlackRequest{
 		Text:      "‼️トークンの有効期限が近づいています",
 		Username:  "[A-Root Systemトークン]",
 		IconEmoji: ":panda_face:",
