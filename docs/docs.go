@@ -967,8 +967,11 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "google_photos_count": {
+                    "type": "integer"
+                },
                 "google_posts": {
-                    "$ref": "#/definitions/res.GooglePosts"
+                    "type": "integer"
                 },
                 "id": {
                     "type": "integer"
@@ -1043,40 +1046,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/res.GoogleBusiness"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "res.GooglePost": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "google_url": {
-                    "type": "string"
-                },
-                "instagram_url": {
-                    "type": "string"
-                },
-                "post_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "res.GooglePosts": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "google_posts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/res.GooglePost"
                     }
                 },
                 "total": {

@@ -150,53 +150,38 @@ func (u *businessInstagramUsecase) GetBusinessInstagram(ctx context.Context, id 
 		return nil, err
 	}
 
-	filter := repository.GooglePostFilter{
+	googlePostsCount, err := u.googlePostRepo.Count(ctx, repository.GooglePostFilter{
 		CustomerID:    util.Pointer(bi.ID),
 		OrderByIDDesc: util.Pointer(true),
-		Limit:         params.Limit,
-		Offset:        params.Offset,
-	}
-
-	googlePosts, err := u.googlePostRepo.FindAll(ctx, filter)
+		PostType:      util.Pointer(domain.PostTypePost),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	total, err := u.googlePostRepo.Count(ctx, filter)
+	googlePhotosCount, err := u.googlePostRepo.Count(ctx, repository.GooglePostFilter{
+		CustomerID:    util.Pointer(bi.ID),
+		OrderByIDDesc: util.Pointer(true),
+		PostType:      util.Pointer(domain.PostTypePhoto),
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	respGooglePosts := make([]res.GooglePost, len(googlePosts))
-	for i, gp := range googlePosts {
-		respGooglePosts[i] = res.GooglePost{
-			GoogleURL:    gp.GoogleURL,
-			InstagramURL: gp.InstagramURL,
-			CreatedAt:    gp.CreatedAt,
-			PostType:     gp.PostType,
-		}
-	}
-
 	return &res.BusinessInstagramDetail{
-		ID:            bi.ID,
-		Name:          bi.Name,
-		BusinessName:  bi.BusinessName,
-		BusinessTitle: bi.BusinessTitle,
-		InstagramID:   bi.InstagramID,
-		InstagramName: bi.InstagramName,
-		Memo:          bi.Memo,
-		MapsURL:       bi.MapsURL,
-		StartDate:     bi.StartDate,
-		Status:        int(bi.Status),
-		CreatedAt:     bi.CreatedAt,
-		UpdatedAt:     bi.UpdatedAt,
-		GooglePosts: res.GooglePosts{
-			GooglePosts: respGooglePosts,
-			Paginate: res.Paginate{
-				Total: total,
-				Count: len(googlePosts),
-			},
-		},
+		ID:                bi.ID,
+		Name:              bi.Name,
+		BusinessName:      bi.BusinessName,
+		BusinessTitle:     bi.BusinessTitle,
+		InstagramID:       bi.InstagramID,
+		InstagramName:     bi.InstagramName,
+		Memo:              bi.Memo,
+		MapsURL:           bi.MapsURL,
+		StartDate:         bi.StartDate,
+		Status:            int(bi.Status),
+		GooglePhotosCount: googlePhotosCount,
+		GooglePostsCount:  googlePostsCount,
+		CreatedAt:         bi.CreatedAt,
+		UpdatedAt:         bi.UpdatedAt,
 	}, nil
 }
 

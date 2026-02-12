@@ -91,8 +91,10 @@ definitions:
         type: string
       created_at:
         type: string
+      google_photos_count:
+        type: integer
       google_posts:
-        $ref: '#/definitions/res.GooglePosts'
+        type: integer
       id:
         type: integer
       instagram_id:
@@ -141,28 +143,6 @@ definitions:
       google_business_list:
         items:
           $ref: '#/definitions/res.GoogleBusiness'
-        type: array
-      total:
-        type: integer
-    type: object
-  res.GooglePost:
-    properties:
-      created_at:
-        type: string
-      google_url:
-        type: string
-      instagram_url:
-        type: string
-      post_type:
-        type: string
-    type: object
-  res.GooglePosts:
-    properties:
-      count:
-        type: integer
-      google_posts:
-        items:
-          $ref: '#/definitions/res.GooglePost'
         type: array
       total:
         type: integer

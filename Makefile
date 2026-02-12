@@ -1,7 +1,4 @@
-.PHONY: dev test
-
-dev:
-	air
+.PHONY: run test
 
 test:
 	go test -v ./... -cover
