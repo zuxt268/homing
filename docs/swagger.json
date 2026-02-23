@@ -355,6 +355,73 @@
                 }
             }
         },
+        "/api/sync/wordpress-gbp": {
+            "post": {
+                "description": "全てのWordPress GBP設定を同期します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sync"
+                ],
+                "summary": "wordpress =\u003e GBPにおける全設定データ同期",
+                "responses": {
+                    "200": {
+                        "description": "全設定同期完了",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sync/wordpress-gbp/{id}": {
+            "post": {
+                "description": "指定のWordPress GBP設定を同期します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sync"
+                ],
+                "summary": "wordpress =\u003e GBPにおける設定データ同期",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "WordPress GBP ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "同期完了",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/sync/wordpress-instagram": {
             "post": {
                 "description": "全ての顧客のデータを同期します",
@@ -482,6 +549,251 @@
                 "responses": {
                     "200": {
                         "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/wordpress-gbp": {
+            "get": {
+                "description": "WordPress GBPの一覧を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-gbp"
+                ],
+                "summary": "WordPress GBP一覧取得",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "取得件数",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "オフセット",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "名前",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ステータス",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "WordPress GBP一覧",
+                        "schema": {
+                            "$ref": "#/definitions/res.WordpressGbpList"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "WordPress GBPを作成します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-gbp"
+                ],
+                "summary": "WordPress GBP作成",
+                "parameters": [
+                    {
+                        "description": "作成データ",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/req.WordpressGbp"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "作成されたWordPress GBP",
+                        "schema": {
+                            "$ref": "#/definitions/res.WordpressGbp"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/wordpress-gbp/{id}": {
+            "get": {
+                "description": "WordPress GBPの詳細を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-gbp"
+                ],
+                "summary": "WordPress GBP詳細取得",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "WordPress GBP ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "WordPress GBP詳細",
+                        "schema": {
+                            "$ref": "#/definitions/res.WordpressGbpDetail"
+                        }
+                    },
+                    "404": {
+                        "description": "見つかりません",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "WordPress GBPを更新します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wordpress-gbp"
+                ],
+                "summary": "WordPress GBP更新",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "WordPress GBP ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新データ",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/req.WordpressGbp"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新されたWordPress GBP",
+                        "schema": {
+                            "$ref": "#/definitions/res.WordpressGbp"
+                        }
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "見つかりません",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "内部サーバーエラー",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "WordPress GBPを削除します",
+                "tags": [
+                    "wordpress-gbp"
+                ],
+                "summary": "WordPress GBP削除",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "WordPress GBP ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "不正なリクエスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "見つかりません",
                         "schema": {
                             "type": "string"
                         }
@@ -903,6 +1215,29 @@
                 }
             }
         },
+        "req.WordpressGbp": {
+            "type": "object",
+            "properties": {
+                "business_name": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "wordpress_domain": {
+                    "type": "string"
+                }
+            }
+        },
         "res.BusinessInstagram": {
             "type": "object",
             "properties": {
@@ -1081,6 +1416,105 @@
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "res.WordpressGbp": {
+            "type": "object",
+            "properties": {
+                "business_name": {
+                    "type": "string"
+                },
+                "business_title": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "maps_url": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "wordpress_domain": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.WordpressGbpDetail": {
+            "type": "object",
+            "properties": {
+                "business_name": {
+                    "type": "string"
+                },
+                "business_title": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "google_photos_count": {
+                    "type": "integer"
+                },
+                "google_posts_count": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "maps_url": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "wordpress_domain": {
+                    "type": "string"
+                }
+            }
+        },
+        "res.WordpressGbpList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "wordpress_gbp_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/res.WordpressGbp"
+                    }
                 }
             }
         },

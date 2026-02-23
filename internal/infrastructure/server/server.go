@@ -69,6 +69,9 @@ func Run() {
 	api.POST("/sync/business-instagram", apiHandler.SyncAllGoogleBusinessInstagram)
 	api.POST("/sync/business-instagram/:id", apiHandler.SyncOneGoogleBusinessInstagram)
 
+	api.POST("/sync/wordpress-gbp", apiHandler.SyncAllWordpressGbp)
+	api.POST("/sync/wordpress-gbp/:id", apiHandler.SyncOneWordpressGbp)
+
 	api.POST("/token", apiHandler.SaveToken)
 	api.GET("/token", apiHandler.GetToken)
 	api.POST("/token/check", apiHandler.CheckToken)
@@ -82,6 +85,12 @@ func Run() {
 
 	api.GET("/google-business", apiHandler.GetGoogleBusinessList)
 	api.POST("/google-business/fetch", apiHandler.FetchGoogleBusinessList)
+
+	api.GET("/wordpress-gbp", apiHandler.GetWordpressGbpList)
+	api.GET("/wordpress-gbp/:id", apiHandler.GetWordpressGbp)
+	api.POST("/wordpress-gbp", apiHandler.CreateWordpressGbp)
+	api.PUT("/wordpress-gbp/:id", apiHandler.UpdateWordpressGbp)
+	api.DELETE("/wordpress-gbp/:id", apiHandler.DeleteWordpressGbp)
 
 	api.GET("/business-instagram", apiHandler.GetBusinessInstagramList)
 	api.GET("/business-instagram/:id", apiHandler.GetBusinessInstagram)

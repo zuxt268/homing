@@ -2,9 +2,12 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,6 +26,9 @@ type CustomerUsecase interface {
 
 	SyncAllGoogleBusinessInstagram(ctx context.Context) error
 	SyncOneGoogleBusinessInstagram(ctx context.Context, id int) error
+
+	SyncAllWordpressGbp(ctx context.Context) error
+	SyncOneWordpressGbp(ctx context.Context, id int) error
 }
 
 type customerUsecase struct {
@@ -36,6 +42,7 @@ type customerUsecase struct {
 	businessInstagramRepo  repository.BusinessInstagramRepository
 	googlePostRepo         repository.GooglePostRepository
 	s3Adapter              adapter.S3Adapter
+	wordpressGbpRepo       repository.WordpressGbpRepository
 	customerLocks          sync.Map
 }
 
@@ -50,6 +57,7 @@ func NewCustomerUsecase(
 	businessInstagramRepo repository.BusinessInstagramRepository,
 	googlePostRepo repository.GooglePostRepository,
 	s3Adapter adapter.S3Adapter,
+	wordpressGbpRepo repository.WordpressGbpRepository,
 ) CustomerUsecase {
 	return &customerUsecase{
 		instagramAdapter:       instagramAdapter,
@@ -62,6 +70,7 @@ func NewCustomerUsecase(
 		businessInstagramRepo:  businessInstagramRepo,
 		googlePostRepo:         googlePostRepo,
 		s3Adapter:              s3Adapter,
+		wordpressGbpRepo:       wordpressGbpRepo,
 	}
 }
 
@@ -413,7 +422,7 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 			/*
 				公開URLをGoogleBusinessに渡してPhotosにアップロード
 			*/
-			uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, sourceURL)
+			uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, sourceURL, "PHOTO")
 			if err != nil {
 				return err
 			}
@@ -479,7 +488,7 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 			/*
 				公開URLをGoogleBusinessに渡してPhotosにアップロード
 			*/
-			uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, childSourceURL)
+			uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, childSourceURL, "PHOTO")
 			if err != nil {
 				return err
 			}
@@ -554,7 +563,7 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 				summary = summary[:1500]
 			}
 
-			localPostResp, err := u.gbpAdapter.CreateLocalPost(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, summary, firstImageSourceURL)
+			localPostResp, err := u.gbpAdapter.CreateLocalPost(ctx, config.Env.GoogleBusinessAccountName, bi.BusinessName, summary, firstImageSourceURL, "")
 			if err != nil {
 				return err
 			}
@@ -579,6 +588,161 @@ func (u *customerUsecase) instagramToGbp(ctx context.Context, bi *domain.Busines
 				Slackに通知
 			*/
 			_ = u.slack.SuccessBI(ctx, bi, post.Permalink, domain.PostTypePost)
+		}
+	}
+
+	return nil
+}
+
+func (u *customerUsecase) SyncAllWordpressGbp(ctx context.Context) error {
+	wgList, err := u.wordpressGbpRepo.FindAll(ctx, repository.WordpressGbpFilter{
+		Status: util.Pointer(1),
+	})
+	if err != nil {
+		return err
+	}
+
+	backGroundCtx := context.Background()
+	for _, wg := range wgList {
+		posts, err := u.wordpressAdapter.GetGbpPosts(backGroundCtx, wg.WordpressDomain)
+		if err != nil {
+			_ = u.slack.Error(ctx, "wordpress => google business profile", err, wg.ID, wg.Name)
+			continue
+		}
+
+		for _, post := range posts {
+			if err := u.wordpressToGbp(backGroundCtx, wg, post); err != nil {
+				_ = u.slack.Error(ctx, "wordpress => google business profile", err, wg.ID, wg.Name)
+				continue
+			}
+		}
+	}
+	return nil
+}
+
+func (u *customerUsecase) SyncOneWordpressGbp(ctx context.Context, id int) error {
+	wg, err := u.wordpressGbpRepo.Get(ctx, repository.WordpressGbpFilter{
+		ID: util.Pointer(id),
+	})
+	if err != nil {
+		return err
+	}
+
+	backGroundCtx := context.Background()
+	posts, err := u.wordpressAdapter.GetGbpPosts(backGroundCtx, wg.WordpressDomain)
+	if err != nil {
+		return err
+	}
+
+	for _, post := range posts {
+		if err := u.wordpressToGbp(backGroundCtx, wg, post); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.WordpressGbp, post external.WordpressGbpPost) error {
+	if len(post.MediaURLs) == 0 {
+		return nil
+	}
+
+	// 連携開始日前のデータは連携しない
+	publishedAt, _ := time.Parse(time.RFC3339, post.PublishedAt)
+	if publishedAt.Before(wg.StartDate) {
+		return nil
+	}
+
+	customerID := 300000 + wg.ID
+
+	// 各media_urlに対してPhotosアップロード
+	for i, mediaURL := range post.MediaURLs {
+		mediaID := fmt.Sprintf("%d_%d", post.PostID, i)
+
+		exist, err := u.googlePostRepo.Exists(ctx, repository.GooglePostFilter{
+			MediaID:    &mediaID,
+			CustomerID: &customerID,
+			PostType:   util.Pointer(domain.PostTypePhoto),
+		})
+		if err != nil {
+			return err
+		}
+		if exist {
+			continue
+		}
+
+		// URLの拡張子でmediaFormatを判定
+		mediaFormat := "PHOTO"
+		ext := strings.ToLower(filepath.Ext(mediaURL))
+		if ext == ".mp4" || ext == ".mov" || ext == ".avi" || ext == ".wmv" || ext == ".webm" {
+			mediaFormat = "VIDEO"
+		}
+
+		uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, wg.BusinessName, mediaURL, mediaFormat)
+		if err != nil {
+			return err
+		}
+
+		err = u.googlePostRepo.Create(ctx, &domain.GooglePost{
+			MediaID:    mediaID,
+			CustomerID: customerID,
+			Name:       uploadResp.Name,
+			GoogleURL:  uploadResp.GoogleURL,
+			CreateTime: uploadResp.CreateTime,
+			PostType:   domain.PostTypePhoto,
+		})
+		if err != nil {
+			return err
+		}
+
+		_ = u.slack.SuccessWG(ctx, wg, domain.PostTypePhoto, mediaURL)
+	}
+
+	// contentが空でない場合はLocal Post作成
+	if post.Content != "" {
+		mediaID := fmt.Sprintf("%d", post.PostID)
+
+		localPostExist, err := u.googlePostRepo.Exists(ctx, repository.GooglePostFilter{
+			MediaID:    &mediaID,
+			CustomerID: &customerID,
+			PostType:   util.Pointer(domain.PostTypePost),
+		})
+		if err != nil {
+			return err
+		}
+		if !localPostExist {
+			summary := post.Content
+			if len(summary) > 1500 {
+				summary = summary[:1500]
+			}
+
+			sourceURL := post.MediaURLs[0]
+
+			localPostResp, err := u.gbpAdapter.CreateLocalPost(ctx,
+				config.Env.GoogleBusinessAccountName,
+				wg.BusinessName,
+				summary,
+				sourceURL,
+				post.PostURL,
+			)
+			if err != nil {
+				return err
+			}
+
+			err = u.googlePostRepo.Create(ctx, &domain.GooglePost{
+				MediaID:    mediaID,
+				CustomerID: customerID,
+				Name:       localPostResp.Name,
+				GoogleURL:  localPostResp.SearchURL,
+				CreateTime: localPostResp.CreateTime,
+				PostType:   domain.PostTypePost,
+			})
+			if err != nil {
+				return err
+			}
+
+			_ = u.slack.SuccessWG(ctx, wg, domain.PostTypePost, localPostResp.SearchURL)
 		}
 	}
 

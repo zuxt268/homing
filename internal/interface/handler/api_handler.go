@@ -19,6 +19,7 @@ type APIHandler struct {
 	tokenUsecase              usecase.TokenUsecase
 	wordpressInstagramUsecase usecase.WordpressInstagramUsecase
 	businessInstagramUsecase  usecase.BusinessInstagramUsecase
+	wordpressGbpUsecase       usecase.WordpressGbpUsecase
 }
 
 func NewAPIHandler(
@@ -26,12 +27,14 @@ func NewAPIHandler(
 	tokenUsecase usecase.TokenUsecase,
 	wordpressInstagramUsecase usecase.WordpressInstagramUsecase,
 	businessInstagramUsecase usecase.BusinessInstagramUsecase,
+	wordpressGbpUsecase usecase.WordpressGbpUsecase,
 ) APIHandler {
 	return APIHandler{
 		customerUsecase:           customerUsecase,
 		tokenUsecase:              tokenUsecase,
 		wordpressInstagramUsecase: wordpressInstagramUsecase,
 		businessInstagramUsecase:  businessInstagramUsecase,
+		wordpressGbpUsecase:       wordpressGbpUsecase,
 	}
 }
 
@@ -508,6 +511,177 @@ func (h *APIHandler) DeleteBusinessInstagram(c echo.Context) error {
 	}
 
 	err := h.businessInstagramUsecase.DeleteBusinessInstagram(c.Request().Context(), id)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
+// SyncAllWordpressGbp godoc
+// @Summary      wordpress => GBPにおける全設定データ同期
+// @Description  全てのWordPress GBP設定を同期します
+// @Tags         sync
+// @Accept       json
+// @Produce      json
+// @Success      200  {string}  string  "全設定同期完了"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/sync/wordpress-gbp [post]
+func (h *APIHandler) SyncAllWordpressGbp(c echo.Context) error {
+	err := h.customerUsecase.SyncAllWordpressGbp(c.Request().Context())
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, "sync all")
+}
+
+// SyncOneWordpressGbp godoc
+// @Summary      wordpress => GBPにおける設定データ同期
+// @Description  指定のWordPress GBP設定を同期します
+// @Tags         sync
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "WordPress GBP ID"
+// @Success      200  {string}  string  "同期完了"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/sync/wordpress-gbp/{id} [post]
+func (h *APIHandler) SyncOneWordpressGbp(c echo.Context) error {
+	var id int
+	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	err := h.customerUsecase.SyncOneWordpressGbp(c.Request().Context(), id)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, "sync one")
+}
+
+// GetWordpressGbpList godoc
+// @Summary      WordPress GBP一覧取得
+// @Description  WordPress GBPの一覧を取得します
+// @Tags         wordpress-gbp
+// @Accept       json
+// @Produce      json
+// @Param        limit   query     int     false  "取得件数"
+// @Param        offset  query     int     false  "オフセット"
+// @Param        name    query     string  false  "名前"
+// @Param        status  query     int     false  "ステータス"
+// @Success      200  {object}  res.WordpressGbpList  "WordPress GBP一覧"
+// @Failure      400  {string}  string  "不正なリクエスト"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/wordpress-gbp [get]
+func (h *APIHandler) GetWordpressGbpList(c echo.Context) error {
+	var params req.GetWordpressGbp
+	if err := c.Bind(&params); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	list, err := h.wordpressGbpUsecase.GetWordpressGbpList(c.Request().Context(), params)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, list)
+}
+
+// GetWordpressGbp godoc
+// @Summary      WordPress GBP詳細取得
+// @Description  WordPress GBPの詳細を取得します
+// @Tags         wordpress-gbp
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "WordPress GBP ID"
+// @Success      200  {object}  res.WordpressGbpDetail  "WordPress GBP詳細"
+// @Failure      404  {string}  string  "見つかりません"
+// @Failure      500  {string}  string  "内部サーバーエラー"
+// @Router       /api/wordpress-gbp/{id} [get]
+func (h *APIHandler) GetWordpressGbp(c echo.Context) error {
+	var params req.GetWordpressGbpDetail
+	if err := c.Bind(&params); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	var id int
+	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	item, err := h.wordpressGbpUsecase.GetWordpressGbp(c.Request().Context(), id, params)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, item)
+}
+
+// CreateWordpressGbp godoc
+// @Summary      WordPress GBP作成
+// @Description  WordPress GBPを作成します
+// @Tags         wordpress-gbp
+// @Accept       json
+// @Produce      json
+// @Param        body  body      req.WordpressGbp  true  "作成データ"
+// @Success      201   {object}  res.WordpressGbp  "作成されたWordPress GBP"
+// @Failure      400   {string}  string  "不正なリクエスト"
+// @Failure      500   {string}  string  "内部サーバーエラー"
+// @Router       /api/wordpress-gbp [post]
+func (h *APIHandler) CreateWordpressGbp(c echo.Context) error {
+	var body req.WordpressGbp
+	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	item, err := h.wordpressGbpUsecase.CreateWordpressGbp(c.Request().Context(), body)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusCreated, item)
+}
+
+// UpdateWordpressGbp godoc
+// @Summary      WordPress GBP更新
+// @Description  WordPress GBPを更新します
+// @Tags         wordpress-gbp
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int               true  "WordPress GBP ID"
+// @Param        body  body      req.WordpressGbp  true  "更新データ"
+// @Success      200   {object}  res.WordpressGbp  "更新されたWordPress GBP"
+// @Failure      400   {string}  string  "不正なリクエスト"
+// @Failure      404   {string}  string  "見つかりません"
+// @Failure      500   {string}  string  "内部サーバーエラー"
+// @Router       /api/wordpress-gbp/{id} [put]
+func (h *APIHandler) UpdateWordpressGbp(c echo.Context) error {
+	var body req.WordpressGbp
+	if err := c.Bind(&body); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	var id int
+	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	item, err := h.wordpressGbpUsecase.UpdateWordpressGbp(c.Request().Context(), id, body)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.JSON(http.StatusOK, item)
+}
+
+// DeleteWordpressGbp godoc
+// @Summary      WordPress GBP削除
+// @Description  WordPress GBPを削除します
+// @Tags         wordpress-gbp
+// @Param        id    path      int     true  "WordPress GBP ID"
+// @Success      204
+// @Failure      400   {string}  string  "不正なリクエスト"
+// @Failure      404   {string}  string  "見つかりません"
+// @Failure      500   {string}  string  "内部サーバーエラー"
+// @Router       /api/wordpress-gbp/{id} [delete]
+func (h *APIHandler) DeleteWordpressGbp(c echo.Context) error {
+	var id int
+	if err := echo.PathParamsBinder(c).Int("id", &id).BindError(); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	err := h.wordpressGbpUsecase.DeleteWordpressGbp(c.Request().Context(), id)
 	if err != nil {
 		return handleError(c, err)
 	}

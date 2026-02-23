@@ -49,6 +49,10 @@ func NewGooglePostRepository(db *gorm.DB) repository.GooglePostRepository {
 	return repository.NewGooglePostRepository(db)
 }
 
+func NewWordpressGbpRepository(db *gorm.DB) repository.WordpressGbpRepository {
+	return repository.NewWordpressGbpRepository(db)
+}
+
 func NewGbpAdapter(credentialsData []byte) (adapter.GbpAdapter, error) {
 	return adapter.NewGbpAdapter(credentialsData)
 }
@@ -73,6 +77,7 @@ func NewCustomerUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter ad
 		NewBusinessInstagramRepository(db),
 		NewGooglePostRepository(db),
 		s3Adapter,
+		NewWordpressGbpRepository(db),
 	)
 }
 
@@ -94,6 +99,15 @@ func NewWordpressInstagramUsecase(httpDriver driver.HttpDriver, db *gorm.DB) use
 	)
 }
 
+func NewWordpressGbpUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.GbpAdapter) usecase.WordpressGbpUsecase {
+	return usecase.NewWordpressGbpUsecase(
+		NewWordpressGbpRepository(db),
+		NewGooglePostRepository(db),
+		NewWordpressAdapter(httpDriver),
+		gbpAdapter,
+	)
+}
+
 func NewBusinessInstagramUsecase(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.GbpAdapter) usecase.BusinessInstagramUsecase {
 	return usecase.NewBusinessInstagramUsecase(
 		NewGoogleBusinessRepository(db),
@@ -111,5 +125,6 @@ func NewHandler(httpDriver driver.HttpDriver, db *gorm.DB, gbpAdapter adapter.Gb
 		NewTokenUsecase(httpDriver, db),
 		NewWordpressInstagramUsecase(httpDriver, db),
 		NewBusinessInstagramUsecase(httpDriver, db, gbpAdapter),
+		NewWordpressGbpUsecase(httpDriver, db, gbpAdapter),
 	)
 }

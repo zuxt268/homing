@@ -77,3 +77,11 @@ type WordpressFileUploadResponse struct {
 type WordpressTitleResponse struct {
 	Title string `json:"title"`
 }
+
+type WordpressGbpPost struct {
+	PostID      int      `json:"post_id"`
+	PostURL     string   `json:"post_url"`
+	PublishedAt string   `json:"published_at"`
+	Content     string   `json:"content"`
+	MediaURLs   []string `json:"media_urls"`
+}

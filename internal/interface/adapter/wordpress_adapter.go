@@ -30,6 +30,7 @@ type WordpressAdapter interface {
 	GetTitle(ctx context.Context, domain string) (string, error)
 	Post(ctx context.Context, in external.WordpressPostInput) (*domain.Post, error)
 	FileUpload(ctx context.Context, in external.WordpressFileUploadInput) (*external.WordpressFileUploadResponse, error)
+	GetGbpPosts(ctx context.Context, domain string) ([]external.WordpressGbpPost, error)
 }
 
 func NewWordpressAdapter(
@@ -202,6 +203,27 @@ func (a *wordpressAdapter) FileUpload(ctx context.Context, in external.Wordpress
 	}
 
 	return &uploadResponse, nil
+}
+
+func (a *wordpressAdapter) GetGbpPosts(ctx context.Context, domain string) ([]external.WordpressGbpPost, error) {
+	u, err := url.Parse(domain)
+	if err != nil {
+		return nil, err
+	}
+	q := u.Query()
+	q.Set("rest_route", "/rodut/v1/posts")
+	u.RawQuery = q.Encode()
+
+	endpoint := "https://" + u.String()
+	resp, err := a.httpDriver.Get(ctx, endpoint, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	var posts []external.WordpressGbpPost
+	if err := json.Unmarshal(resp, &posts); err != nil {
+		return nil, fmt.Errorf("JSONの変換に失敗: %w", err)
+	}
+	return posts, nil
 }
 
 // signUploadHeaders creates HMAC signature headers for file upload

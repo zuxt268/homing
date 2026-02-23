@@ -19,6 +19,7 @@ type Slack interface {
 
 	SuccessWI(ctx context.Context, wi *domain.WordpressInstagram, wordpressUrl, instagramUrl string) error
 	SuccessBI(ctx context.Context, bi *domain.BusinessInstagram, instagramUrl, postType string) error
+	SuccessWG(ctx context.Context, wg *domain.WordpressGbp, postType string, mediaUrl string) error
 }
 
 type slack struct {
@@ -124,6 +125,24 @@ func (s *slack) SuccessBI(ctx context.Context, bi *domain.BusinessInstagram, ins
 	sb := strings.Builder{}
 	sb.WriteString("｀｀｀")
 	sb.WriteString(fmt.Sprintf(templateBiSuccess, postType, bi.ID, bi.Name, instagramUrl))
+	sb.WriteString("｀｀｀")
+	return s.noticeWebAppChannel(ctx, external.SlackRequest{
+		Text:      sb.String(),
+		Username:  "homing",
+		IconEmoji: ":cat:",
+	})
+}
+
+const templateWgSuccess = `[WordPress => GBP: %s]
+id: %d
+name: %s
+url: %s
+`
+
+func (s *slack) SuccessWG(ctx context.Context, wg *domain.WordpressGbp, postType string, mediaUrl string) error {
+	sb := strings.Builder{}
+	sb.WriteString("｀｀｀")
+	sb.WriteString(fmt.Sprintf(templateWgSuccess, postType, wg.ID, wg.Name, mediaUrl))
 	sb.WriteString("｀｀｀")
 	return s.noticeWebAppChannel(ctx, external.SlackRequest{
 		Text:      sb.String(),

@@ -31,9 +31,9 @@ type Business struct {
 
 type GbpAdapter interface {
 	GetAllBusinesses(ctx context.Context, accountName string) ([]Business, error)
-	UploadMedia(ctx context.Context, accountName, businessName string, sourceURL string) (*external.GoogleBusinessMediaUploadResponse, error)
+	UploadMedia(ctx context.Context, accountName, businessName, sourceURL, mediaFormat string) (*external.GoogleBusinessMediaUploadResponse, error)
 	GetBusiness(ctx context.Context, businessName string) (Business, error)
-	CreateLocalPost(ctx context.Context, accountName, businessName, summary, sourceURL string) (*external.GoogleBusinessLocalPostResponse, error)
+	CreateLocalPost(ctx context.Context, accountName, businessName, summary, sourceURL, callToActionURL string) (*external.GoogleBusinessLocalPostResponse, error)
 }
 
 type gbpAdapter struct {
@@ -110,14 +110,14 @@ func (a *gbpAdapter) GetAllBusinesses(ctx context.Context, accountName string) (
 	return businesses, nil
 }
 
-func (a *gbpAdapter) UploadMedia(ctx context.Context, accountName, businessName string, sourceURL string) (*external.GoogleBusinessMediaUploadResponse, error) {
+func (a *gbpAdapter) UploadMedia(ctx context.Context, accountName, businessName, sourceURL, mediaFormat string) (*external.GoogleBusinessMediaUploadResponse, error) {
 	locationID := extractLocationID(businessName)
 	parent := fmt.Sprintf("%s/locations/%s", accountName, locationID)
 
 	// sourceUrl 方式で media.create を呼ぶ
 	createURL := fmt.Sprintf("https://mybusiness.googleapis.com/v4/%s/media", parent)
 	reqBody := map[string]any{
-		"mediaFormat": "PHOTO",
+		"mediaFormat": mediaFormat,
 		"locationAssociation": map[string]string{
 			"category": "ADDITIONAL",
 		},
@@ -157,7 +157,7 @@ func (a *gbpAdapter) UploadMedia(ctx context.Context, accountName, businessName 
 	return &uploadResponse, nil
 }
 
-func (a *gbpAdapter) CreateLocalPost(ctx context.Context, accountName, businessName, summary, sourceURL string) (*external.GoogleBusinessLocalPostResponse, error) {
+func (a *gbpAdapter) CreateLocalPost(ctx context.Context, accountName, businessName, summary, sourceURL, callToActionURL string) (*external.GoogleBusinessLocalPostResponse, error) {
 	locationID := extractLocationID(businessName)
 	parent := fmt.Sprintf("%s/locations/%s", accountName, locationID)
 
@@ -171,6 +171,12 @@ func (a *gbpAdapter) CreateLocalPost(ctx context.Context, accountName, businessN
 		reqBody["media"] = map[string]string{
 			"mediaFormat": "PHOTO",
 			"sourceUrl":   sourceURL,
+		}
+	}
+	if callToActionURL != "" {
+		reqBody["callToAction"] = map[string]string{
+			"actionType": "LEARN_MORE",
+			"url":        callToActionURL,
 		}
 	}
 
