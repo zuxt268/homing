@@ -32,7 +32,7 @@ func (r *tokenRepository) First(ctx context.Context) (string, error) {
 }
 
 func (r *tokenRepository) DeleteInsert(ctx context.Context, token string) error {
-	err := r.db.WithContext(ctx).Delete(&model.Token{}, "1").Error
+	err := r.db.WithContext(ctx).Where("1 = 1").Delete(&model.Token{}).Error
 	if err != nil {
 		return err
 	}
