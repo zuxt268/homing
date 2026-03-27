@@ -48,7 +48,7 @@ func (a *instagramAdapter) GetPosts25(ctx context.Context, token string, instagr
 	}
 	var postsDto external.InstagramGetPostsResponse
 	if err := json.Unmarshal(resp, &postsDto); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal instagram posts response: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal instagram posts response: %w, body: %s", err, string(resp))
 	}
 	return external.ToInstagramPostsEntity(&postsDto), nil
 }
@@ -84,7 +84,7 @@ func (a *instagramAdapter) GetPostsAll(ctx context.Context, token, instagramID s
 		}
 		var postsDto external.InstagramGetPostsNextResponse
 		if err := json.Unmarshal(respBody, &postsDto); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal posts response: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal posts response: %w, body: %s", err, string(resp))
 		}
 		posts := external.NextResponseToInstagramPostsEntity(&postsDto)
 		result = append(result, posts...)
