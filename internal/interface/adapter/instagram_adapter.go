@@ -84,7 +84,7 @@ func (a *instagramAdapter) GetPostsAll(ctx context.Context, token, instagramID s
 		}
 		var postsDto external.InstagramGetPostsNextResponse
 		if err := json.Unmarshal(respBody, &postsDto); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal posts response: %w, body: %s", err, string(resp))
+			return nil, fmt.Errorf("failed to unmarshal posts response: %w, body: %s", err, string(respBody))
 		}
 		posts := external.NextResponseToInstagramPostsEntity(&postsDto)
 		result = append(result, posts...)
