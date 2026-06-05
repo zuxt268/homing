@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/zuxt268/homing/internal/domain"
 	"github.com/zuxt268/homing/internal/interface/dto/model"
 	"gorm.io/gorm"
@@ -117,6 +119,10 @@ func (r *googlePostRepository) Create(ctx context.Context, googlePost *domain.Go
 		PostType:     googlePost.PostType,
 	}
 	if err := r.getDB(ctx).Create(&m).Error; err != nil {
+		var mysqlErr *mysql.MySQLError
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return domain.ErrDuplicate
+		}
 		return err
 	}
 	googlePost.ID = m.ID

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -712,7 +713,7 @@ func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.Wordpre
 			return err
 		}
 		if !localPostExist {
-			summary := post.Content
+			summary := sanitizeForGbp(post.Content)
 			if len(summary) > 1500 {
 				summary = summary[:1500]
 			}
@@ -749,10 +750,36 @@ func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.Wordpre
 			if err != nil {
 				return err
 			}
-
 			_ = u.slack.SuccessWG(ctx, wg, domain.PostTypePost, localPostResp.SearchURL)
 		}
 	}
 
 	return nil
+}
+
+// GBPは投稿本文の電話番号・住所・URL・ハッシュタグをポリシー違反として自動拒否するため、送信前に除去する
+var (
+	gbpURLPattern     = regexp.MustCompile(`https?://\S+`)
+	gbpPhonePattern   = regexp.MustCompile(`☎️\s*[\d\-\s]+`)
+	gbpAddressPattern = regexp.MustCompile(`📍[^📍🚃⏰🗓️☎️🚗\n]+`)
+	gbpHashtagPattern = regexp.MustCompile(`#\S+(?:[ \t　]+#\S+)*`)
+	gbpSpacesPattern  = regexp.MustCompile(`[ \t　]{2,}`)
+)
+
+func sanitizeForGbp(content string) string {
+	content = gbpURLPattern.ReplaceAllString(content, "")
+	content = gbpPhonePattern.ReplaceAllString(content, "")
+	content = gbpAddressPattern.ReplaceAllString(content, "")
+	content = gbpHashtagPattern.ReplaceAllString(content, "")
+
+	lines := strings.Split(content, "\n")
+	out := make([]string, 0, len(lines))
+	for _, line := range lines {
+		line = gbpSpacesPattern.ReplaceAllString(line, " ")
+		line = strings.TrimSpace(line)
+		if line != "" {
+			out = append(out, line)
+		}
+	}
+	return strings.Join(out, "\n")
 }
