@@ -717,7 +717,15 @@ func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.Wordpre
 				summary = summary[:1500]
 			}
 
-			sourceURL := post.MediaURLs[0]
+			// Local Postには動画を添付できないため画像のみ抽出（無ければmedia無しで投稿）
+			var sourceURL string
+			for _, m := range post.MediaURLs {
+				ext := strings.ToLower(filepath.Ext(m))
+				if ext != ".mp4" && ext != ".mov" && ext != ".avi" && ext != ".wmv" && ext != ".webm" {
+					sourceURL = m
+					break
+				}
+			}
 
 			localPostResp, err := u.gbpAdapter.CreateLocalPost(ctx,
 				config.Env.GoogleBusinessAccountName,
