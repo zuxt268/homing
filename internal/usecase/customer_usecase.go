@@ -697,7 +697,7 @@ func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.Wordpre
 			return err
 		}
 
-		_ = u.slack.SuccessWG(ctx, wg, domain.PostTypePhoto, mediaURL)
+		_ = u.slack.SuccessWG(ctx, wg, domain.PostTypePhoto, mediaURL, post.PostURL)
 	}
 
 	// contentが空でない場合はLocal Post作成
@@ -750,7 +750,7 @@ func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.Wordpre
 			if err != nil {
 				return err
 			}
-			_ = u.slack.SuccessWG(ctx, wg, domain.PostTypePost, localPostResp.SearchURL)
+			_ = u.slack.SuccessWG(ctx, wg, domain.PostTypePost, localPostResp.SearchURL, post.PostURL)
 		}
 	}
 
