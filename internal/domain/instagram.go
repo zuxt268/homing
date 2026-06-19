@@ -103,13 +103,13 @@ func removeHashtags(text string) string {
 }
 
 func (i *InstagramPost) getHTMLForImage() string {
-	imageHTML := fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='margin: 0 auto;' width='500px' height='500px'/></div>", i.SourceURLs[0])
+	imageHTML := fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='width: 100%%; max-width: 500px; height: auto; display: block; margin: 0 auto;'/></div>", i.SourceURLs[0])
 	imageHTML += i.getContentsHTML()
 	return imageHTML
 }
 
 func (i *InstagramPost) getHTMLForVideo() string {
-	videoHTML := fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='margin: 0 auto;' width='500px' height='500px' controls>Sorry, your browser does not support embedded videos.</video></div>", i.SourceURLs[0])
+	videoHTML := fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='width: 100%%; max-width: 500px; height: auto; display: block; margin: 0 auto;' controls>Sorry, your browser does not support embedded videos.</video></div>", i.SourceURLs[0])
 	videoHTML += i.getContentsHTML()
 	return videoHTML
 }
@@ -118,9 +118,9 @@ func (i *InstagramPost) getHTMLForCarousel() string {
 	html := "<div class='a-root-wordpress-instagram-slider'>"
 	for idx, child := range i.Children {
 		if child.MediaType == "IMAGE" {
-			html += fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='margin: 0 auto;' width='500px' height='500px'/></div>", i.SourceURLs[idx])
+			html += fmt.Sprintf("<div style='text-align: center;'><img src='%s' style='width: 100%%; max-width: 500px; height: auto; display: block; margin: 0 auto;'/></div>", i.SourceURLs[idx])
 		} else if child.MediaType == "VIDEO" {
-			html += fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='margin: 0 auto;' width='500px' height='500px' controls>Sorry, your browser does not support embedded videos.</video></div>", i.SourceURLs[idx])
+			html += fmt.Sprintf("<div style='text-align: center;'><video src='%s' style='width: 100%%; max-width: 500px; height: auto; display: block; margin: 0 auto;' controls>Sorry, your browser does not support embedded videos.</video></div>", i.SourceURLs[idx])
 		}
 	}
 	html += "</div>"
