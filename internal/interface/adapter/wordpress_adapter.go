@@ -66,8 +66,8 @@ func (a *wordpressAdapter) GetTitle(ctx context.Context, domain string) (string,
 		return "", err
 	}
 	var titleResponse external.WordpressTitleResponse
-	if err := json.Unmarshal(resp, &titleResponse); err != nil {
-		return "", fmt.Errorf("JSONの変換に失敗: %w (endpoint=%s, response=%s)", err, endpoint, truncateResponse(resp))
+	if err := unmarshalWordpressResponse(resp, &titleResponse); err != nil {
+		return "", fmt.Errorf("JSONの変換に失敗: %w (endpoint=%s)", err, endpoint)
 	}
 	return titleResponse.Title, nil
 }
@@ -103,8 +103,8 @@ func (a *wordpressAdapter) Post(ctx context.Context, input external.WordpressPos
 		return nil, fmt.Errorf("記事の投稿に失敗: %w", err)
 	}
 	var postDto external.WordpressPostResponse
-	if err := json.Unmarshal(resp, &postDto); err != nil {
-		return nil, fmt.Errorf("JSONの変換に失敗: %w (endpoint=%s, response=%s)", err, endpoint, truncateResponse(resp))
+	if err := unmarshalWordpressResponse(resp, &postDto); err != nil {
+		return nil, fmt.Errorf("JSONの変換に失敗: %w (endpoint=%s)", err, endpoint)
 	}
 
 	return &domain.Post{
@@ -220,10 +220,34 @@ func (a *wordpressAdapter) GetGbpPosts(ctx context.Context, domain string) ([]ex
 		return nil, err
 	}
 	var posts []external.WordpressGbpPost
-	if err := json.Unmarshal(resp, &posts); err != nil {
-		return nil, fmt.Errorf("JSONの変換に失敗: %w (endpoint=%s, response=%s)", err, endpoint, truncateResponse(resp))
+	if err := unmarshalWordpressResponse(resp, &posts); err != nil {
+		return nil, fmt.Errorf("JSONの変換に失敗: %w (endpoint=%s)", err, endpoint)
 	}
 	return posts, nil
+}
+
+// unmarshalWordpressResponse はWordPressのレスポンスをJSONとしてパースする。
+// 本番サーバーで display_errors が有効な場合、JSON本体の前にPHPの警告(HTML)が
+// 混入することがあるため、先頭の非JSON部分を取り除いてからデコードする。
+// それでも失敗した場合は、原因調査用に実際のレスポンス本文をエラーに含める。
+func unmarshalWordpressResponse(resp []byte, v any) error {
+	clean := sanitizeJSONResponse(resp)
+	// json.Decoder は最初のJSON値だけを読むため、JSONの後ろに警告等が続いても許容できる。
+	dec := json.NewDecoder(bytes.NewReader(clean))
+	if err := dec.Decode(v); err != nil {
+		return fmt.Errorf("%w (response=%s)", err, truncateResponse(resp))
+	}
+	return nil
+}
+
+// sanitizeJSONResponse は先頭のPHP警告などの非JSON部分を取り除き、
+// 最初のJSON開始位置('{' または '[')以降を返す。見つからない場合は元のまま返す。
+func sanitizeJSONResponse(resp []byte) []byte {
+	idx := bytes.IndexAny(resp, "{[")
+	if idx < 0 {
+		return resp
+	}
+	return resp[idx:]
 }
 
 // truncateResponse はJSON変換失敗時に実際のレスポンス本文をエラーへ含めるためのヘルパー。
