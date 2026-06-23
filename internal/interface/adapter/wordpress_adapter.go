@@ -67,7 +67,7 @@ func (a *wordpressAdapter) GetTitle(ctx context.Context, domain string) (string,
 	}
 	var titleResponse external.WordpressTitleResponse
 	if err := json.Unmarshal(resp, &titleResponse); err != nil {
-		return "", fmt.Errorf("JSONの変換に失敗: %w", err)
+		return "", fmt.Errorf("JSONの変換に失敗: %w (endpoint=%s, response=%s)", err, endpoint, truncateResponse(resp))
 	}
 	return titleResponse.Title, nil
 }
@@ -104,7 +104,7 @@ func (a *wordpressAdapter) Post(ctx context.Context, input external.WordpressPos
 	}
 	var postDto external.WordpressPostResponse
 	if err := json.Unmarshal(resp, &postDto); err != nil {
-		return nil, fmt.Errorf("JSONの変換に失敗: %w", err)
+		return nil, fmt.Errorf("JSONの変換に失敗: %w (endpoint=%s, response=%s)", err, endpoint, truncateResponse(resp))
 	}
 
 	return &domain.Post{
@@ -221,9 +221,23 @@ func (a *wordpressAdapter) GetGbpPosts(ctx context.Context, domain string) ([]ex
 	}
 	var posts []external.WordpressGbpPost
 	if err := json.Unmarshal(resp, &posts); err != nil {
-		return nil, fmt.Errorf("JSONの変換に失敗: %w", err)
+		return nil, fmt.Errorf("JSONの変換に失敗: %w (endpoint=%s, response=%s)", err, endpoint, truncateResponse(resp))
 	}
 	return posts, nil
+}
+
+// truncateResponse はJSON変換失敗時に実際のレスポンス本文をエラーへ含めるためのヘルパー。
+// HTMLエラーページなどが返ってきた場合に原因を特定しやすくする。長すぎる場合は末尾を省略する。
+func truncateResponse(resp []byte) string {
+	const maxLen = 1000
+	s := strings.TrimSpace(string(resp))
+	if s == "" {
+		return "(empty)"
+	}
+	if len(s) > maxLen {
+		return s[:maxLen] + "...(truncated)"
+	}
+	return s
 }
 
 // signUploadHeaders creates HMAC signature headers for file upload
