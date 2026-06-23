@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -659,6 +660,11 @@ func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.Wordpre
 
 	// 各media_urlに対してPhotosアップロード
 	for i, mediaURL := range post.MediaURLs {
+		// PDFは連携対象外
+		if strings.ToLower(filepath.Ext(mediaURL)) == ".pdf" {
+			continue
+		}
+
 		mediaID := fmt.Sprintf("%d_%d", post.PostID, i)
 
 		exist, err := u.googlePostRepo.Exists(ctx, repository.GooglePostFilter{
@@ -673,6 +679,12 @@ func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.Wordpre
 			continue
 		}
 
+		// GBPはメディア取得サイズが25MBを超えると拒否するため、超過分はスキップ
+		if mediaExceedsGbpLimit(ctx, mediaURL) {
+			slog.Warn("メディアがGBPのサイズ上限を超えているためスキップ", "media_url", mediaURL)
+			continue
+		}
+
 		// URLの拡張子でmediaFormatを判定
 		mediaFormat := "PHOTO"
 		ext := strings.ToLower(filepath.Ext(mediaURL))
@@ -682,6 +694,12 @@ func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.Wordpre
 
 		uploadResp, err := u.gbpAdapter.UploadMedia(ctx, config.Env.GoogleBusinessAccountName, wg.BusinessName, mediaURL, mediaFormat)
 		if err != nil {
+			// HEADでサイズが取得できずにアップロードした場合のフォールバック。
+			// GBPがサイズ超過で拒否した場合はエラー通知せずスキップする。
+			if isGbpMediaTooLargeErr(err) {
+				slog.Warn("GBPがメディアサイズ超過で拒否したためスキップ", "media_url", mediaURL)
+				continue
+			}
 			return err
 		}
 
@@ -755,6 +773,35 @@ func (u *customerUsecase) wordpressToGbp(ctx context.Context, wg *domain.Wordpre
 	}
 
 	return nil
+}
+
+// gbpMaxMediaBytes はGBPがメディア取得時に許容する最大バイト数（25MB）。
+const gbpMaxMediaBytes = 26214400
+
+// mediaExceedsGbpLimit はメディアURLのサイズがGBPの取得上限を超えるかをHEADリクエストで判定する。
+// Content-Lengthが取得できない場合やリクエストに失敗した場合は false（=超過とみなさない）を返し、
+// 実際のアップロード時のエラー(isGbpMediaTooLargeErr)でフォールバックする。
+func mediaExceedsGbpLimit(ctx context.Context, mediaURL string) bool {
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, mediaURL, nil)
+	if err != nil {
+		return false
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	if resp.ContentLength <= 0 {
+		return false
+	}
+	return resp.ContentLength > gbpMaxMediaBytes
+}
+
+// isGbpMediaTooLargeErr はGBPがメディアのサイズ超過で拒否したエラーかどうかを判定する。
+func isGbpMediaTooLargeErr(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "Media fetch response bytes too large")
 }
 
 // GBPは投稿本文の電話番号・住所・URL・ハッシュタグをポリシー違反として自動拒否するため、送信前に除去する
